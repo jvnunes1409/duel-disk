@@ -284,6 +284,16 @@ body[data-t=duelo] h1{display:none}body[data-t=duelo] main{padding-top:8px}body[
 .hbar .btn{padding:10px 4px;font-size:.78rem;letter-spacing:1px}
 details.hlp{margin:0 0 10px;color:var(--mut);font-size:.78rem}details.hlp summary{cursor:pointer;text-align:center;padding:4px;color:var(--cy)}details.hlp p{margin:6px 0 0;text-align:left;line-height:1.4}
 details.tinfo summary{cursor:pointer;text-align:center;color:var(--cy);font-weight:800;font-size:.85rem;padding:8px 0}
+#resultado{display:grid;grid-template-columns:1fr 1fr;gap:8px}#resultado .card{margin:0;padding:8px}#resultado .rc h3{font-size:.95rem;margin:4px 0}#resultado .rc .art{width:100%;margin:6px 0}#resultado .rc .art span{font-size:2.6rem}#resultado .info{padding:6px;font-size:.75rem;width:100%}
+#resultado .rc>b{font-size:.85rem}
+#sbar{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);width:calc(100% - 20px);max-width:500px;display:flex;border-radius:14px;overflow:hidden;border:2px solid var(--gd);box-shadow:0 6px 24px #000c,0 0 18px #f2c14e55;opacity:0;pointer-events:none;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1);z-index:5}
+#sbar.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#sbar button{flex:1;padding:15px 6px;border:0;font:900 .9rem Impact,sans-serif;letter-spacing:1.5px;text-transform:uppercase}
+#sbar .sb1{background:linear-gradient(#2a2f66,#12163a);color:var(--mut);border-right:2px solid var(--gd)}#sbar .sb2{flex:1.25;background:linear-gradient(#f6d36b,#c58d12);color:#2a1a00}
+#sbar button:active{filter:brightness(1.25)}
+@media(max-height:760px){.opts{flex-direction:row;gap:6px;margin-bottom:8px}.opts .tg{flex:1;padding:8px;gap:8px;font-size:.75rem}.opts .tg small{display:none}.mode{margin-bottom:8px}.mode button{padding:9px 4px}#resultado .rc .art{aspect-ratio:4/3}#pool{margin:-2px 0 6px!important}}
+#sbar button{font-size:.8rem;letter-spacing:1px}
+#resultado .rc h3 .tier{display:table;margin:4px auto 0;white-space:nowrap}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -313,6 +323,7 @@ details.tinfo summary{cursor:pointer;text-align:center;color:var(--cy);font-weig
 <nav><button data-t="decks">📚<br>Decks</button><button data-t="sorteio">🎴<br>Sorteio</button><button data-t="torneio">🏟️<br>Torneio</button><button data-t="duelo" class="on">⚔️<br>Duelo</button><button data-t="stats">📊<br>Stats</button><button data-t="hist">🏆<br>Histórico</button></nav>
 <div id="modal"><div class="box" id="box"></div></div>
 <div id="fx"></div>
+<div id="sbar"><button class="sb1" onclick="sortear()">🔄 Sortear de novo</button><button class="sb2" onclick="goTab('duelo')">⚔️ Ir para o duelo</button></div>
 <div id="toast" role="status"></div>
 
 <script>
@@ -380,7 +391,12 @@ const MOM={start:['Início do duelo','É hora do duelo!'],dmg:['Dano nos LP','ef
 let VOZ=null;function pickVoz(){try{const v=speechSynthesis.getVoices();VOZ=v.find(x=>/^pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null}catch(e){}}
 try{pickVoz();speechSynthesis.onvoiceschanged=pickVoz}catch(e){}
 function say(t){if(mute||!CFG.voz||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(VOZ)u.voice=VOZ;u.rate=1.02;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
-let CA=null;function moment(k,txt){if(mute)return null;const u=CSND[k]||DEF[k];if(u){try{if(CA)CA.pause();const a=CA=new Audio(u);a.play().catch(()=>a.dispatchEvent(new Event('error')));return a}catch(e){}}else say(txt);return null}
+let CA=null;const MA={};const mEl=(k,u)=>{const a=MA[k]||(MA[k]=new Audio());if(a.dataset.u!==u){a.dataset.u=u;a.src=u}return a};
+function moment(k,txt){if(mute)return null;const u=CSND[k]||DEF[k];if(u){try{if(CA&&CA!==MA[k])CA.pause();const a=CA=mEl(k,u);a.onended=a.onerror=null;try{a.currentTime=0}catch(e){}a.play().catch(()=>a.dispatchEvent(new Event('error')));return a}catch(e){}}else say(txt);return null}
+// Celulares só liberam o som depois de um toque: no primeiro toque 'destravamos' todos os áudios do app (mudos e por um instante).
+let UNL=false;function unlock(){if(UNL)return;UNL=true;try{dmgInit();const u=CSND.lps||DEF.lps;if(u&&LA.dataset.u!==u){LA.dataset.u=u;LA.src=u}const L=[LA,DA[0],DA[1]];Object.keys(DEF).forEach(k=>{if(k!=='dmg'&&k!=='lps')L.push(mEl(k,CSND[k]||DEF[k]))});
+ L.forEach(a=>{a.muted=true;const q=a.play();if(q&&q.then)q.then(()=>{a.pause();try{a.currentTime=0}catch(e){}a.muted=false}).catch(()=>{a.muted=false});else a.muted=false})}catch(e){}}
+['pointerdown','touchstart','keydown'].forEach(ev=>addEventListener(ev,unlock,{once:false,passive:true}));
 let un=false;addEventListener('pointerdown',()=>{if(un)return;un=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}Object.values(SFX).forEach(s=>s.a.forEach(a=>{a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{a.muted=false})}))},{passive:true});
 $('#bMute').onclick=e=>{mute=!mute;e.currentTarget.textContent=mute?'🔇':'🔊';if(mute){try{speechSynthesis.cancel();if(CA)CA.pause()}catch(x){}}play('click')};
 
@@ -404,7 +420,7 @@ function art(i,c='',x=''){const d=DECKS[i];if(!d)return `<div class="art ${c}"><
  return `<div class="art ${c}" data-i="${i}" style="--c:${ATTR[d[2]]};${u?`background-image:url('${u}')`:''}">${u?'':`<span>${d[3]}</span>`}${atr(d[2])}${x}</div>`}
 
 // ===== Navegação e modal =====
-function goTab(t){document.body.dataset.t=t;document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));$('#'+t).classList.add('on');document.querySelector(`nav [data-t=${t}]`).classList.add('on');wake(t==='duelo');if(t==='duelo')setTimeout(duelStart,60)}
+function goTab(t){document.body.dataset.t=t;sbar(t==='sorteio'&&!!document.querySelector('#resultado .pop'));document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));$('#'+t).classList.add('on');document.querySelector(`nav [data-t=${t}]`).classList.add('on');wake(t==='duelo');if(t==='duelo')setTimeout(duelStart,60)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.t==='torneio'){TV=null;rT()}if(b.dataset.t==='stats')rS();goTab(b.dataset.t);play('click')});
 function modal(h){$('#box').innerHTML=h;$('#modal').classList.add('on')}
 function fechar(){$('#modal').classList.remove('on')}
@@ -430,7 +446,9 @@ function drawPool(need){let a=shuffle(avail());if(a.length<need)a=a.concat(shuff
 function rSort(){['justo','total','draft'].forEach(m=>$('#m_'+m).classList.toggle('on',SRT.modo===m));$('#oRep').checked=!!SRT.rep;$('#oMd3').checked=!!SRT.md3;
  const n=avail().length;$('#pool').innerHTML=SRT.rep?`🔁 ${n} de ${DECKS.length} decks ainda não usados nesta volta${USED.length?` · <a onclick="resetUsed()">recomeçar volta</a>`:''}`:'';
  $('#bSort').textContent=SRT.modo==='draft'?'Sortear opções do draft':'Sortear decks'}
-function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div class="card rc ${s?'shuf':'pop'}" style="border-color:${COR[k]}"><b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s?'':`<button class="info" onclick="info(${i})">Ver Info</button>`}</div>`).join('')+(s?'':`${SRT.md3?'<div class="mini" style="margin-bottom:8px">🎯 Melhor de 3: vence quem ganhar 2 duelos</div>':''}<button class="btn" onclick="goTab('duelo')">⚔️ Ir para o duelo</button>`)}
+function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div class="card rc ${s?'shuf':'pop'}" style="border-color:${COR[k]}"><b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s?'':`<button class="info" onclick="info(${i})">Ver Info</button>`}</div>`).join('')+(s?'':`${SRT.md3?'<div class="mini" style="grid-column:1/-1;margin-bottom:4px">🎯 Melhor de 3: vence quem ganhar 2 duelos</div>':''}`);sbar(!s)}
+// Barra flutuante dividida: sortear de novo | ir para o duelo (sempre visível, sem rolar)
+function sbar(on){const e=$('#sbar');if(e)e.classList.toggle('on',!!on&&document.body.dataset.t==='sorteio')}
 function sortear(){if(busy)return;if(SRT.modo==='draft')return draftStart();
  busy=true;play('sweep');const ix=[...DECKS.keys()];let A=avail();if(A.length<2){USED=[];A=ix}const a=pick(A),near=i=>i!==a&&Math.abs(DECKS[i][1]-DECKS[a][1])<=1;
  let pool=SRT.modo==='justo'?A.filter(near):A.filter(i=>i!==a);if(!pool.length&&SRT.modo==='justo')pool=ix.filter(near);if(!pool.length)pool=ix.filter(i=>i!==a);const b=pick(pool);let n=0;
@@ -438,7 +456,7 @@ function sortear(){if(busy)return;if(SRT.modo==='draft')return draftStart();
 // Draft: cada um recebe 3 decks sorteados e escolhe 1 (Douglas primeiro, João vê a escolha dele)
 function draftStart(){busy=true;play('sweep');const P=drawPool(6);DR={o:[P.slice(0,3),P.slice(3,6)],c:[null,null],k:0};let n=0;
  const iv=setInterval(()=>{rDraft(1);play('tickU');if(++n>8){clearInterval(iv);busy=false;rDraft();play('win')}},100)}
-function rDraft(sh){const k=DR.k,o=sh?[0,1,2].map(()=>pick([...DECKS.keys()])):DR.o[k];
+function rDraft(sh){sbar(0);const k=DR.k,o=sh?[0,1,2].map(()=>pick([...DECKS.keys()])):DR.o[k];
  $('#resultado').innerHTML=(k&&!sh?`<div class="mini" style="margin-bottom:8px">Douglas escolheu <b style="color:var(--g)">${esc(dn(DR.c[0]))}</b></div>`:'')+`<div class="card" style="border-color:${COR[k]};text-align:center"><b style="color:${COR[k]};font:900 1rem Impact,sans-serif;letter-spacing:2px">${NOMES[k].toUpperCase()}, ESCOLHA SEU DECK</b><div class="cnote">Toque em um dos três · ⓘ mostra a estratégia</div>
  <div class="drf">${o.map(i=>`<div class="dro ${sh?'shuf':'pop'}" ${sh?'':`onclick="draftPick(${i})"`}>${sh?'':`<button class="ii" onclick="event.stopPropagation();info(${i})" aria-label="Ver estratégia">i</button>`}${art(i)}<b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">T${DECKS[i][1]}</span></div>`).join('')}</div></div>`}
 function draftPick(i){if(!DR||busy)return;DR.c[DR.k]=i;play('click');if(DR.k===0){DR.k=1;rDraft();return}
@@ -483,7 +501,8 @@ function undoLP(){if(over||!duel.log.length){toast(over?'O duelo já terminou':'
 const AN=[null,null],DA=[new Audio(),new Audio()];let DT=2.56,RV=null,RD=700;const RC=2000,RP=900;
 // Os LP só aparecem depois do 'É hora do duelo!': os painéis entram pelos lados e os números sobem de 0 até 8000, no tempo do efeito sonoro.
 const LA=new Audio();LA.addEventListener('loadedmetadata',()=>{if(isFinite(LA.duration)&&LA.duration>.2)RD=LA.duration*1000});
-function lpsSnd(){const u=CSND.lps||DEF.lps;if(!u||LA.dataset.u===u&&0)return;if(LA.dataset.u!==u){LA.dataset.u=u;LA.src=u}if(mute)return;try{LA.pause();LA.currentTime=0;LA.play().catch(()=>{})}catch(e){}}
+LA.addEventListener('error',()=>{if(!mute)play('boom')});
+function lpsSnd(){const u=CSND.lps||DEF.lps;if(!u||LA.dataset.u===u&&0)return;if(LA.dataset.u!==u){LA.dataset.u=u;LA.src=u}if(mute)return;try{LA.pause();LA.currentTime=0;LA.play().catch(()=>{if(!mute)play('boom')})}catch(e){}}
 function revealLP(){const el=$('#players');if(!el.classList.contains('lphide'))return Promise.resolve();
  return new Promise(ok=>{sh[0]=sh[1]=0;draw();el.classList.add('lpin');el.classList.remove('lphide');lpsSnd();RV={t0:performance.now(),D:RC};go();setTimeout(()=>el.classList.remove('lpin'),1000);setTimeout(ok,RC+RP)})}
 const dmgU=()=>CSND.dmg||DEF.dmg,dmgRate=d=>1+1.4*(1-Math.min(1,d/6000));
@@ -820,7 +839,9 @@ function fxOpen(html,ms,hook){return new Promise(ok=>{const f=$('#fx');f.classNa
  const tm=setTimeout(end,ms);f.onclick=()=>{if(Date.now()-t0>400)end()};if(hook)hook(end)})}
 const deckArt=di=>di!=null&&DECKS[di]?art(di):'<div class="art" style="--c:#556"><span>👤</span></div>';
 function showVS(){const d=duel.decks;play('clash');const snd=!mute&&(CSND.start||DEF.start);
- return fxOpen(`<div class="vsp">${[0,1].map(p=>`<div class="hf h${p}" style="--pc:${COR[p]}">${deckArt(d[p])}<div class="nm"><b>${NOMES[p].toUpperCase()}</b><small>${esc(dn(d[p]))}</small></div></div>`).join('')}<div class="vsx">VS</div><div class="cap">É HORA DO DUELO!</div></div>`,snd?14000:2700,end=>{const stop=()=>{if(CA)CA.pause();end()};setTimeout(()=>{const a=moment('start','É hora do duelo!');if(a){a.onended=end;a.onerror=end}},380);if(snd){const f=$('#fx'),old=f.onclick;f.onclick=()=>{old();if(CA)CA.pause()}}})}
+ return fxOpen(`<div class="vsp">${[0,1].map(p=>`<div class="hf h${p}" style="--pc:${COR[p]}">${deckArt(d[p])}<div class="nm"><b>${NOMES[p].toUpperCase()}</b><small>${esc(dn(d[p]))}</small></div></div>`).join('')}<div class="vsx">VS</div><div class="cap">É HORA DO DUELO!</div></div>`,snd?14000:2700,end=>{const t0=Date.now(),fin=()=>setTimeout(end,Math.max(0,2700-(Date.now()-t0)));
+  setTimeout(()=>{const a=moment('start','É hora do duelo!');if(a){a.onended=end;a.onerror=()=>{say('É hora do duelo!');fin()}}else fin()},380);
+  if(snd){const f=$('#fx'),old=f.onclick;f.onclick=()=>{old();if(CA)CA.pause()}}})}
 function duelStart(){if(duel.decks&&(duel.log.length||over))$('#players').classList.remove('lphide');if(!duel.decks||duel.ann||duel.log.length||over)return;duel.ann=1;const ask0=()=>{if(duel.first==null&&!over&&$('#duelo').classList.contains('on'))quemComeca()},ask=()=>revealLP().then(ask0);
  if(CFG.vs)showVS().then(ask);else{play('clash');const a=moment('start','É hora do duelo!');if(a){a.onended=ask;a.onerror=ask}else ask()}}
 // A carta sobe girando, vira mostrando a arte do deck vencedor e explode em luz. Na final do torneio: dourado, coroa e confete.
