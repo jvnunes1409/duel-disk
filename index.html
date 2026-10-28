@@ -445,7 +445,7 @@ function quemComeca(){if(over)return;const pv=duel.prevW;
  modal(`<h2>QUEM COMEÇA?</h2><div class="st" style="height:130px"><div id="tw"><div class="coin" id="coin">${COIN_H}</div></div></div><div class="res" id="rs">&nbsp;</div>
  <button class="btn" onclick="sortFirst()">🪙 Sortear na moeda</button><p class="cnote" style="margin:4px 0 8px">Cara = Douglas · Coroa = João</p>
  <div class="row"><button class="btn" style="border-color:var(--g);color:var(--g)" onclick="setFirst(0)">Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b)" onclick="setFirst(1)">João</button></div>
- ${pv!=null?`<p class="cnote">Pela regra, quem perdeu o duelo anterior (${NOMES[1-pv]}) escolhe quem começa.</p>`:''}`)}
+ <button class="btn" style="border-color:#c0394d;color:#ff7a8a;margin-top:8px;padding:10px" onclick="cancelDuel()">✖ Cancelar duelo</button>${pv!=null?`<p class="cnote">Pela regra, quem perdeu o duelo anterior (${NOMES[1-pv]}) escolhe quem começa.</p>`:''}`)}
 function sortFirst(){if(bt)return;bt=true;const k=Math.random()<.5;cr=Math.ceil(cr/360)*360+1800+(k?180:0);$('#coin').style.transform=`rotateY(${cr}deg)`;toss();play('coin');
  setTimeout(()=>{const r=$('#rs');if(r)r.textContent=(k?'COROA':'CARA')+' · '+NOMES[k?1:0].toUpperCase()+' COMEÇA';play('coin');bt=false;setTimeout(()=>setFirst(k?1:0),1000)},1450)}
 function setFirst(p){if(over)return;duel.first=p;rTurn();fechar();play('click');say(NOMES[p]+' começa!')}
@@ -460,7 +460,7 @@ function go(){if(!run){run=true;requestAnimationFrame(loop)}}
 // ---- Tela sempre ligada durante o duelo
 let WL=null;async function wake(on){try{if(on&&CFG.wake&&!WL&&navigator.wakeLock&&document.visibilityState==='visible'){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){WL=null}}
 document.addEventListener('visibilitychange',()=>wake(document.visibilityState==='visible'&&$('#duelo').classList.contains('on')));
-function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="if(confirm('Resetar o duelo?')){fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}">🔄 Resetar duelo</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><button class="btn" onclick="fechar();finish(0)">🏆 Douglas venceu</button><button class="btn" onclick="fechar();finish(1)">🏆 João venceu</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`)}
+function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" style="border-color:#c0394d;color:#ff7a8a" onclick="cancelDuel()">✖ Cancelar duelo</button><button class="btn" onclick="if(confirm('Resetar o duelo?')){fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}">🔄 Resetar duelo</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><button class="btn" onclick="fechar();finish(0)">🏆 Douglas venceu</button><button class="btn" onclick="fechar();finish(1)">🏆 João venceu</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`)}
 // ---- Escolher os decks manualmente (sem sorteio)
 let PK=[null,null];
 function escolher(){PK=duel.decks?[...duel.decks]:[null,null];pickM()}
@@ -471,6 +471,9 @@ function pickM(){const opt=p=>`<select id="pk${p}" onchange="PK[${p}]=this.value
  <button class="btn" ${ok?'':'disabled style="opacity:.4;margin-top:10px"'} ${ok?'style="margin-top:10px"':''} onclick="pickGo()">⚔️ Começar duelo</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Cancelar</button>`)}
 function pickGo(){if(PK[0]==null||PK[1]==null)return;const prog=duel&&(duel.log.length||lp[0]!==8000||lp[1]!==8000)&&!over;if(prog&&!confirm('Há um duelo em andamento. Descartar e começar com os decks escolhidos?'))return;
  fechar();useDecks(PK);newDuel([...PK],null,SRT.md3?mkSr():null);duelStart();play('click')}
+// Cancela o duelo atual sem salvar nada no histórico e volta ao estado inicial (decks não escolhidos)
+function cancelDuel(){if(!confirm('Cancelar este duelo? Nada será salvo no histórico.'))return;if(CA)CA.pause();try{speechSynthesis.cancel()}catch(e){}
+ fechar();const f=$('#fx');if(f){f.className='';f.innerHTML=''}newDuel(null);toast('Duelo cancelado');play('click')}
 function rematch(){fechar();const pw=LH?LH.w:null;newDuel(duel.decks,null,duel.sr?mkSr():null);duel.prevW=pw;duelStart()}
 function nextSerie(){fechar();const sr=duel.sr,pw=LH?LH.w:null;newDuel(duel.decks,null,sr);duel.prevW=pw;duelStart()}
 const BTN2='class="btn" style="border-color:#2c58b8;color:var(--mut)"';
