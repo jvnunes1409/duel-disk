@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>Duel Disk</title>
+<style>
+:root{--cy:#35e0ff;--gd:#f2c14e;--g:#3dff7a;--b:#4aa3ff;--bg:#040b22;--tx:#e6f4ff;--mut:#8fb0d8}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none}
+body{margin:0;color:var(--tx);font-family:system-ui,sans-serif;touch-action:manipulation;background:repeating-linear-gradient(45deg,rgba(242,193,78,.035) 0 2px,transparent 2px 16px),radial-gradient(ellipse at 50% 0,#243d9c,transparent 62%),radial-gradient(ellipse at 100% 100%,#4a1d7a99,transparent 55%),radial-gradient(ellipse at 0 70%,#7a2a2a55,transparent 50%),var(--bg) fixed;padding-bottom:78px}
+h1{margin:0;text-align:center;padding:10px;font:900 1.3rem Impact,"Arial Narrow",sans-serif;letter-spacing:4px;color:var(--gd);text-shadow:0 0 10px #f2c14e88}
+main{max-width:520px;margin:auto;padding:0 10px}
+section{display:none}section.on{display:block}
+nav{position:fixed;bottom:0;left:0;right:0;display:flex;background:#050f2e;border-top:2px solid var(--cy);box-shadow:0 -4px 16px #35e0ff33;padding-bottom:env(safe-area-inset-bottom)}
+nav button{flex:1;min-width:0;padding:11px 0;background:none;border:0;color:var(--mut);font-weight:800;font-size:.72rem}
+nav button.on{color:var(--cy);background:linear-gradient(#0000,#35e0ff22)}
+button{font:inherit;cursor:pointer;color:var(--tx)}
+.card{background:linear-gradient(#10265f,#0a1740);border:1px solid #2c58b8;border-radius:12px;padding:12px;margin-bottom:12px}
+.btn{width:100%;padding:15px;border-radius:10px;border:2px solid var(--gd);background:linear-gradient(#3a3f7a,#14183f);color:var(--gd);font:900 1rem Impact,sans-serif;letter-spacing:2px;text-transform:uppercase}
+.btn:active,.k:active,.ib:active{transform:scale(.95);filter:brightness(1.3)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+.tier{padding:2px 9px;border-radius:99px;font-size:.72rem;font-weight:900;color:#111}
+.t1{background:#ff5a6e}.t2{background:#ffc83d}.t3{background:#5fd39a}.t4{background:#4fb8ff}.t5{background:#9aa6c4}
+.chips{display:flex;gap:8px;margin-bottom:12px}.chips button{flex:1;padding:10px 0;border-radius:99px;border:1px solid #2c58b8;background:#0a1740;font-weight:800;color:var(--mut)}.chips button.on{border-color:var(--gd);color:var(--gd)}
+.art{--c:#888;position:relative;display:grid;place-items:center;background:linear-gradient(150deg,var(--c),#050b20 85%) center/cover;border:2px solid var(--gd);border-radius:8px;overflow:hidden}
+.art span{font-size:2rem;filter:drop-shadow(0 0 8px #000)}
+.art>.atr{position:absolute;top:3px;right:3px;width:clamp(16px,24%,34px);aspect-ratio:1/1;display:block;filter:drop-shadow(0 1px 2px #000)}.atr svg{width:100%;height:100%;display:block}
+.dk{display:flex;gap:12px;align-items:center}.dk .art{width:72px;height:72px;flex:none}.dk small{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:var(--mut);margin-top:3px;font-size:.8rem}
+.mode{display:flex;gap:8px;margin-bottom:12px}.mode button{flex:1;padding:14px 4px;border-radius:10px;border:1px solid #2c58b8;background:#0a1740;font-weight:900;color:var(--mut)}.mode button.on{border-color:var(--gd);color:var(--gd)}
+.rc{text-align:center;border-width:2px}.rc h3{margin:8px 0}
+.rc .art,.box .art{width:min(250px,100%);aspect-ratio:1/1;margin:8px auto}
+.rc .art span,.box .art span{font-size:4rem}
+.pop{animation:pop .5s cubic-bezier(.2,1.6,.4,1)}.shuf{animation:fl .1s infinite}
+@keyframes pop{from{transform:scale(.6) rotateX(60deg);opacity:0}}@keyframes fl{50%{opacity:.6;filter:hue-rotate(60deg)}}
+.info{padding:10px 18px;border-radius:10px;border:1px solid var(--gd);background:#0006;font-weight:800;margin:6px 0 2px}
+/* ---- Contador estilo Duel Disk ---- */
+.tb{display:flex;gap:8px;margin-bottom:10px}
+.ib{flex:1;padding:9px 0;font-size:1.4rem;border-radius:10px;border:2px solid var(--cy);background:linear-gradient(#17357f,#0a1a4a);box-shadow:0 0 10px #35e0ff44;display:grid;place-items:center;min-height:50px}
+#bgart{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none;background:radial-gradient(ellipse at 50% 30%,#1b4bff,#0a22b8 45%,#040f55 80%)}
+#bgart .gr{position:absolute;left:-60%;right:-60%;top:36%;height:90%;transform:perspective(340px) rotateX(63deg);transform-origin:50% 0;background:repeating-linear-gradient(90deg,rgba(130,190,255,.45) 0 2px,transparent 2px 56px),repeating-linear-gradient(0deg,rgba(130,190,255,.45) 0 2px,transparent 2px 56px);animation:gm 3.5s linear infinite;-webkit-mask-image:linear-gradient(transparent,#000 35%);mask-image:linear-gradient(transparent,#000 35%)}
+@keyframes gm{to{background-position:0 56px,0 56px}}
+#bgart .sq{position:absolute;border:1px solid rgba(150,205,255,.55);background:rgba(120,190,255,.14);animation:pl 5s ease-in-out infinite}
+@keyframes pl{50%{opacity:.15}}
+#bgart::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(3,10,40,.45),rgba(3,10,40,.1) 40%,rgba(3,10,40,.55))}
+.bc{position:absolute;width:var(--w);height:calc(var(--w)*1.46);perspective:600px;opacity:.8;z-index:1;animation:dr var(--d) ease-in-out infinite alternate}
+@keyframes dr{from{transform:rotate(var(--r))}to{transform:translate(var(--x),var(--y)) rotate(calc(var(--r) + var(--rr)))}}
+.bc .cd{position:absolute;inset:0;transform-style:preserve-3d;transition:transform 1.1s cubic-bezier(.4,.1,.2,1)}
+.bc.f .cd{transform:rotateY(180deg)}
+.bc .fc,.bc .bk2{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:3px;box-shadow:0 5px 14px #0009}
+.bc .fc{transform:rotateY(180deg);background:#10142f center/100% 100% no-repeat}
+.bc .bk2{background:radial-gradient(ellipse 26% 34% at 50% 50%,#000 0 72%,transparent 76%),repeating-conic-gradient(from 15deg at 50% 50%,#3a1a05 0 9deg,#94501a 9deg 18deg,#5e2d09 18deg 27deg);border:3px solid #d9a05a;box-sizing:border-box}
+@media(prefers-reduced-motion:reduce){.bc,#bgart .gr,#bgart .sq{animation:none}}
+.coin-ic{width:28px;height:28px;border-radius:50%;background:radial-gradient(circle at 32% 28%,#fff4b8,#e0a81e 55%,#8a5a05);border:2px solid #b27a10;box-shadow:inset 0 0 0 1.5px #ffe9a0,0 0 8px #f2c14e88;display:grid;place-items:center}
+.coin-ic::after{content:"";width:68%;height:68%;background:url("data:image/svg+xml,%3Csvg%20viewBox%3D%220%200%20100%20100%22%20fill%3D%22none%22%20stroke%3D%22%235a3d00%22%20stroke-width%3D%225%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M6%2050Q50%2012%2094%2050Q50%2088%206%2050Z%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%2214%22%20fill%3D%22%235a3d00%22%2F%3E%3Ccircle%20cx%3D%2250%22%20cy%3D%2250%22%20r%3D%225%22%20fill%3D%22%23ffe9a0%22%20stroke%3D%22none%22%2F%3E%3Cpath%20d%3D%22M20%2030Q50%208%2080%2030%22%2F%3E%3Cpath%20d%3D%22M54%2066Q58%2082%2074%2082Q90%2082%2090%2068%22%2F%3E%3C%2Fsvg%3E") center/contain no-repeat}
+.pl{display:flex;gap:6px;height:128px;padding:6px;margin-bottom:10px;border-radius:10px;border:2px solid var(--c);background:#07122f;box-shadow:0 0 14px var(--c)}
+.pl.hit{animation:sh .4s;box-shadow:0 0 24px #f33}.pl.heal{box-shadow:0 0 24px #3ff}
+@keyframes sh{20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.g{width:20px;display:flex;flex-direction:column;gap:2px;flex:none}.g i{flex:1;border-radius:2px;transition:opacity .15s}.g i.off{opacity:.12}
+.gold{flex:1;min-width:0;display:flex;align-items:center;padding:6px;border-radius:8px;background:linear-gradient(#ffe39a,#d99a1e 45%,#8d5a05);box-shadow:inset 0 0 0 2px #fff3c4aa}
+.lcd{width:100%;padding:8px 2px;text-align:center;border-radius:6px;background:linear-gradient(#7a40d8,#3a1a86);border:2px solid #20104f;font:900 clamp(1.6rem,8vw,2.3rem)/1 "Arial Black",Impact,sans-serif;color:#fff;text-shadow:0 0 8px #d5b8ff,0 2px 0 #20104f}
+.ptw{height:100%;aspect-ratio:1/1;flex:none}.ptw .art{width:100%;height:100%;border-color:#cfe7ff}
+.ptw b{position:absolute;left:0;right:0;bottom:0;padding:8px 2px 2px;text-align:center;font:900 .7rem Impact,sans-serif;letter-spacing:1px;background:linear-gradient(#0000,#000d)}
+.ptw b small{display:block;font:600 .55rem system-ui;color:var(--gd);letter-spacing:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.calc{display:flex;align-items:center;gap:10px;padding:8px 14px;margin-bottom:8px;border-radius:10px;border:2px solid var(--cy);background:linear-gradient(#050d2c,#0a1d55);box-shadow:inset 0 0 12px #000}
+.calc b{font:800 .7rem system-ui;letter-spacing:2px;color:var(--mut)}.calc span{flex:1;text-align:right;font:900 2rem "Arial Black",Impact,sans-serif;color:#fff;text-shadow:0 0 8px var(--cy)}
+.lab{display:grid;grid-template-columns:1fr 1fr;text-align:center;font:900 .8rem Impact,sans-serif;letter-spacing:2px;margin-bottom:4px}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.k{padding:14px 0;font:900 1.5rem "Arial Black",Impact,sans-serif;border-radius:10px;border:2px solid #4aa9ff;background:linear-gradient(#244b9c,#0a1d52);color:#dff3ff;text-shadow:0 0 8px var(--cy);box-shadow:inset 0 0 8px #35e0ff55}
+.k.sm{font-size:1.1rem;padding:11px 0;border-color:var(--gd);color:var(--gd)}
+.k.g1{border-color:#9dffb4;background:linear-gradient(#27c455,#0b6a2b);color:#fff}
+.k.b1{border-color:#a9d0ff;background:linear-gradient(#3a7cff,#143c9c);color:#fff}
+/* ---- Dado e moeda ---- */
+.st{height:160px;display:grid;place-items:center;perspective:700px}.res{min-height:2.4rem;font:900 1.8rem Impact,sans-serif;color:var(--gd);margin:6px 0}
+.toss{animation:toss 1.4s}@keyframes toss{0%{transform:translateY(0)}35%{transform:translateY(-50px) scale(1.25)}60%{transform:translateY(0) scale(1)}72%{transform:translateY(-14px)}85%,100%{transform:translateY(0)}}
+.cube{width:92px;height:92px;position:relative;transform-style:preserve-3d;transition:transform 1.4s cubic-bezier(.15,.7,.25,1)}
+.f{position:absolute;inset:0;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:12px;background:linear-gradient(135deg,#fff,#d6d0bd);border-radius:16px;border:1px solid #b9b19a}
+.f u{place-self:center;width:17px;height:17px;border-radius:50%;text-decoration:none}.f u.p{background:radial-gradient(circle at 35% 30%,#555,#000)}
+.f1 u.p{width:24px;height:24px;background:radial-gradient(circle at 35% 30%,#ff8a8a,#b00)}
+.f1{transform:translateZ(46px)}.f6{transform:rotateY(180deg) translateZ(46px)}.f2{transform:rotateY(90deg) translateZ(46px)}.f5{transform:rotateY(-90deg) translateZ(46px)}.f3{transform:rotateX(90deg) translateZ(46px)}.f4{transform:rotateX(-90deg) translateZ(46px)}
+.coin{width:96px;height:96px;position:relative;transform-style:preserve-3d;transition:transform 1.4s cubic-bezier(.2,.7,.3,1)}
+.coin div{position:absolute;inset:0;border-radius:50%;backface-visibility:hidden;display:grid;place-items:center;background:radial-gradient(circle at 32% 28%,#fff4b8,#e0a81e 55%,#8a5a05);border:4px solid #b27a10;box-shadow:inset 0 0 0 3px #ffe9a0,inset 0 0 0 6px #c58f16,inset 0 0 14px #5a3d0088,0 2px 8px #000a}.coin div svg{width:62%;height:62%;filter:drop-shadow(0 1px 0 #fff3b0)}.coin .bk{transform:rotateY(180deg)}
+/* ---- Histórico ---- */
+#score{text-align:center;font:900 1.8rem Impact,sans-serif;margin:6px 0 12px}
+.hh{display:flex;justify-content:space-between;align-items:center}.hh small{color:var(--mut)}.hd{margin:6px 0;font-weight:700}.hd em{color:var(--gd);font-style:normal;font-size:.8rem}
+.hs{display:flex;gap:14px;flex-wrap:wrap;font-size:.85rem;color:var(--mut)}
+details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg{font-size:.8rem;padding:2px 0}
+#modal{position:fixed;inset:0;background:#000c;display:none;place-items:center;padding:16px;z-index:9}#modal.on{display:grid}
+.box{background:linear-gradient(#10265f,#0a1740);border:2px solid var(--gd);border-radius:16px;padding:18px;max-width:400px;width:100%;text-align:center;max-height:94vh;overflow:auto}
+.box h2{margin:0 0 8px;color:var(--gd);font-family:Impact,sans-serif;letter-spacing:2px}.box .btn{margin-top:8px}
+.clh{margin:14px 0 6px;color:var(--gd);font:900 .95rem Impact,sans-serif;letter-spacing:2px;text-align:left}
+.cg{margin:10px 0 4px;color:var(--cy);font-weight:800;font-size:.78rem;letter-spacing:1px;text-align:left}
+.cr{display:flex;gap:10px;align-items:center;padding:6px;border-radius:8px;border:1px solid #2c58b8;background:#0b1a47;margin-bottom:5px;text-align:left;cursor:pointer}
+.cr:active{background:#14306f}
+.cr .ph{position:relative;width:38px;height:55px;border-radius:3px;flex:none;background:#10142f center/cover no-repeat}.qt{position:absolute;top:-5px;right:-6px;background:var(--gd);color:#111;font:900 .72rem Impact,sans-serif;letter-spacing:.5px;padding:1px 6px;border-radius:99px;border:1.5px solid #fff;box-shadow:0 1px 4px #000a;z-index:1}.cdv .bigw{position:relative;width:42%;flex:none}.cdv .bigw .big{width:100%}.cdv .bigw .qt{font-size:.95rem;top:-7px;right:-7px;padding:2px 9px}
+.cr b{font-size:.84rem;display:block;line-height:1.2}.cr small{color:var(--mut);font-size:.72rem}.cr em{color:#ffb36b;font-style:normal;font-size:.7rem}
+.cdv{display:flex;gap:10px;align-items:flex-start;text-align:left}.cdv .big{width:42%;aspect-ratio:421/614;border-radius:4px;flex:none;background:#10142f center/cover no-repeat;box-shadow:0 3px 10px #000a}
+.ctb{width:100%;border-collapse:collapse;font-size:.8rem}.ctb td{border:1px solid #2c58b8;padding:5px 6px;vertical-align:middle}.ctb td.ck{background:#10265f;color:var(--mut);width:36%}
+.ctb .atr{position:static;display:inline-block;width:18px;height:18px;vertical-align:middle;margin-right:4px}
+.ctx{margin-top:10px;border:1px solid #2c58b8;border-radius:8px;padding:10px;text-align:left;font-size:.85rem;line-height:1.45;background:#0b1a47}
+.ctx h4{margin:0 0 6px;color:var(--gd);font-size:.85rem}.cnote{color:var(--mut);font-size:.72rem;margin-top:6px}
+.inf{text-align:left;font-size:.88rem;line-height:1.45}.inf p{margin:8px 0}
+/* ---- Torneio ---- */
+.tstp{display:flex;gap:5px;margin-bottom:12px}
+.tstp button{flex:1;min-width:0;padding:8px 2px;border-radius:10px;border:1px solid #2c58b8;background:#0a1740;color:var(--mut);font-weight:800;font-size:.7rem;line-height:1.25}
+.tstp button small{display:block;font-size:.62rem;opacity:.85;font-weight:700}
+.tstp button.ok{border-color:#3dff7a88;color:#9dffb4}
+.tstp button.on{border-color:var(--gd);color:var(--gd);background:linear-gradient(#3a3f7a,#14183f)}
+.thd{text-align:center}.thd .tsc{font:900 1.5rem Impact,sans-serif}.thd small{color:var(--mut);font-size:.75rem}
+.tbar{height:8px;border-radius:99px;background:#0007;overflow:hidden;margin:8px 0 4px}.tbar i{display:block;height:100%;background:linear-gradient(90deg,var(--cy),var(--gd));transition:width .4s}
+.thd .btn{margin-top:10px;font-size:.9rem;padding:13px}
+.tm{padding:10px}.tm.ready{border-color:var(--gd);box-shadow:0 0 12px #f2c14e44}
+.tmh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.tmh b{font:900 .85rem Impact,sans-serif;letter-spacing:1.5px;color:var(--gd)}.tmh span{font-size:.7rem;color:var(--mut);font-weight:700}
+.tm.done .tmh span{color:var(--g)}
+.ts{display:flex;align-items:center;gap:10px;padding:6px;border-radius:9px;background:#07122f;border-left:4px solid var(--pc);cursor:pointer}
+.ts .art{width:48px;height:48px;flex:none;border-width:1.5px}.ts .art span{font-size:1.4rem}
+.ts .tn{flex:1;min-width:0}.ts .tn small{display:block;font:900 .62rem Impact,sans-serif;letter-spacing:1.5px;color:var(--pc)}
+.ts .tn b{font-size:.88rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ts .tn b.src{color:var(--mut);font-style:italic;font-weight:600}
+.ts .tier{font-size:.6rem;padding:1px 6px}
+.ts.win{background:linear-gradient(90deg,#f2c14e30,#07122f 70%);box-shadow:inset 0 0 0 1px #f2c14e99}
+.ts.lose{opacity:.45;filter:grayscale(.8)}.ts.lose .tn b{text-decoration:line-through}
+.tlp{font:900 1rem "Arial Black",Impact,sans-serif;text-align:right}.tlp small{display:block;font:700 .55rem system-ui;color:var(--mut);letter-spacing:1px}
+.tvs{text-align:center;font:900 .68rem Impact,sans-serif;letter-spacing:3px;color:var(--mut);margin:3px 0}
+.tmf{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.74rem;color:var(--mut);min-height:20px}.tmf span{flex:1}
+.tplay{padding:9px 14px;border-radius:9px;border:2px solid var(--gd);background:linear-gradient(#3a3f7a,#14183f);color:var(--gd);font:900 .85rem Impact,sans-serif;letter-spacing:1px;white-space:nowrap}
+.tund{padding:6px 10px;border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--mut);font-size:.72rem;font-weight:800;white-space:nowrap}
+.tplay:active,.tund:active,.tstp button:active{transform:scale(.95)}
+.ph0{--c:#2a3558}.ph0 span{color:#ffffff66;font-family:Impact,sans-serif}
+.gt{width:100%;border-collapse:collapse;font-size:.82rem}.gt th{color:var(--mut);font-size:.66rem;padding:4px 3px;font-weight:800}
+.gt td{padding:6px 3px;border-top:1px solid #2c58b8;text-align:center}.gt td.dn{text-align:left;font-weight:800;max-width:0;width:52%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gt tr.q td:first-child{color:var(--g);font-weight:900}.gt tr.out{opacity:.45}.gt em{font-style:normal;font-size:.62rem;color:var(--gd);display:block}
+.ghd{display:flex;justify-content:space-between;align-items:center}.ghd .clh{margin:0 0 6px}
+.champ{text-align:center;border:2px solid var(--gd);animation:glow 1.6s ease-in-out infinite alternate}
+.champ .art{width:min(220px,80%);aspect-ratio:1/1;margin:8px auto}.champ .art span{font-size:4rem}
+.champ h2{margin:6px 0 0;color:var(--gd);font:900 1.6rem Impact,sans-serif;letter-spacing:4px}.champ h3{margin:4px 0}.champ p{margin:4px 0;color:var(--mut);font-size:.85rem}
+@keyframes glow{to{box-shadow:0 0 30px #f2c14ebb}}
+.tmb{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;margin-bottom:10px;border-radius:10px;border:1px solid var(--gd);background:#f2c14e1a;color:var(--gd);font:900 .8rem Impact,sans-serif;letter-spacing:1.5px;cursor:pointer}
+.tmb small{font:700 .7rem system-ui;color:var(--mut);letter-spacing:0;white-space:nowrap}
+.htl{font-size:.75rem;color:var(--gd);font-weight:800;margin-top:2px}
+.flash{animation:fl2 1.4s}@keyframes fl2{25%,60%{box-shadow:0 0 0 3px var(--cy),0 0 20px var(--cy)}}
+.tfl{list-style:none;padding:0;margin:8px 0;text-align:left;font-size:.84rem;line-height:1.4}.tfl li{display:flex;gap:10px;align-items:baseline;padding:7px 0;border-top:1px solid #2c58b855}
+.tfl li b{flex:none;width:86px;color:var(--gd);font:900 .8rem Impact,sans-serif;letter-spacing:1px}.tfl li span{color:var(--mut)}
+.trule{text-align:left;font-size:.82rem;line-height:1.45;color:var(--mut)}.trule p{margin:6px 0}.trule b{color:var(--tx)}
+.cmp{display:flex;gap:10px;align-items:center;padding:6px 0;border-top:1px solid #2c58b855;text-align:left}.cmp .art{width:44px;height:44px;flex:none;border-width:1.5px}.cmp .art span{font-size:1.2rem}
+.cmp b{display:block;font-size:.88rem}.cmp small{color:var(--mut);font-size:.72rem}
+/* ---- Estatísticas ---- */
+.sh{margin:18px 0 8px;color:var(--gd);font:900 1rem Impact,sans-serif;letter-spacing:3px}
+.vsh{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;text-align:center}.vsh b{display:block;font:900 .8rem Impact,sans-serif;letter-spacing:2px}
+.vsh .bn{font:900 2.6rem/1 "Arial Black",Impact,sans-serif;color:#fff}.vsh .x{color:var(--mut);font:900 1.2rem Impact,sans-serif;padding-bottom:8px}
+.sbar{display:flex;gap:2px;height:12px;margin:10px 0 4px}.sbar i{display:block;height:100%}.sbar i:first-child{border-radius:99px 0 0 99px}.sbar i:last-child{border-radius:0 99px 99px 0}
+.sbl{display:flex;justify-content:space-between;font-size:.75rem;color:var(--mut);font-weight:700;margin-bottom:6px}
+.sv{display:grid;grid-template-columns:1fr 1.25fr 1fr;align-items:center;gap:6px;padding:7px 0;border-top:1px solid #2c58b855}
+.sv span{color:var(--mut);font-size:.7rem;text-align:center;font-weight:700;line-height:1.2}
+.sv b{font:800 .95rem system-ui}.sv b:first-child{text-align:left}.sv b:last-child{text-align:right}.sv b.best{color:var(--gd)}.sv b.best::after{content:" ★";font-size:.7rem}.sv b:first-child.best::after{content:none}.sv b:first-child.best::before{content:"★ ";font-size:.7rem}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tile{background:#07122f;border:1px solid #2c58b8;border-radius:10px;padding:10px;min-width:0}
+.tile small{display:block;color:var(--mut);font-size:.64rem;font-weight:800;letter-spacing:.6px;text-transform:uppercase}
+.tile b{display:block;font:900 1.2rem "Arial Black",Impact,sans-serif;margin:3px 0 1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile b.nm{font:800 .92rem system-ui}.tile span{display:block;font-size:.7rem;color:var(--mut);line-height:1.3}
+.rec{display:flex;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #2c58b855}.rec:first-of-type{border-top:0}
+.rec i{font-style:normal;font-size:1.4rem;width:30px;text-align:center;flex:none}.rec div{flex:1;min-width:0}.rec b{display:block;font-size:.86rem}.rec small{color:var(--mut);font-size:.72rem}.rec em{font:900 1.05rem "Arial Black",Impact,sans-serif;font-style:normal;flex:none}
+.rk{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #2c58b855;cursor:pointer}.rk:active{background:#14306f}
+.rk .no{width:22px;flex:none;font:900 .85rem Impact,sans-serif;color:var(--mut);text-align:center}
+.rk .art{width:40px;height:40px;flex:none;border-width:1.5px}.rk .art span{font-size:1.1rem}
+.rk .mid{flex:1;min-width:0}.rk .mid b{display:block;font-size:.85rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb{height:6px;background:#0008;border-radius:99px;margin-top:5px;overflow:hidden}.pb i{display:block;height:100%;background:var(--gd);border-radius:99px}
+.rk .vd{text-align:right;flex:none;font-weight:800;font-size:.85rem}.rk .vd small{display:block;color:var(--mut);font-size:.68rem;font-weight:700}
+.hb{display:grid;grid-template-columns:62px 1fr auto;white-space:nowrap;gap:8px;align-items:center;padding:6px 0;font-size:.8rem}.hb .pb{margin:0;height:10px}.hb>span:last-child{text-align:right;color:var(--mut);font-size:.72rem}.hb>span:last-child b{color:var(--tx);font-size:.82rem}
+.chw{position:relative;margin-top:4px}.chw svg{width:100%;display:block;touch-action:none}
+.ctt{position:absolute;top:0;pointer-events:none;background:#050d2c;border:1px solid var(--cy);border-radius:8px;padding:5px 8px;font-size:.72rem;white-space:nowrap;transform:translateX(-50%);display:none;z-index:2;line-height:1.35}
+.ctt b{color:#fff}
+.mini{color:var(--mut);font-size:.72rem;text-align:center;margin-top:4px}
+/* ---- Animações (VS e vitória) ---- */
+#fx{position:fixed;inset:0;z-index:30;display:none;overflow:hidden;cursor:pointer;perspective:900px}#fx.on{display:block}
+#fx.out{animation:fdo .35s forwards}@keyframes fdo{to{opacity:0}}@keyframes fdi{from{opacity:0}}
+.vsp{position:absolute;inset:0;background:#000d;animation:fdi .2s}
+.vsp .hf{position:absolute;left:0;right:0;height:52%;display:flex;align-items:center;gap:16px;padding:0 6vw}
+.vsp .h0{top:0;background:linear-gradient(115deg,#0d5a2a,#07122f 72%);clip-path:polygon(0 0,100% 0,100% 78%,0 100%);animation:sl .45s cubic-bezier(.2,.9,.3,1.15) both}
+.vsp .h1{bottom:0;background:linear-gradient(295deg,#0d3a86,#07122f 72%);clip-path:polygon(0 22%,100% 0,100% 100%,0 100%);flex-direction:row-reverse;text-align:right;animation:sr .45s cubic-bezier(.2,.9,.3,1.15) both}
+@keyframes sl{from{transform:translateX(-105%)}}@keyframes sr{from{transform:translateX(105%)}}
+.vsp .art{width:38vw;max-width:190px;aspect-ratio:1/1;flex:none;border-width:3px;box-shadow:0 0 28px var(--pc)}.vsp .art span{font-size:3.4rem}
+.vsp .h0 .art{margin-top:-6vh}.vsp .h1 .art{margin-top:6vh}
+.vsp .nm{min-width:0}.vsp .nm b{display:block;font:900 1.5rem Impact,sans-serif;letter-spacing:3px;color:var(--pc);text-shadow:0 0 12px var(--pc)}.vsp .nm small{display:block;font-weight:800;font-size:.85rem;color:#fff}
+.vsp .vsx{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font:900 5.5rem/1 Impact,sans-serif;color:var(--gd);text-shadow:0 0 24px #f2c14e,0 5px 0 #6a4a00;animation:slm .5s .35s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slm{from{transform:translate(-50%,-50%) scale(4);opacity:0}}
+.vsp .cap{position:absolute;left:0;right:0;top:50%;margin-top:52px;text-align:center;font:900 1.35rem Impact,sans-serif;letter-spacing:4px;color:#fff;text-shadow:0 0 12px var(--cy);animation:fdi .4s .75s both}
+.vic{position:absolute;inset:0;display:grid;place-items:center;animation:fdi .3s}
+.vic.shk{animation:fdi .3s,vsh .45s 1s}@keyframes vsh{20%{transform:translate(-10px,6px)}40%{transform:translate(9px,-7px)}60%{transform:translate(-6px,4px)}80%{transform:translate(4px,-2px)}}
+.vic .rays{position:absolute;left:50%;top:42%;width:220vmax;height:220vmax;margin:-110vmax 0 0 -110vmax;background:repeating-conic-gradient(#ffffff26 0 5deg,transparent 5deg 15deg);-webkit-mask-image:radial-gradient(circle,#000 0,transparent 32%);mask-image:radial-gradient(circle,#000 0,transparent 32%);animation:spin 14s linear infinite,fdi 1s .9s both}
+@keyframes spin{to{transform:rotate(360deg)}}
+.vic .ring{position:absolute;left:50%;top:42%;width:120px;height:120px;margin:-60px 0 0 -60px;border-radius:50%;border:5px solid var(--vc);opacity:0;animation:rng .9s .95s ease-out}
+.vic .ring.r2{animation-delay:1.12s}@keyframes rng{0%{opacity:1;transform:scale(.3)}100%{opacity:0;transform:scale(7)}}
+.vic .stage{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);perspective:1000px}
+.vic .vc{width:min(58vw,250px);aspect-ratio:421/614;position:relative;transform-style:preserve-3d;animation:summon 1.05s cubic-bezier(.3,.6,.25,1) both}
+@keyframes summon{0%{transform:translateY(70vh) scale(.25) rotateY(0)}70%{transform:translateY(0) scale(1.18) rotateY(900deg)}84%{transform:scale(.96) rotateY(900deg)}100%{transform:scale(1) rotateY(900deg)}}
+.vic .vc>div{position:absolute;inset:0;border-radius:8px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.vic .vb{background:radial-gradient(ellipse 26% 34% at 50% 50%,#000 0 72%,transparent 76%),repeating-conic-gradient(from 15deg at 50% 50%,#3a1a05 0 9deg,#94501a 9deg 18deg,#5e2d09 18deg 27deg);border:4px solid #d9a05a}
+.vic .vf{transform:rotateY(180deg);background:linear-gradient(160deg,#c9a24a,#6b4a12);padding:7% 7% 0;display:flex;flex-direction:column;box-shadow:0 0 0 2px #fff3c4 inset,0 0 40px var(--vc);animation:pul 1.6s 1.1s ease-in-out infinite alternate}
+@keyframes pul{to{box-shadow:0 0 0 2px #fff3c4 inset,0 0 80px var(--vc),0 0 140px var(--vc)}}
+.vic .vf .nb{background:#1a1408cc;color:#fff3c4;font:900 .82rem Impact,sans-serif;letter-spacing:1px;padding:4px 6px;border-radius:3px;margin-bottom:6%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vic .vf .art{width:100%;aspect-ratio:1/1;border:3px solid #3a2a08;border-radius:2px}.vic .vf .art span{font-size:4.5rem}
+.vic .vf .ft{flex:1;display:grid;place-items:center;font:900 .78rem Impact,sans-serif;letter-spacing:3px;color:#2a1c04}
+.vic .ttl{position:absolute;left:0;right:0;top:calc(42% + min(42vw,182px) + 14px);text-align:center;padding:0 12px}
+.vic .ttl b{display:block;font:900 clamp(2rem,10vw,3rem)/1.05 Impact,sans-serif;letter-spacing:3px;color:#fff;text-shadow:0 0 18px var(--vc),0 4px 0 #000;animation:slt .5s 1s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes slt{from{transform:scale(3);opacity:0}}
+.vic .ttl small{display:block;margin-top:6px;font-weight:800;font-size:1rem;color:var(--gd);animation:fdi .5s 1.35s both}
+.vic .tip{position:absolute;bottom:calc(24px + env(safe-area-inset-bottom));left:0;right:0;text-align:center;color:#fff8;font-size:.75rem;animation:fdi .5s 2.2s both}
+.vic .sp{position:absolute;left:50%;top:42%;width:8px;height:8px;margin:-4px;border-radius:50%;background:var(--sc);box-shadow:0 0 10px var(--sc);opacity:0;animation:brs 1s calc(.95s + var(--dl)) ease-out}
+@keyframes brs{0%{opacity:1;transform:rotate(var(--a)) translateX(0) scale(1.4)}100%{opacity:0;transform:rotate(var(--a)) translateX(var(--ds)) scale(.3)}}
+.vic .cf{position:absolute;top:-4vh;width:9px;height:14px;background:var(--sc);opacity:0;animation:cnf var(--du) var(--dl) linear infinite}
+@keyframes cnf{0%{opacity:1;transform:translate(0,0) rotate(0)}100%{opacity:1;transform:translate(var(--dx),110vh) rotate(var(--rt))}}
+.vic .crn{position:absolute;left:50%;top:calc(42% - min(42vw,182px) - 46px);transform:translateX(-50%);font-size:3.2rem;animation:crn .6s 1.5s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 0 12px #f2c14e)}
+@keyframes crn{from{transform:translate(-50%,-80px);opacity:0}}
+@media(prefers-reduced-motion:reduce){.vic .rays,.vic .cf{animation:none}}
+/* ---- Configurações de som ---- */
+.opt{text-align:left;margin:10px 0}.opt>b{display:block;font-size:.85rem;margin-bottom:5px}
+.seg{display:flex;gap:6px}.seg button{flex:1;padding:9px 2px;border-radius:9px;border:1px solid #2c58b8;background:#0a1740;color:var(--mut);font-weight:800;font-size:.78rem}.seg button.on{border-color:var(--gd);color:var(--gd)}
+.slot{display:flex;gap:8px;align-items:center;padding:8px 0;border-top:1px solid #2c58b855;text-align:left}.slot>div{flex:1;min-width:0}.slot b{display:block;font-size:.85rem}.slot small{color:var(--mut);font-size:.72rem}
+/* ---- Turnos, desfazer, ½ LP, aviso rápido ---- */
+.trw{display:flex;gap:4px;flex:none;align-self:stretch}.trw button{border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--tx)}
+.trb0{width:30px;font:900 1.3rem Impact,sans-serif;color:var(--mut)!important}
+.trb{padding:5px 10px;text-align:left;min-width:108px;border-color:var(--gd)!important}.trb b{display:block;font:900 .85rem Impact,sans-serif;letter-spacing:1.5px;color:var(--gd)}.trb small{display:block;font-weight:800;font-size:.72rem;white-space:nowrap}
+.trw button:active{transform:scale(.95)}
+.k.hf0{border-color:#9dffb4;color:#9dffb4}.k.hf1{border-color:#a9d0ff;color:#a9d0ff}.k.ud{border-color:#ffb36b;color:#ffb36b}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translate(-50%,16px);background:#050d2c;border:1px solid var(--cy);padding:9px 16px;border-radius:99px;font-weight:800;font-size:.85rem;opacity:0;transition:.25s;pointer-events:none;z-index:40;white-space:nowrap;box-shadow:0 4px 16px #000a}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+/* ---- Sorteio: modos e opções ---- */
+.mode button small{display:block;font-size:.62rem;font-weight:700;opacity:.8;margin-top:2px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.tg{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;border:1px solid #2c58b8;background:#0a1740;font-weight:800;font-size:.85rem;cursor:pointer}
+.tg input{appearance:none;-webkit-appearance:none;width:42px;height:24px;border-radius:99px;background:#24345e;position:relative;flex:none;margin:0;transition:background .2s;cursor:pointer}
+.tg input::after{content:"";position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:transform .2s}
+.tg input:checked{background:var(--gd)}.tg input:checked::after{transform:translateX(18px)}
+.tg small{display:block;color:var(--mut);font-weight:600;font-size:.72rem;margin-top:1px}
+#pool a{color:var(--cy);text-decoration:underline;cursor:pointer}
+.drf{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+.dro{position:relative;padding:6px;border-radius:10px;border:1px solid #2c58b8;background:#07122f;cursor:pointer;text-align:center}.dro:active{transform:scale(.95)}
+.dro .art{width:100%;aspect-ratio:1/1}.dro .art span{font-size:2rem}
+.dro b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:.74rem;line-height:1.2;margin:6px 0 4px;min-height:2.4em}.dro .tier{font-size:.6rem}
+.dro .ii{position:absolute;top:2px;left:2px;width:26px;height:26px;border-radius:50%;border:1px solid #fff8;background:#000a;color:#fff;font:800 .8rem system-ui;z-index:2}
+.outx{width:100%;height:36vh;background:#07122f;color:var(--tx);border:1px solid #2c58b8;border-radius:8px;padding:8px;font:12px/1.45 ui-monospace,Menlo,Consolas,monospace;-webkit-user-select:text;user-select:text;white-space:pre;overflow:auto;resize:none}
+.cf3{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:5px}.cf3 span{font-size:.62rem;color:var(--mut);background:#0a1740;border:1px solid #2c58b8;border-radius:6px;padding:2px 3px;text-align:center;white-space:nowrap}.cf3 b{color:var(--tx)}
+.cfr{flex:none;text-align:right;min-width:78px}.cfr>b{display:block;font:900 1.15rem "Arial Black",Impact,sans-serif}.cfr>b.pos{color:var(--g)}.cfr>b.neg{color:#ff7a8a}.cfr>small{display:block;color:var(--mut);font-size:.6rem;margin-bottom:3px}
+.srs{font:900 1.4rem Impact,sans-serif;letter-spacing:2px;margin:6px 0}
+/* ---- Carta MVP ---- */
+.mvpb{display:block;width:100%;margin:10px 0 2px;padding:12px;border-radius:10px;border:1px dashed var(--gd);background:#f2c14e14;color:var(--gd);font-weight:800;font-size:.9rem}.mvpb small{color:var(--mut);font-weight:700;margin-left:4px}
+.srch{width:100%;padding:11px 12px;border-radius:10px;border:1px solid #2c58b8;background:#07122f;color:var(--tx);font:600 1rem system-ui;margin:4px 0 10px;-webkit-user-select:text;user-select:text}
+#mvl{max-height:50vh;overflow:auto;text-align:left;margin-bottom:6px}
+.rk .ph{width:30px;height:44px;border-radius:3px;flex:none;background:#10142f center/cover no-repeat;border:1px solid #2c58b8}
+.rk .mid small{display:block;color:var(--mut);font-size:.7rem}
+/* ---- Conquistas, Elo, tiers ---- */
+.ach{display:flex;gap:10px;align-items:center;padding:7px 0;border-top:1px solid #2c58b855;text-align:left}
+.ach>i{font-style:normal;font-size:1.5rem;width:34px;text-align:center;flex:none;filter:grayscale(1);opacity:.35}.ach.on>i{filter:none;opacity:1}
+.ach>div{flex:1;min-width:0}.ach b{display:block;font-size:.85rem}.ach small{color:var(--mut);font-size:.72rem}.ach:not(.on) b{color:var(--mut)}
+.who{display:flex;gap:4px;flex:none}.who em{font:900 .72rem Impact,sans-serif;font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;border:1.5px solid #2c58b8;color:#2c58b8}.who em.y{border-color:var(--pc);background:var(--pc);color:#07122f}
+.achn .ach{border:1px solid var(--gd);border-radius:10px;padding:8px;margin-bottom:6px;background:#f2c14e14;animation:pop .5s cubic-bezier(.2,1.6,.4,1)}
+.sug{flex:none;padding:6px 9px;border-radius:8px;border:1px solid #2c58b8;font-weight:900;font-size:.74rem;background:#0a1740;color:var(--mut)}.sug.up{border-color:var(--g);color:var(--g)}.sug.dn{border-color:#ff8a8a;color:#ff8a8a}
+.elo{font:900 .95rem "Arial Black",Impact,sans-serif;flex:none;width:46px;text-align:right}
+.tset{display:flex;gap:6px;justify-content:center;margin:8px 0 2px}.tset button{width:46px;padding:6px 0;border-radius:99px;border:1.5px solid #2c58b8;background:#0a1740;font-weight:900;font-size:.75rem;color:var(--mut)}.tset button.on{color:#111;border-color:#fff}.tset button.t1{background:#ff5a6e}.tset button.t2{background:#ffc83d}.tset button.t3{background:#5fd39a}.tset button.t4{background:#4fb8ff}.tset button.t5{background:#9aa6c4}
+.cnote a{color:var(--cy);text-decoration:underline;cursor:pointer}
+.rk.sel{background:#f2c14e1f;box-shadow:inset 3px 0 0 var(--gd)}
+.lgn{display:flex;align-items:center;gap:6px;min-width:0}.lgn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lgt .art{width:26px;height:26px;flex:none;border-width:1px}.lgt .art span{font-size:.8rem}.lgt .art>.atr{display:none}
+.slot button,.slot label{flex:none;padding:8px 10px;border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--tx);font-size:.85rem;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="bgart"><div class="gr"></div></div>
+<h1>⚡ DUEL DISK ⚡</h1>
+<main>
+<section id="decks"><div class="chips" id="filtro"></div><div id="lista"></div></section>
+<section id="sorteio">
+  <div class="mode"><button id="m_justo" onclick="setMode('justo')">⚖️ Justo<small>tiers parecidos</small></button><button id="m_total" onclick="setMode('total')">🎲 Total<small>qualquer deck</small></button><button id="m_draft" onclick="setMode('draft')">🃏 Draft<small>escolha entre 3</small></button></div>
+  <div class="opts"><label class="tg"><input type="checkbox" id="oRep" onchange="SRT.rep=this.checked;saveSort();rSort()"><span>🔁 Não repetir decks<small>só repete depois de usar todos os 24</small></span></label><label class="tg"><input type="checkbox" id="oMd3" onchange="SRT.md3=this.checked;saveSort();rSort()"><span>🎯 Melhor de 3<small>vence quem ganhar 2 duelos com os mesmos decks</small></span></label></div>
+  <div id="pool" class="cnote" style="text-align:center;margin:-2px 0 10px"></div>
+  <button class="btn" id="bSort" onclick="sortear()">Sortear decks</button><div id="resultado" style="margin-top:12px"></div>
+</section>
+<section id="torneio"><div id="tour"></div></section>
+<section id="duelo" class="on">
+  <div id="tmb"></div>
+  <div class="tb"><button class="ib" onclick="menu()">☰</button><button class="ib" onclick="escolher()" aria-label="Escolher decks">📚</button><button class="ib" onclick="dado()">🎲</button><button class="ib" onclick="moeda()"><span class="coin-ic"></span></button><button class="ib" id="bMute">🔊</button></div>
+  <div id="players"></div>
+  <div class="calc"><div class="trw"><button class="trb0" onclick="turn(-1)" aria-label="Voltar um turno">‹</button><button class="trb" id="trb" onclick="turn(1)" aria-label="Passar o turno"></button></div><span id="amt" aria-label="Valor">0</span></div>
+  <div class="lab"><span style="color:var(--g)">DOUGLAS</span><span style="color:var(--b)">JOÃO</span></div>
+  <div class="pad" id="pad"></div>
+</section>
+<section id="stats"><div id="stx"></div></section>
+<section id="hist"><div id="score"></div><div id="hl"></div><div class="row" style="margin:10px 0"><button class="btn" id="bTxt" style="padding:12px;font-size:.8rem">📄 Exportar TXT</button><button class="btn" id="bExp" style="padding:12px;font-size:.8rem">💾 Backup</button><label class="btn" style="padding:12px;font-size:.85rem;text-align:center;cursor:pointer">⬇ Importar<input type="file" id="fImp" accept=".json,application/json" hidden></label></div><p class="cnote" style="text-align:center;margin:-4px 0 10px">O TXT é para ler em qualquer aparelho. O backup (.json) é para restaurar ou juntar com outro celular e leva duelos, torneio, campeões, áudios próprios, tiers e configurações.</p><button class="btn" id="bClear" style="border-color:#2c58b8;color:var(--mut)">Limpar histórico</button></section>
+</main>
+<nav><button data-t="decks">📚<br>Decks</button><button data-t="sorteio">🎴<br>Sorteio</button><button data-t="torneio">🏟️<br>Torneio</button><button data-t="duelo" class="on">⚔️<br>Duelo</button><button data-t="stats">📊<br>Stats</button><button data-t="hist">🏆<br>Histórico</button></nav>
+<div id="modal"><div class="box" id="box"></div></div>
+<div id="fx"></div>
+<div id="toast" role="status"></div>
+
+<script>
+// Deck: [nome, tier, atributo, emoji, estratégia, pontos fortes, pontos fracos, carta para buscar a arte, (opcional) URL/caminho de imagem própria]
+const DECKS=[
+["Reis de Fogo",4,"FOGO","🔥","Destrói os próprios monstros FIRE para ativar efeitos. Fire King High Avatar Garunix volta quando um FIRE seu é destruído e ganha ATK devorando outro monstro; a Fire King Island vem direto do deck.","Remoção em massa (o Xyz Rank 8 limpa o campo), muita sinergia e boa recuperação.","Precisa de monstros FIRE para destruir e trava se o monstro-chave for negado.","Fire King High Avatar Garunix"],
+["O Rei Carmesim",1,"TREVAS","👑","Deck do Jack Atlas: invoca Red Dragon Archfiend por Sincro e enche o campo de Resonators para chegar em Sincros maiores, como o Red Nova Dragon.","Combos flexíveis e resistentes, Extra Deck enorme e destruição de todos os monstros em ataque do oponente.","Exige conhecer os combos e sofre se o Crimson Resonator ou o Red Rising Dragon forem negados.","Red Dragon Archfiend"],
+["Yusei Fudo",1,"VENTO","⭐","Invocações Sincro com as cartas do Yusei (Stardust Dragon é o símbolo). Vem com 50 cartas e cartas modernas de uso geral.","Deck moderno e completo, com cartas inéditas e boas interrupções.","Pede prática com Sincro e os monstros-base são frágeis sozinhos.","Stardust Dragon"],
+["Crow Hogan",1,"TREVAS","🐦","Blackwings: pássaros rápidos que invocam Sincros em sequência para ganhar vantagem logo no começo.","Muito veloz, com os Blackwings mais recentes e cartas modernas de apoio.","Monstros de pouco ATK e dependência de Sincro; precisa de boa abertura.","Black-Winged Dragon"],
+["Horda Zumbi",2,"TREVAS","💀","Zombie World cria o campo dos zumbis: com um Field Spell em jogo, o monstro-chefe volta do cemitério toda Standby Phase, e uma Magia rouba monstros do oponente.","Recursão constante, controle e ótimo custo-benefício.","Depende de Zombie World e sofre contra banimento de cemitério.","Red-Eyes Zombie Necro Dragon"],
+["Akiza Izinski",1,"FOGO","🌹","Deck da Black Rose: gira em torno do Black Rose Dragon e das cartas novas da Akiza (Doom of Dimensions).","Black Rose Dragon limpa o campo e o deck traz cartas modernas de apoio.","Depende de Sincro e do combo certo; pode ficar sem resposta se for interrompido.","Black Rose Dragon"],
+["Encantadoras Espirituais",3,"FOGO","🔮","Magas que roubam monstros do oponente pelo mesmo Atributo e enchem o campo de familiares. Spiritual Arts tiram cartas da mão, enterram cartas no deck e causam dano.","Controle e roubo de monstros, com cartas úteis em qualquer deck (Effect Veiler, Solemn Warning).","As Charmers sozinhas são frágeis e dependem do Atributo do alvo.","Hiita the Fire Charmer, Ablaze"],
+["Correntes Glaciais",1,"ÁGUA","❄️","Ice Barrier: o Medallion busca monstros do tipo e Freezing Chains revive Ice Barrier de Nível 4 ou menos, levando a Sincros do Extra Deck.","Boa recursão e consistência na busca de monstros.","Ritmo lento e pouco dano nos primeiros turnos.","Revealer of the Ice Barrier"],
+["Lenda das Feras Cristalinas",2,"LUZ","💎","Crystal Beasts do Jesse Anderson viram Magias Contínuas e depois se unem no novo Rainbow Dragon (Fusão), que chega a 11000 ATK e limpa o campo.","ATK gigante e golpe final com as feras banidas.","Montagem lenta (pede vários Crystal Beasts diferentes) e vulnerável à remoção de Magias/Armadilhas.","Crystal Beast Rainbow Dragon"],
+["Bestas Sagradas",4,"TREVAS","👹","Reúne Raviel, Hamon e Uria com novas formas de invocá-los e o campo Fallen Paradise. Controlar várias Bestas ao mesmo tempo é recompensado.","Monstros muito poderosos e várias formas de invocá-los sem cumprir os requisitos originais.","Hamon e Uria têm requisitos pesados sem os suportes; precisa de boa mão.","Raviel, Lord of Phantasms"],
+["Kaiba (Blue-Eyes)",3,"LUZ","🐉","Deck do Seto Kaiba: poder bruto com o Blue-Eyes White Dragon, monstros fortes e Magias/Armadilhas destrutivas.","ATK alto, carta icônica e fácil de entender.","Depende de comprar os Blue-Eyes; mão ruim deixa o deck sem resposta.","Blue-Eyes White Dragon"],
+["Yugi (Decks Lendários 2)",2,"TREVAS","🃏","O Yugi mais forte do acervo: junte as peças do Exodia para vencer na hora, ou jogue com Dark Magician, Dark Magician Girl e a armadilha contínua Obliterate!!! e outras cartas de controle. Sem os Deuses Egípcios.","Duas formas de vencer (Exodia ou campo), cartas de suporte e armadilhas que viram o jogo.","Exodia depende de sorte e de proteger a mão; sem as peças, o deck fica mais lento.","Dark Magician"],
+["Onda de Luz",4,"LUZ","✨","Fadas com Contra-Armadilhas: negam as jogadas do oponente e ativam efeitos de Fada. Airknight Parshath (2800 ATK) pode voltar do cemitério e uma Contra-Armadilha invoca qualquer Parshath.","Muito controle e negação, com proteção para as Fadas.","Lento e depende de ter as Contra-Armadilhas certas na hora.","Airknight Parshath"],
+["Loucura Mecanizada",2,"TERRA","⚙️","Machina: Machina Citadel (3000 ATK) volta do cemitério e destrói monstros em cadeia, enquanto Machina Air Raider e Gearframe trocam Machines.","ATK alto, recursão do cemitério e remoção pesada.","Precisa de Machines no cemitério ou destruídas para funcionar bem.","Machina Citadel"],
+["Ataque do Herói",3,"TREVAS","🎭","Elemental HERO do Jaden: fusão com Polymerization e Miracle Fusion, mais os Masked HERO (Dark Law, Divine Wind, Koga) invocados por Mask Change.","Versátil, com fusões para várias situações e Divine Wind difícil de derrubar em batalha.","Muitos monstros fracos e dependência de Mask Change ou Polymerization.","Contrast HERO Chaos"],
+["Revolução do Dragão Cibernético",3,"LUZ","🤖","Cyber Dragons que se invocam por efeito e viram o Cyber Twin Dragon (Fusão) e o Cyber Dragon Nova, com Power Bond e Super Polymerization.","Invocação fácil, fusões fortes e boa sinergia entre os Cyber Dragons.","Cartas mais antigas e depende de ter um Cyber Dragon em campo.","Cyber Dragon Nova"],
+["Covil das Trevas",3,"TREVAS","🌑","Controle com o campo Lair of Darkness: oferece monstros do oponente como Tributo para ativar efeitos. Traz Darkest Diabolos, Lilith e vírus como Grinning Grave Virus.","Controle e vírus que atrapalham a mão e o deck do oponente.","Lento, depende do campo Lair e ataca pouco.","Darkest Diabolos, Lord of the Lair"],
+["Fúria do Dinosmagador",2,"TERRA","🦖","Dinossauros que destroem os fracos para invocar os fortes. Ultimate Conductor Tyranno (3500 ATK) e invocações em massa para Xyz Rank 4.","ATK enorme e bom para Xyz de Nível 4.","Difícil de começar: precisa pôr monstros em campo para destruí-los.","Ultimate Conductor Tyranno"],
+["Deuses: Obelisco",4,"DIVINO","👊","Invoque o Obelisk com 3 Tributos usando monstros que se replicam. Fist of Fate nega e destrói efeitos de monstros e Soul Crossing usa monstros do oponente como Tributo.","Obelisk limpa o campo do oponente, com Brain Control e Fist of Fate de apoio.","Precisa de 3 Tributos e do Obelisk na mão; deck lento.","Obelisk the Tormentor"],
+["Deuses: Slifer",4,"DIVINO","⚡","Slifer fica mais forte conforme as cartas na sua mão. Tokens ajudam nos Tributos e Thunderforce Attack destrói os monstros do oponente (e compra cartas na sua Main Phase).","Cartas de compra mantêm a mão cheia e o ATK vira altíssimo.","Precisa de 3 Tributos e sofre se a mão esvaziar.","Slifer the Sky Dragon"],
+["Joey (Red-Eyes e Gemini)",3,"TREVAS","🎲","Deck do Joey: Red-Eyes B. Dragon e monstros Gemini, com cartas que evoluem como Red-Eyes Black Flare Dragon e Red-Eyes Archfiend of Lightning.","Monstros que crescem a cada turno e fáceis de aprender.","Pouca consistência e cartas antigas.","The Black Stone of Legend"],
+["Yugi (Reino dos Duelistas)",5,"TREVAS","✋","Yugi clássico (Reino dos Duelistas): junte as 5 peças do Exodia, the Forbidden One, para vencer na hora. Sem os Deuses.","Vitória instantânea com Exodia.","Depende de sorte para juntar as peças e é muito lento.","Exodia the Forbidden One"],
+["Yugi (Dirigível Kaiba)",5,"LUZ","🔧","Deck da Cerimônia Final contra o Yami Yugi: Gadgets que se buscam entre si e monstros LV da série Silent.","Fácil de buscar peças e combo simples.","ATK baixo, pouca pressão e sem cartas modernas.","Green Gadget"],
+["Rugido do Dragão",5,"TREVAS","🐲","Deck de Dragões de 2005 liderado pelo Dragão das Trevas de Olhos Vermelhos (Red-Eyes Darkness Dragon), com Luster Dragon e Masked Dragon como apoio.","Dragões de bom ATK e a carta principal é muito forte quando entra em campo.","Cartas antigas, pouca sinergia e o Dragão das Trevas depende de descartar um dragão da mão.","Red-Eyes Darkness Dragon"]];
+// Tier original (do código) e ajustes feitos no app
+const BT=DECKS.map(d=>d[1]);let TO={};try{TO=JSON.parse(localStorage.getItem('ygo_tiers')||'{}')}catch(e){}
+DECKS.forEach(d=>{if(TO[d[0]])d[1]=TO[d[0]]});
+const GL={FOGO:'<path d="M16 5c1 5 7 8 7 14a7 7 0 0 1-14 0c0-3 2-5 3-7 0 3 2 4 3 4 0-4-1-7 1-11z"/>',"ÁGUA":'<path d="M16 5c4 6 8 9 8 14a8 8 0 0 1-16 0c0-5 4-8 8-14z"/>',VENTO:'<g fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M7 12h11a3 3 0 1 0-3-3"/><path d="M7 17h16a3 3 0 1 1-3 3"/><path d="M7 22h7"/></g>',TERRA:'<path d="M4 24l8-13 5 8 3-4 8 9z"/>',LUZ:'<circle cx="16" cy="16" r="5"/><g stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M16 4v4M16 24v4M4 16h4M24 16h4M7.5 7.5l2.8 2.8M21.7 21.7l2.8 2.8M24.5 7.5l-2.8 2.8M10.3 21.7l-2.8 2.8"/></g>',TREVAS:'<path d="M20 5a11 11 0 1 0 7 19 9 9 0 0 1-7-19z"/>',DIVINO:'<path d="M16 5l11 20H5z"/><circle cx="16" cy="18" r="3" fill="#8a6a10"/>'};
+function atr(a){const c=ATTR[a]||'#888';return `<i class="atr" title="${a}"><svg viewBox="0 0 32 32" fill="#fff"><circle cx="16" cy="16" r="15" fill="${c}" stroke="#0a1230" stroke-width="1.6"/><circle cx="16" cy="16" r="13" fill="none" stroke="#fff" stroke-opacity=".5"/>${GL[a]||''}</svg></i>`}
+const ATTR={LUZ:"#f5d76e",TREVAS:"#8b5cf6",FOGO:"#ff6a3d","ÁGUA":"#3aa8ff",TERRA:"#b9833f",VENTO:"#4fd1a1",DIVINO:"#e8b94a"};
+const NOMES=["Douglas","João"],COR=["var(--g)","var(--b)"],GC=["#3a8cff","#2ad6c8","#35d86a","#8be83a","#e8f030","#ffc02e","#ff7a2e","#ff3b3b"];
+const $=s=>document.querySelector(s),pick=a=>a[Math.random()*a.length|0];
+const fmt=ms=>{const s=Math.round(ms/1000);return Math.floor(s/60)+"m "+String(s%60).padStart(2,"0")+"s"};
+
+// ===== Sons: gerados em arquivos WAV e tocados por <audio> (funciona no celular) =====
+const TAU=Math.PI*2,sn=(f,t)=>Math.sin(TAU*f*t),sq=(f,t)=>sn(f,t)>0?1:-1,ch=(a,b,D,t)=>Math.sin(TAU*(a*t+(b-a)*t*t/(2*D))),nz=()=>Math.random()*2-1,ex=(t,k)=>Math.exp(-t*k);
+function wav(fn,dur,sr=22050){const n=sr*dur|0,b=new ArrayBuffer(44+n*2),v=new DataView(b),w=(o,s)=>[...s].forEach((c,i)=>v.setUint8(o+i,c.charCodeAt(0)));
+ w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVEfmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+ for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,fn(i/sr)))*32767,true);return URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
+const SFX={};let mute=false;
+function reg(n,fn,d,k=3){const u=wav(fn,d);SFX[n]={i:0,a:Array.from({length:k},()=>{const a=new Audio(u);a.preload='auto';return a})}}
+function play(n){if(mute)return;const s=SFX[n];if(!s)return;const a=s.a[s.i++%s.a.length];try{a.currentTime=0;a.play().catch(()=>{})}catch(e){}}
+reg('click',t=>.3*sn(800,t)*ex(t,60),.07);
+reg('tickU',t=>.3*sq(2000,t)*ex(t,80),.05,6);
+reg('tickD',t=>.3*sq(1200,t)*ex(t,80),.05,6);
+reg('hit',t=>.6*ch(260,40,.5,t)*ex(t,5)+.35*nz()*ex(t,35),.55);
+reg('heal',t=>[523,659,784,1047].reduce((a,f,i)=>t>i*.09?a+.25*sn(f,t)*ex(t-i*.09,7):a,0),.6);
+reg('coin',t=>.25*(sn(2600,t)+.6*sn(3900,t)+.35*sn(5400,t))*ex(t,4)*(1+.3*sn(14,t)),1.1,2);
+reg('dice',t=>[0,.06,.13,.22,.34,.5,.7].reduce((a,c)=>t>c?a+.5*nz()*ex(t-c,70):a,0),.9,2);
+reg('sweep',t=>.2*ch(200,1400,.7,t)*(t<.6?1:ex(t-.6,30)),.7,2);
+reg('win',t=>[523,659,784,1047,784,1047,1319].reduce((a,f,i)=>t>i*.12?a+.2*(sn(f,t)+.4*sn(2*f,t))*ex(t-i*.12,3):a,0),1.4,2);
+reg('boom',t=>.75*ch(130,28,.9,t)*ex(t,3.5)+.45*nz()*ex(t,10),1,2);
+reg('rise',t=>.16*ch(140,1100,.95,t)*Math.min(1,t*3)*(t<.9?1:ex(t-.9,40))+.07*nz()*t,.95,2);
+reg('clash',t=>.45*nz()*ex(t,16)+.25*sn(1760,t)*ex(t,7)+.2*sn(2350,t)*ex(t,9)+.3*ch(300,90,.6,t)*ex(t,6),.7,2);
+
+// ===== Narrador e áudios próprios =====
+let CFG={voz:1,vs:1,vic:'all',wake:1};try{Object.assign(CFG,JSON.parse(localStorage.getItem('ygo_cfg')||'{}'))}catch(e){}
+const saveCfg=()=>{try{localStorage.setItem('ygo_cfg',JSON.stringify(CFG))}catch(e){}};
+const MOM={start:['Início do duelo','É hora do duelo!'],win:['Vitória','“[nome] vence o duelo!”'],champ:['Campeão do torneio','“[deck] é o campeão do torneio!”']},CSND={};
+let VOZ=null;function pickVoz(){try{const v=speechSynthesis.getVoices();VOZ=v.find(x=>/^pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null}catch(e){}}
+try{pickVoz();speechSynthesis.onvoiceschanged=pickVoz}catch(e){}
+function say(t){if(mute||!CFG.voz||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(VOZ)u.voice=VOZ;u.rate=1.02;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
+let CA=null;function moment(k,txt){if(mute)return;if(CSND[k]){try{if(CA)CA.pause();CA=new Audio(CSND[k]);CA.play().catch(()=>{})}catch(e){}}else say(txt)}
+let un=false;addEventListener('pointerdown',()=>{if(un)return;un=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}Object.values(SFX).forEach(s=>s.a.forEach(a=>{a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{a.muted=false})}))},{passive:true});
+$('#bMute').onclick=e=>{mute=!mute;e.currentTarget.textContent=mute?'🔇':'🔊';if(mute){try{speechSynthesis.cancel();if(CA)CA.pause()}catch(x){}}play('click')};
+
+// ===== Artes dos decks (YGOPRODeck, guardadas no navegador) =====
+const KV={db:null,open(){return new Promise(ok=>{try{const q=indexedDB.open('ygo',1);q.onupgradeneeded=()=>q.result.createObjectStore('kv');q.onsuccess=()=>ok(q.result);q.onerror=()=>ok(null)}catch(e){ok(null)}})},
+async get(k){this.db=this.db||await this.open();if(!this.db)return;return new Promise(ok=>{try{const q=this.db.transaction('kv').objectStore('kv').get(k);q.onsuccess=()=>ok(q.result);q.onerror=()=>ok()}catch(e){ok()}})},
+async set(k,v){this.db=this.db||await this.open();if(!this.db)return;return new Promise(ok=>{try{const t=this.db.transaction('kv','readwrite');t.objectStore('kv').put(v,k);t.oncomplete=()=>ok(1);t.onerror=()=>ok()}catch(e){ok()}})}};
+try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+let IMG={},LD={};try{IMG=JSON.parse(localStorage.getItem('ygo_img')||'{}')}catch(e){}
+function setImg(i,u){document.querySelectorAll(`.art[data-i="${i}"]`).forEach(e=>{e.style.backgroundImage=`url('${u}')`;const s=e.querySelector('span');if(s)s.remove()})}
+function pre(i,u){const m=new Image();m.onload=()=>{LD[DECKS[i][7]]=u;setImg(i,u)};m.src=u}
+async function toData(u){try{const b=await(await fetch(u)).blob();return await new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=no;f.readAsDataURL(b)})}catch(e){return null}}
+async function loadArt(){for(let i=0;i<DECKS.length;i++){const q=DECKS[i][7];
+ if(DECKS[i][8]){pre(i,DECKS[i][8]);continue}
+ const d=await KV.get('art:'+q);if(d){pre(i,d);continue}
+ let u=IMG[q];
+ if(!u){try{const j=await(await fetch('https://db.ygoprodeck.com/api/v7/cardinfo.php?fname='+encodeURIComponent(q))).json(),c=j.data.find(x=>x.name.toLowerCase()===q.toLowerCase())||j.data[0];u=c.card_images[0].image_url_cropped;IMG[q]=u;try{localStorage.setItem('ygo_img',JSON.stringify(IMG))}catch(e){}}catch(e){continue}}
+ const dd=await toData(u);if(dd){KV.set('art:'+q,dd);pre(i,dd)}else pre(i,u);
+ await new Promise(r=>setTimeout(r,120))}}
+function art(i,c='',x=''){const d=DECKS[i];if(!d)return `<div class="art ${c}"><span>👤</span>${x}</div>`;const u=LD[d[7]];
+ return `<div class="art ${c}" data-i="${i}" style="--c:${ATTR[d[2]]};${u?`background-image:url('${u}')`:''}">${u?'':`<span>${d[3]}</span>`}${atr(d[2])}${x}</div>`}
+
+// ===== Navegação e modal =====
+function goTab(t){document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));$('#'+t).classList.add('on');document.querySelector(`nav [data-t=${t}]`).classList.add('on');wake(t==='duelo');if(t==='duelo')setTimeout(duelStart,60)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.t==='torneio'){TV=null;rT()}if(b.dataset.t==='stats')rS();goTab(b.dataset.t);play('click')});
+function modal(h){$('#box').innerHTML=h;$('#modal').classList.add('on')}
+function fechar(){$('#modal').classList.remove('on')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')fechar()};
+function info(i){const d=DECKS[i];modal(`<h2>${d[0]}</h2><span class="tier t${d[1]}">TIER ${d[1]}</span>
+ <div class="tset">${[1,2,3,4,5].map(t=>`<button class="${d[1]===t?'on t'+t:''}" onclick="setTier(${i},${t});info(${i})" aria-label="Mudar para tier ${t}">T${t}</button>`).join('')}</div>
+ <div class="cnote" style="text-align:center">${d[1]!==BT[i]?`Ajustado no app (original: Tier ${BT[i]}) · <a onclick="setTier(${i},${BT[i]});info(${i})">restaurar</a>`:'Toque num tier para mudar a classificação deste deck'}</div>${art(i)}<div class="inf"><p><b>Estratégia</b><br>${d[4]}</p><p><b>✅ Pontos fortes</b><br>${d[5]}</p><p><b>⚠️ Pontos fracos</b><br>${d[6]}</p></div><div class="clh">CARTAS DO DECK <span id="clN"></span></div><div id="cl"></div><button class="btn" onclick="fechar()">Fechar</button>`);$('#box').scrollTop=0;cardList(i)}
+
+// ===== Decks e sorteio =====
+let filtro=0,busy=false,SRT={modo:'justo',rep:false,md3:false},USED=[],DR=null;
+try{Object.assign(SRT,JSON.parse(localStorage.getItem('ygo_sort')||'{}'))}catch(e){}
+try{USED=JSON.parse(localStorage.getItem('ygo_used')||'[]')}catch(e){}
+function saveSort(){try{localStorage.setItem('ygo_sort',JSON.stringify(SRT));localStorage.setItem('ygo_used',JSON.stringify(USED))}catch(e){}}
+function rFiltro(){$('#filtro').innerHTML=[0,1,2,3,4,5].map(t=>`<button class="${filtro===t?'on':''}" onclick="filtro=${t};rFiltro();rLista()">${t?'Tier '+t:'Todos'}</button>`).join('')}
+function rLista(){$('#lista').innerHTML=[...DECKS.keys()].sort((a,b)=>DECKS[a][1]-DECKS[b][1]).map(i=>{const d=DECKS[i];return filtro&&d[1]!==filtro?'':`<div class="card dk" onclick="info(${i})">${art(i)}<div><b>${d[0]}</b> <span class="tier t${d[1]}">T${d[1]}</span><small>${d[4]}</small></div></div>`}).join('')}
+function setTier(i,t){const n=DECKS[i][0];DECKS[i][1]=t;if(t===BT[i])delete TO[n];else TO[n]=t;try{localStorage.setItem('ygo_tiers',JSON.stringify(TO))}catch(e){}KV.set('tiers',JSON.stringify(TO));rLista();play('click')}
+function setMode(m){SRT.modo=m;saveSort();rSort();play('click')}
+// Decks ainda não usados nesta "volta" (opção Não repetir)
+const avail=()=>[...DECKS.keys()].filter(i=>!SRT.rep||!USED.includes(DECKS[i][0]));
+function useDecks(ds){if(!SRT.rep)return;ds.forEach(i=>{const n=DECKS[i][0];if(!USED.includes(n))USED.push(n)});if(!avail().length)USED=[];saveSort();rSort()}
+function resetUsed(){USED=[];saveSort();rSort();play('click')}
+function drawPool(need){let a=shuffle(avail());if(a.length<need)a=a.concat(shuffle([...DECKS.keys()].filter(i=>!a.includes(i))).slice(0,need-a.length));return a}
+function rSort(){['justo','total','draft'].forEach(m=>$('#m_'+m).classList.toggle('on',SRT.modo===m));$('#oRep').checked=!!SRT.rep;$('#oMd3').checked=!!SRT.md3;
+ const n=avail().length;$('#pool').innerHTML=SRT.rep?`🔁 ${n} de ${DECKS.length} decks ainda não usados nesta volta${USED.length?` · <a onclick="resetUsed()">recomeçar volta</a>`:''}`:'';
+ $('#bSort').textContent=SRT.modo==='draft'?'Sortear opções do draft':'Sortear decks'}
+function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div class="card rc ${s?'shuf':'pop'}" style="border-color:${COR[k]}"><b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s?'':`<button class="info" onclick="info(${i})">Ver Info</button>`}</div>`).join('')+(s?'':`${SRT.md3?'<div class="mini" style="margin-bottom:8px">🎯 Melhor de 3: vence quem ganhar 2 duelos</div>':''}<button class="btn" onclick="goTab('duelo')">⚔️ Ir para o duelo</button>`)}
+function sortear(){if(busy)return;if(SRT.modo==='draft')return draftStart();
+ busy=true;play('sweep');const ix=[...DECKS.keys()];let A=avail();if(A.length<2){USED=[];A=ix}const a=pick(A),near=i=>i!==a&&Math.abs(DECKS[i][1]-DECKS[a][1])<=1;
+ let pool=SRT.modo==='justo'?A.filter(near):A.filter(i=>i!==a);if(!pool.length&&SRT.modo==='justo')pool=ix.filter(near);if(!pool.length)pool=ix.filter(i=>i!==a);const b=pick(pool);let n=0;
+ const iv=setInterval(()=>{showR([pick(ix),pick(ix)],1);play('tickU');if(++n>14){clearInterval(iv);useDecks([a,b]);newDuel([a,b],null,SRT.md3?mkSr():null);showR([a,b]);play('win');busy=false}},100)}
+// Draft: cada um recebe 3 decks sorteados e escolhe 1 (Douglas primeiro, João vê a escolha dele)
+function draftStart(){busy=true;play('sweep');const P=drawPool(6);DR={o:[P.slice(0,3),P.slice(3,6)],c:[null,null],k:0};let n=0;
+ const iv=setInterval(()=>{rDraft(1);play('tickU');if(++n>8){clearInterval(iv);busy=false;rDraft();play('win')}},100)}
+function rDraft(sh){const k=DR.k,o=sh?[0,1,2].map(()=>pick([...DECKS.keys()])):DR.o[k];
+ $('#resultado').innerHTML=(k&&!sh?`<div class="mini" style="margin-bottom:8px">Douglas escolheu <b style="color:var(--g)">${esc(dn(DR.c[0]))}</b></div>`:'')+`<div class="card" style="border-color:${COR[k]};text-align:center"><b style="color:${COR[k]};font:900 1rem Impact,sans-serif;letter-spacing:2px">${NOMES[k].toUpperCase()}, ESCOLHA SEU DECK</b><div class="cnote">Toque em um dos três · ⓘ mostra a estratégia</div>
+ <div class="drf">${o.map(i=>`<div class="dro ${sh?'shuf':'pop'}" ${sh?'':`onclick="draftPick(${i})"`}>${sh?'':`<button class="ii" onclick="event.stopPropagation();info(${i})" aria-label="Ver estratégia">i</button>`}${art(i)}<b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">T${DECKS[i][1]}</span></div>`).join('')}</div></div>`}
+function draftPick(i){if(!DR||busy)return;DR.c[DR.k]=i;play('click');if(DR.k===0){DR.k=1;rDraft();return}
+ const ds=DR.c;DR=null;useDecks(ds);newDuel(ds,null,SRT.md3?mkSr():null);showR(ds);play('win')}
+
+// ===== Duelo =====
+let lp,sh=[8000,8000],duel,over=false,amt='',run=false,fr=0,RES=null,LH=null;
+$('#players').innerHTML=[0,1].map(p=>`<div class="pl" id="P${p}" style="--c:${COR[p]}"><div class="g" id="g${p}">${GC.map(c=>`<i style="background:${c}"></i>`).join('')}</div><div class="gold"><div class="lcd" id="v${p}">8000</div></div><div class="ptw" id="pt${p}"></div></div>`).join('');
+$('#pad').innerHTML=[['+','g1',0,1],['−','g1',0,-1],['+','b1',1,1],['−','b1',1,-1]].map(([t,c,p,s])=>`<button class="k ${c}" onclick="apply(${p},${s})">${t}</button>`).join('')
+ +[100,500,1000,2000].map(v=>`<button class="k sm" onclick="setAmt('${v}')">${v}</button>`).join('')
+ +`<button class="k sm hf0" onclick="half(0)" aria-label="Douglas perde metade dos LP">½ LP</button><button class="k sm ud" style="grid-column:span 2" onclick="undoLP()">↶ Desfazer</button><button class="k sm hf1" onclick="half(1)" aria-label="João perde metade dos LP">½ LP</button>`
+ +['7','8','9','C','4','5','6','⌫','1','2','3','00'].map(k=>`<button class="k" onclick="key('${k}')">${k}</button>`).join('')
+ +`<button class="k" style="grid-column:span 2" onclick="key('0')">0</button><button class="k" style="grid-column:span 2" onclick="key('000')">000</button>`;
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1900)}
+function calc(){$('#amt').textContent=amt||'0'}
+function setAmt(v){amt=v;calc();play('click')}
+function key(k){amt=k==='C'?'':k==='⌫'?amt.slice(0,-1):(amt+k).replace(/^0+/,'').slice(0,6);calc();play('click')}
+function draw(){for(let p=0;p<2;p++){$('#v'+p).textContent=sh[p];const n=Math.ceil(Math.min(1,sh[p]/8000)*8);$('#g'+p).querySelectorAll('i').forEach((e,k)=>e.classList.toggle('off',8-k>n))}}
+function ports(){[0,1].forEach(p=>{const i=duel.decks?duel.decks[p]:null;$('#pt'+p).onclick=()=>{if(!duel.log.length&&!over)escolher()};$('#pt'+p).innerHTML=art(i,'',`<b>${NOMES[p].toUpperCase()}${i!=null?`<small>${DECKS[i][0]}</small>`:''}</b>`)})}
+const mkSr=()=>({id:Date.now(),g:[0,0]});
+function newDuel(decks,tm,sr){duel={t0:decks?Date.now():0,decks:decks||null,log:[],tm:decks&&tm||null,sr:decks&&sr||null,first:null,tn:1};lp=[8000,8000];over=false;amt='';calc();ports();tBan();rTurn();go()}
+// ---- Turnos e quem começa
+const turnOf=()=>duel.first==null?null:(duel.tn%2?duel.first:1-duel.first);
+function rTurn(){const b=$('#trb');if(!b)return;const p=turnOf();b.innerHTML=`<b>TURNO ${duel.tn}</b><small style="color:${p==null?'var(--mut)':COR[p]}">${p==null?'quem começa? ▸':'vez de '+NOMES[p]+' ▸'}</small>`}
+function turn(s){if(over)return;if(duel.first==null){quemComeca();return}if(s<0&&duel.tn===1)return;duel.tn+=s;if(!duel.t0)duel.t0=Date.now();rTurn();play(s>0?'tickU':'click');if(s>0)toast(`Turno ${duel.tn} · vez de ${NOMES[turnOf()]}`)}
+const COIN_H=`<div><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 50Q50 12 94 50Q50 88 6 50Z"/><circle cx="50" cy="50" r="14" fill="#5a3d00"/><circle cx="50" cy="50" r="5" fill="#ffe9a0" stroke="none"/><path d="M20 30Q50 8 80 30"/><path d="M54 66Q58 82 74 82Q90 82 90 68"/></svg></div><div class="bk"><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24H88L50 90Z"/><circle cx="50" cy="13" r="7"/><path d="M33 44Q50 32 67 44Q50 56 33 44Z"/><circle cx="50" cy="44" r="5" fill="#5a3d00"/><path d="M38 28H62"/></svg></div>`;
+function quemComeca(){if(over)return;const pv=duel.prevW;
+ modal(`<h2>QUEM COMEÇA?</h2><div class="st" style="height:130px"><div id="tw"><div class="coin" id="coin">${COIN_H}</div></div></div><div class="res" id="rs">&nbsp;</div>
+ <button class="btn" onclick="sortFirst()">🪙 Sortear na moeda</button><p class="cnote" style="margin:4px 0 8px">Cara = Douglas · Coroa = João</p>
+ <div class="row"><button class="btn" style="border-color:var(--g);color:var(--g)" onclick="setFirst(0)">Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b)" onclick="setFirst(1)">João</button></div>
+ ${pv!=null?`<p class="cnote">Pela regra, quem perdeu o duelo anterior (${NOMES[1-pv]}) escolhe quem começa.</p>`:''}`)}
+function sortFirst(){if(bt)return;bt=true;const k=Math.random()<.5;cr=Math.ceil(cr/360)*360+1800+(k?180:0);$('#coin').style.transform=`rotateY(${cr}deg)`;toss();play('coin');
+ setTimeout(()=>{const r=$('#rs');if(r)r.textContent=(k?'COROA':'CARA')+' · '+NOMES[k?1:0].toUpperCase()+' COMEÇA';play('coin');bt=false;setTimeout(()=>setFirst(k?1:0),1000)},1450)}
+function setFirst(p){if(over)return;duel.first=p;rTurn();fechar();play('click');say(NOMES[p]+' começa!')}
+// ---- LP
+function apply(p,s){if(over)return;const v=parseInt(amt||'0',10);if(!v)return;if(!duel.t0)duel.t0=Date.now();const b=lp[p];lp[p]=Math.max(0,b+s*v);const d=lp[p]-b;if(!d)return;
+ duel.log.push({t:Date.now()-duel.t0,p,d,lp:lp[p],tn:duel.tn});amt='';calc();play(d<0?'hit':'heal');const e=$('#P'+p),c=d<0?'hit':'heal';e.classList.remove('hit','heal');void e.offsetWidth;e.classList.add(c);setTimeout(()=>e.classList.remove(c),450);go()}
+function half(p){if(over)return;const v=Math.floor(lp[p]/2);if(!v)return;amt=String(v);apply(p,-1)}
+function undoLP(){if(over||!duel.log.length){toast(over?'O duelo já terminou':'Nada para desfazer');return}const e=duel.log.pop();lp[e.p]=e.lp-e.d;play('tickU');go();toast(`Desfeito: ${NOMES[e.p]} ${e.d<0?'−':'+'}${Math.abs(e.d)}`)}
+function loop(){let mv=false;for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d)continue;mv=true;const s=Math.max(10,Math.ceil(Math.abs(d)/18));sh[p]=Math.abs(d)<=s?lp[p]:sh[p]+Math.sign(d)*s;if(fr++%3==0)play(d<0?'tickD':'tickU')}
+ draw();if(mv)requestAnimationFrame(loop);else{run=false;for(let p=0;p<2;p++)if(lp[p]===0&&!over)finish(1-p)}}
+function go(){if(!run){run=true;requestAnimationFrame(loop)}}
+// ---- Tela sempre ligada durante o duelo
+let WL=null;async function wake(on){try{if(on&&CFG.wake&&!WL&&navigator.wakeLock&&document.visibilityState==='visible'){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){WL=null}}
+document.addEventListener('visibilitychange',()=>wake(document.visibilityState==='visible'&&$('#duelo').classList.contains('on')));
+function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="if(confirm('Resetar o duelo?')){fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}">🔄 Resetar duelo</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><button class="btn" onclick="fechar();finish(0)">🏆 Douglas venceu</button><button class="btn" onclick="fechar();finish(1)">🏆 João venceu</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`)}
+// ---- Escolher os decks manualmente (sem sorteio)
+let PK=[null,null];
+function escolher(){PK=duel.decks?[...duel.decks]:[null,null];pickM()}
+function pickM(){const opt=p=>`<select id="pk${p}" onchange="PK[${p}]=this.value===''?null:+this.value;pickM()" style="width:100%;padding:11px;border-radius:10px;border:2px solid ${COR[p]};background:#0a1740;color:#fff;font-size:.95rem"><option value="">— escolher —</option>${[1,2,3,4,5].map(t=>`<optgroup label="Tier ${t}">${[...DECKS.keys()].filter(i=>DECKS[i][1]===t).sort((a,b)=>DECKS[a][0].localeCompare(DECKS[b][0])).map(i=>`<option value="${i}"${PK[p]===i?' selected':''}>${esc(DECKS[i][0])}</option>`).join('')}</optgroup>`).join('')}</select>`;
+ const ok=PK[0]!=null&&PK[1]!=null,pv=p=>PK[p]!=null?`<div style="text-align:center;margin-top:6px">${art(PK[p])}<span class="tier t${DECKS[PK[p]][1]}">T${DECKS[PK[p]][1]}</span></div>`:'';
+ modal(`<h2>ESCOLHER DECKS</h2><div class="mini" style="margin-bottom:8px;text-align:left">Para usar um deck novo sem sortear. Começa um duelo novo com os LP zerados em 8000.</div>
+ <div class="row" style="gap:10px;align-items:flex-start"><div style="flex:1"><b style="color:var(--g)">DOUGLAS</b>${opt(0)}${pv(0)}</div><div style="flex:1"><b style="color:var(--b)">JOÃO</b>${opt(1)}${pv(1)}</div></div>
+ <button class="btn" ${ok?'':'disabled style="opacity:.4;margin-top:10px"'} ${ok?'style="margin-top:10px"':''} onclick="pickGo()">⚔️ Começar duelo</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Cancelar</button>`)}
+function pickGo(){if(PK[0]==null||PK[1]==null)return;const prog=duel&&(duel.log.length||lp[0]!==8000||lp[1]!==8000)&&!over;if(prog&&!confirm('Há um duelo em andamento. Descartar e começar com os decks escolhidos?'))return;
+ fechar();useDecks(PK);newDuel([...PK],null,SRT.md3?mkSr():null);duelStart();play('click')}
+function rematch(){fechar();const pw=LH?LH.w:null;newDuel(duel.decks,null,duel.sr?mkSr():null);duel.prevW=pw;duelStart()}
+function nextSerie(){fechar();const sr=duel.sr,pw=LH?LH.w:null;newDuel(duel.decks,null,sr);duel.prevW=pw;duelStart()}
+const BTN2='class="btn" style="border-color:#2c58b8;color:var(--mut)"';
+function finish(w){if(over)return;over=true;const dur=duel.t0?Date.now()-duel.t0:0,ht=Date.now(),m=tmValid(),sr=!m&&duel.sr,before=achv(hist);
+ const h={t:ht,w,dur,decks:duel.decks?duel.decks.map(i=>DECKS[i][0]):null,lp:[...lp],log:duel.log,tn:duel.tn};
+ if(duel.first!=null)h.first=duel.first;if(m){h.tid=m.id;h.tl=mlab(m)}if(sr){sr.g[w]++;h.sr=sr.id;h.srg=sr.g[0]+sr.g[1]}
+ hist.unshift(h);save();rH();LH=h;tBan();
+ const nw=newAch(before,achv(hist)),di=duel.decks?duel.decks[w]:null,dk=duel.decks?dn(di):'',W=`<h2>🏆 ${NOMES[w].toUpperCase()} VENCE!</h2><p>⏱ ${fmt(dur)}${h.tn>1?' · '+h.tn+' turnos':''}</p>`;
+ let fin=false,fdi=di,fw=w,top,btns;
+ if(m){m.w=w;m.lp=[...lp];m.h=ht;saveT();TV=curSt();rT();const nx=nextM(),nxb=nx?`<button class="btn" onclick="fechar();playM('${nx.id}')">⚔️ Próximo: ${mlab(nx)}</button>`:'';
+  if(T.fmt==='liga'){const st=ligaStand();
+   if(!nx){fin=true;fdi=st[0].i;fw=null;top=`<h2>🏆 FIM DA LIGA!</h2>${art(fdi)}<h3 style="margin:6px 0">${esc(st[0].n)}</h3><p style="color:var(--gd);font-weight:800">é o campeão da liga!</p>`;btns=`<button class="btn" onclick="fechar();goT('${m.id}')">🏟️ Ver tabela final</button>`}
+   else{const pos=st.findIndex(r=>r.n===dk)+1;top=W+`<p><b>${esc(dk)}</b> soma mais uma vitória e está em <b>${pos}º</b> na liga</p>`;btns=nxb+`<button ${BTN2} onclick="fechar();goT('${m.id}')">🏟️ Ver tabela</button>`}}
+  else if(m.st==='f'){fin=true;top=`<h2>🏆 ${NOMES[w].toUpperCase()} VENCE A FINAL!</h2>${art(di)}<h3 style="margin:6px 0">${esc(dk)}</h3><p style="color:var(--gd);font-weight:800">é o campeão do torneio!</p><p>⏱ ${fmt(dur)}</p>`;btns=`<button class="btn" onclick="fechar();goT('f')">🏟️ Ver o campeão</button>`}
+  else{top=W+`<p><b>${esc(dk)}</b> avança${m.st==='g'?' no Grupo '+m.id[1]:' ➜ '+destTxt(m)}</p>`;btns=nxb+`<button ${BTN2} onclick="fechar();goT('${m.id}')">🏟️ Ver chave</button>`}}
+ else if(sr){const sw=sr.g[0]===2?0:sr.g[1]===2?1:null;
+  if(sw!=null){top=`<h2>🏆 ${NOMES[sw].toUpperCase()} VENCE A SÉRIE!</h2><div class="srs"><span style="color:var(--g)">Douglas ${sr.g[0]}</span> × <span style="color:var(--b)">${sr.g[1]} João</span></div><p>⏱ ${fmt(dur)}</p>`;btns=`<button class="btn" onclick="rematch()">🎯 Nova série (mesmos decks)</button><button ${BTN2} onclick="fechar();newDuel()">Novo duelo</button>`}
+  else{top=`<h2>🏆 ${NOMES[w].toUpperCase()} VENCE O DUELO ${h.srg}!</h2><div class="srs">🎯 <span style="color:var(--g)">Douglas ${sr.g[0]}</span> × <span style="color:var(--b)">${sr.g[1]} João</span></div><p>⏱ ${fmt(dur)}</p>`;btns=`<button class="btn" onclick="nextSerie()">⚔️ Duelo ${h.srg+1} da série</button><button ${BTN2} onclick="fechar()">Fechar</button>`}}
+ else{top=W;btns=`<button class="btn" onclick="rematch()">Revanche (mesmos decks)</button><button ${BTN2} onclick="fechar();newDuel()">Novo duelo</button>`}
+ RES={h,top,btns,nw};celebrate(fdi,fw,fin).then(showRes)}
+// Resultado: texto + conquistas novas + carta MVP + botões
+function showRes(){if(!RES)return;const{h,top,btns,nw}=RES;
+ const ach=nw.length?`<div class="clh">🏅 CONQUISTA${nw.length>1?'S':''} DESBLOQUEADA${nw.length>1?'S':''}!</div><div class="achn">${nw.map(a=>`<div class="ach on"><i>${ACH[a.id].e}</i><div><b>${ACH[a.id].n}</b><small>${NOMES[a.p]} · ${ACH[a.id].d}</small></div></div>`).join('')}</div>`:'';
+ const mv=h.decks?`<button class="mvpb" onclick="mvpPick(${h.t},1)">${h.mvp?`⭐ MVP: <b>${esc(h.mvp.n)}</b><small>trocar</small>`:'⭐ Escolher a carta MVP do duelo'}</button>`:'';
+ modal(top+ach+mv+btns);if(nw.length)setTimeout(()=>play('heal'),150)}
+
+// ===== Dado e moeda =====
+const PIPS=[0,[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]],ROT={1:[0,0],2:[0,-90],3:[-90,0],4:[90,0],5:[0,90],6:[0,180]};
+const face=n=>`<div class="f f${n}">${[...Array(9)].map((_,k)=>`<u class="${PIPS[n].includes(k)?'p':''}"></u>`).join('')}</div>`;
+let sp=0,cr=0,bt=false;
+function toss(){const t=$('#tw');t.classList.remove('toss');void t.offsetWidth;t.classList.add('toss')}
+function dado(){modal(`<h2>DADO</h2><div class="st"><div id="tw"><div class="cube" id="cube">${[1,2,3,4,5,6].map(face).join('')}</div></div></div><div class="res" id="rs">&nbsp;</div><button class="btn" onclick="rolar()">Rolar de novo</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`);setTimeout(rolar,150)}
+function rolar(){if(bt)return;bt=true;const n=1+Math.random()*6|0,[x,y]=ROT[n];sp++;$('#cube').style.transform=`rotateX(${x+720*sp}deg) rotateY(${y+720*sp}deg)`;$('#rs').innerHTML='&nbsp;';toss();play('dice');setTimeout(()=>{const r=$('#rs');if(r)r.textContent=n;bt=false},1450)}
+function moeda(){modal(`<h2>MOEDA</h2><div class="st"><div id="tw"><div class="coin" id="coin"><div><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 50Q50 12 94 50Q50 88 6 50Z"/><circle cx="50" cy="50" r="14" fill="#5a3d00"/><circle cx="50" cy="50" r="5" fill="#ffe9a0" stroke="none"/><path d="M20 30Q50 8 80 30"/><path d="M54 66Q58 82 74 82Q90 82 90 68"/></svg></div><div class="bk"><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24H88L50 90Z"/><circle cx="50" cy="13" r="7"/><path d="M33 44Q50 32 67 44Q50 56 33 44Z"/><circle cx="50" cy="44" r="5" fill="#5a3d00"/><path d="M38 28H62"/></svg></div></div></div></div><div class="res" id="rs">&nbsp;</div><button class="btn" onclick="girar()">Girar de novo</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`);setTimeout(girar,150)}
+function girar(){if(bt)return;bt=true;const k=Math.random()<.5;cr=Math.ceil(cr/360)*360+1800+(k?180:0);$('#coin').style.transform=`rotateY(${cr}deg)`;$('#rs').innerHTML='&nbsp;';toss();play('coin');setTimeout(()=>{const r=$('#rs');if(r)r.textContent=k?'COROA':'CARA';play('coin');bt=false},1450)}
+
+// ===== Histórico =====
+let hist=[];try{hist=JSON.parse(localStorage.getItem('ygo_hist3')||'[]')}catch(e){}
+function save(){try{localStorage.setItem('ygo_hist3',JSON.stringify(hist))}catch(e){}KV.set('hist',JSON.stringify(hist))}
+function mergeH(a){let n=0;const ts=new Set(hist.map(x=>x.t));a.forEach(x=>{if(x&&typeof x.t==='number'&&(x.w===0||x.w===1)&&Array.isArray(x.lp)&&Array.isArray(x.log)&&!ts.has(x.t)){hist.push(x);ts.add(x.t);n++}});hist.sort((p,q)=>q.t-p.t);if(n){save();rH()}return n}
+KV.get('hist').then(s=>{try{if(s)mergeH(JSON.parse(s))}catch(e){}});
+function backupTxt(){return JSON.stringify({app:'ygo-duelos',v:3,t:Date.now(),hist,torneio:T,camp:CAMP,cfg:CFG,tiers:TO,sort:SRT,used:USED,snd:CSND})}
+function pad2(n){return String(n).padStart(2,'0')}
+function stamp(t){const d=new Date(t||Date.now());return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+function txtReport(){const L=[],w=[0,0],dt=t=>new Date(t).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'}),bar='='.repeat(38),sep='-'.repeat(38);
+ hist.forEach(x=>w[x.w]++);
+ L.push(bar,'DUEL DISK - HISTÓRICO DE DUELOS',bar,'Exportado em '+dt(Date.now()),'');
+ L.push('PLACAR GERAL: Douglas '+w[0]+' x '+w[1]+' João  ('+hist.length+' duelo'+(hist.length===1?'':'s')+')');
+ if(CAMP.length){L.push('','CAMPEÕES DE TORNEIO',sep);CAMP.forEach(c=>L.push('* '+dt(c.t)+' - Campeão: '+c.c+(c.p!=null?' ('+NOMES[c.p]+')':'')+(c.v?' - Vice: '+c.v:'')+(c.s?' - Placar: '+c.s[0]+' x '+c.s[1]:'')+(c.fmt==='liga'?' [liga]':'')))}
+ L.push('','');
+ hist.forEach((h,k)=>{const n=hist.length-k,st=[0,1].map(p=>{const l=(h.log||[]).filter(e=>e.p===p);return{dmg:-l.filter(e=>e.d<0).reduce((a,e)=>a+e.d,0),heal:l.filter(e=>e.d>0).reduce((a,e)=>a+e.d,0)}});
+  L.push(sep,'DUELO #'+n+' - '+dt(h.t),sep,'Douglas x João');
+  if(h.decks)L.push('Decks: '+h.decks[0]+' (Douglas)  vs  '+h.decks[1]+' (João)');else L.push('Decks: não sorteados');
+  if(h.tl)L.push('Torneio: '+h.tl);
+  L.push('Vencedor: '+NOMES[h.w],'Duração: '+fmt(h.dur),'LP final: Douglas '+h.lp[0]+' x '+h.lp[1]+' João');
+  if(h.tn>1)L.push('Turnos: '+h.tn);if(h.first!=null)L.push('Começou: '+NOMES[h.first]);if(h.sr)L.push('Melhor de 3 - duelo '+h.srg);if(h.mvp)L.push('Carta MVP: '+h.mvp.n);
+  L.push('Dano sofrido: Douglas '+st[0].dmg+' / João '+st[1].dmg,'Cura: Douglas '+st[0].heal+' / João '+st[1].heal);
+  if((h.log||[]).length){L.push('','Histórico de dano:');h.log.forEach(e=>L.push('  '+fmt(e.t)+(e.tn?' T'+e.tn:'')+' | '+NOMES[e.p]+' '+(e.d<0?'-':'+')+Math.abs(e.d)+' -> '+e.lp))}
+  L.push('','')});
+ if(!hist.length)L.push('Nenhum duelo registrado ainda.');
+ return L.join('\r\n')}
+let OUT=null;
+function outM(title,name,mime,text,prev){OUT={name,mime,text};
+ modal(`<h2>${title}</h2><textarea class="outx" readonly id="outx">${esc(prev||text)}</textarea><div class="row" style="margin-top:10px"><button class="btn" style="padding:12px;font-size:.8rem" onclick="outShare()">📤 Compartilhar</button><button class="btn" style="padding:12px;font-size:.8rem" onclick="outCopy()">📋 Copiar</button></div><button class="btn" onclick="outDl()">⬇ Baixar arquivo</button><button ${BTN2} onclick="fechar()">Fechar</button>`)}
+async function outShare(){const o=OUT;if(!o)return;
+ try{const f=new File(['﻿'+o.text],o.name,{type:o.mime});if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f],title:o.name});return}}catch(e){if(e&&e.name==='AbortError')return}
+ try{if(navigator.share&&o.text.length<60000){await navigator.share({title:o.name,text:o.text});return}}catch(e){if(e&&e.name==='AbortError')return}
+ outCopy()}
+async function outCopy(){const o=OUT;if(!o)return;
+ try{await navigator.clipboard.writeText(o.text);toast('Copiado! Cole onde quiser.');return}catch(e){}
+ try{const t=document.createElement('textarea');t.value=o.text;t.style.cssText='position:fixed;opacity:0;top:0';document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,t.value.length);const ok=document.execCommand('copy');t.remove();if(ok){toast('Copiado! Cole onde quiser.');return}}catch(e){}
+ toast('Não consegui copiar. Use Baixar arquivo.')}
+function outDl(){const o=OUT;if(!o)return;
+ try{const b=new Blob(['﻿'+o.text],{type:o.mime+';charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=o.name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),5000);toast('Arquivo gerado - veja em Downloads')}catch(e){toast('Não deu para baixar. Use Copiar.')}}
+function exportTxt(){outM('HISTÓRICO EM TEXTO','historico-duel-disk-'+stamp()+'.txt','text/plain',txtReport())}
+function exportH(){const s=backupTxt();outM('BACKUP','backup-duel-disk-'+stamp()+'.json','application/json',s,'Backup pronto ('+Math.round(s.length/1024)+' KB).\nToque em Compartilhar ou Baixar arquivo e guarde onde quiser. Para restaurar, use Importar.')}
+$('#bExp').onclick=exportH;$('#bTxt').onclick=exportTxt;
+$('#fImp').onchange=async e=>{const f=e.target.files[0];e.target.value='';if(!f)return;try{const j=JSON.parse(await f.text()),n=mergeH(Array.isArray(j)?j:j.hist||[]);let ex='';
+ if(j.camp&&Array.isArray(j.camp)){const ts=new Set(CAMP.map(c=>c.t));const nc=j.camp.filter(c=>c&&c.t&&!ts.has(c.t));if(nc.length){CAMP=CAMP.concat(nc).sort((a,b)=>b.t-a.t);saveCamp();ex+='\n'+nc.length+' campeão(ões) adicionado(s).'}}
+ if(j.torneio&&j.torneio.M&&JSON.stringify(j.torneio)!==JSON.stringify(T)&&(!T||confirm('O arquivo tem um torneio salvo. Substituir o torneio atual por ele?'))){T=j.torneio;saveT();ex+='\nTorneio carregado.'}
+ const ns=j.snd?Object.keys(j.snd).filter(k=>MOM[k]&&typeof j.snd[k]==='string').length:0;
+ if((j.cfg||j.tiers||ns)&&confirm(`O backup também tem configurações e tiers${ns?` e ${ns} áudio(s) próprio(s)`:''}. Restaurar isso também?`)){
+  if(j.cfg)Object.assign(CFG,j.cfg),saveCfg();
+  if(j.tiers){TO=j.tiers;DECKS.forEach((d,i)=>d[1]=TO[d[0]]||BT[i]);try{localStorage.setItem('ygo_tiers',JSON.stringify(TO))}catch(e){}KV.set('tiers',JSON.stringify(TO));rLista()}
+  if(j.sort)Object.assign(SRT,j.sort);if(Array.isArray(j.used))USED=j.used;saveSort();rSort();
+  if(ns)Object.keys(j.snd).forEach(k=>{if(MOM[k]&&typeof j.snd[k]==='string'){CSND[k]=j.snd[k];KV.set('snd:'+k,j.snd[k])}});ex+='\nConfigurações, tiers e áudios restaurados.'}
+ rT();rS();alert((n?n+' duelo(s) adicionado(s).':'Nenhum duelo novo (já estavam aqui).')+ex)}catch(x){alert('Arquivo inválido.')}};
+function rH(){const w=[0,0];hist.forEach(h=>w[h.w]++);$('#score').innerHTML=`<span style="color:var(--g)">Douglas ${w[0]}</span> × <span style="color:var(--b)">${w[1]} João</span>`;
+ $('#hl').innerHTML=hist.length?hist.map(h=>{const st=[0,1].map(p=>{const l=h.log.filter(e=>e.p===p);return{dmg:-l.filter(e=>e.d<0).reduce((a,e)=>a+e.d,0),heal:l.filter(e=>e.d>0).reduce((a,e)=>a+e.d,0)}});
+ return `<div class="card" style="border-left:5px solid ${COR[h.w]}"><div class="hh"><b><span style="color:var(--g)">Douglas</span> × <span style="color:var(--b)">João</span></b><small>${new Date(h.t).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></div>
+ <div class="hd">${h.decks?`${h.decks[0]} <em>vs</em> ${h.decks[1]}`:'<em>Decks não sorteados</em>'}${h.tl?`<div class="htl">🏟️ Torneio · ${h.tl}</div>`:''}</div>
+ <div class="hs"><span>🏆 ${NOMES[h.w]}</span><span>⏱ ${fmt(h.dur)}</span><span>❤️ ${h.lp[0]} × ${h.lp[1]}</span>${h.tn>1?`<span>🔄 ${h.tn} turnos</span>`:''}${h.first!=null?`<span>🪙 ${NOMES[h.first]} começou</span>`:''}${h.sr?`<span>🎯 MD3 · duelo ${h.srg}</span>`:''}${h.mvp?`<span>⭐ ${esc(h.mvp.n)}</span>`:''}</div>
+ <details><summary>Detalhes</summary><div class="row" style="margin:8px 0;font-size:.85rem">${[0,1].map(p=>`<div><b style="color:${COR[p]}">${NOMES[p]}</b><br>Dano sofrido: ${st[p].dmg}<br>Cura: ${st[p].heal}</div>`).join('')}</div>
+ ${h.decks?`<button class="tund" style="margin:2px 0 8px" onclick="mvpPick(${h.t})">⭐ ${h.mvp?'Trocar':'Escolher'} carta MVP</button>`:''}
+ ${h.log.length?h.log.map(e=>`<div class="lg" style="color:${COR[e.p]}">${fmt(e.t)}${e.tn?' · T'+e.tn:''} · ${NOMES[e.p]} ${e.d<0?'−':'+'}${Math.abs(e.d)} → ${e.lp}</div>`).join(''):'<small>Sem registros.</small>'}</details></div>`}).join(''):'<p style="color:var(--mut);text-align:center">Nenhum duelo registrado ainda.</p>'}
+// ===== Carta MVP: escolhida da lista de cartas do deck vencedor =====
+let MVPL=null;
+function mvpItems(nm,c){return(CARDS[nm]||[]).map((x,k)=>({k,pt:(c&&c[k]&&c[k].pt)||x[0]||x[1],en:x[1],is:c&&c[k]&&c[k].d?c[k].d.is:null,u:x[2]})).filter(x=>!x.u)}
+async function mvpPick(t,fromRes){const h=hist.find(x=>x.t===t);if(!h||!h.decks)return;const nm=h.decks[h.w];let c=await KV.get('dk:'+nm);
+ MVPL={t,nm,items:mvpItems(nm,c),fromRes:!!fromRes,q:''};
+ modal(`<h2>⭐ CARTA MVP</h2><p class="cnote" style="margin-top:-4px">${esc(nm)} · qual carta decidiu o duelo?</p><input class="srch" placeholder="Buscar carta…" oninput="MVPL.q=this.value;mvpList()" aria-label="Buscar carta"><div id="mvl"></div>${h.mvp?`<button ${BTN2} onclick="mvpSet(-1)">Tirar a carta MVP</button>`:''}<button ${BTN2} onclick="${fromRes?'showRes()':'fechar()'}">Voltar</button>`);mvpList();
+ if(!c)getDeck(nm).then(c2=>{if(c2&&MVPL&&MVPL.t===t){MVPL.items=mvpItems(nm,c2);mvpList()}})}
+function mvpList(){const el=$('#mvl');if(!el||!MVPL)return;const q=MVPL.q.toLowerCase(),it=MVPL.items.filter(x=>!q||x.pt.toLowerCase().includes(q)||x.en.toLowerCase().includes(q));
+ el.innerHTML=it.map(x=>`<div class="cr" onclick="mvpSet(${x.k})"><div class="ph" ${x.is?`style="background-image:url('${x.is}')"`:''}></div><div><b>${esc(x.pt)}</b>${x.pt!==x.en?`<small>${esc(x.en)}</small>`:''}</div></div>`).join('')||'<p class="cnote">Nenhuma carta encontrada.</p>'}
+function mvpSet(k){const h=hist.find(x=>x.t===MVPL.t);if(!h)return;if(k<0)delete h.mvp;else{const x=MVPL.items.find(y=>y.k===k);if(!x)return;h.mvp={n:x.pt,en:x.en,is:x.is};play('heal');toast('⭐ MVP: '+x.pt)}
+ save();rH();if(MVPL.fromRes&&RES&&RES.h.t===h.t)showRes();else fechar()}
+$('#bClear').onclick=()=>{if(confirm('Apagar todo o histórico?')){hist=[];save();rH()}};
+
+// ===== Lista de cartas do deck + detalhes (YGOPRODeck) =====
+const CARDS={"Horda Zumbi":[["Tatsunecro","Tatsunecro"],["Rei da Condenação Balerdroch","Doomking Balerdroch"],["Banshee do Necromundo","Necroworld Banshee"],["Florescer Brilhante","Glow-Up Bloom"],["Kasha","Kasha"],["Dragão Zumbi de Olhos Vermelhos","Red-Eyes Zombie Dragon"],["Mech Malévolo - Goku En","Malevolent Mech - Goku En"],["Decomposição Interminável","Endless Decay"],["Paladino do Dragão Amaldiçoado","Paladin of the Cursed Dragon"],["Governante Imortal","Immortal Ruler"],["Mestre Zumbi","Zombie Master"],["Tristan, Cavaleiro do Submundo","Tristan, Knight of the Underworld"],["Mezuki","Mezuki"],["Gozuki","Gozuki"],["Shutendoji","Shutendoji"],["Tartaruga Pirâmide","Pyramid Turtle"],["Goblin Zumbi","Goblin Zombie"],["Isolda, Belle do Submundo","Isolde, Belle of the Underworld"],["Shiranui Solitário","Shiranui Solitaire"],["Uni-Zumbi","Uni-Zombie"],["Ácaro Marionete","Marionette Mite"],["Besta do Faraó","Beast of the Pharaoh"],["Fantasma Expiatório","Scapeghost"],["Necronizar Zumbi","Zombie Necronize"],["Luta pelo Poder Zumbi","Zombie Power Struggle"],["Mundo Zumbi","Zombie World"],["Olho Esmagador","Overpowering Eye"],["Livro da Vida","Book of Life"],["Chamado da Múmia","Call of the Mummy"],["Enterro Tolo","Foolish Burial"],["Portão do Monstro","Monster Gate"],["Arrastado para a Cova","Dragged Down into the Grave"],["Enterro de Outra Dimensão","Burial from a Different Dimension"],["Carona","Shared Ride"],["Retorno dos Zumbis","Return of the Zombies"],["Santuário Assombrado","Haunted Shrine"],["Armadilha da Tumba Emperial","Trap of the Imperial Tomb"],["Ninho do Agulheto","Needlebug Nest"],["Metaverso","Metaverse"],["Fragrância Anti-Magia","Anti-Spell Fragrance"],["Máscara da Restrição","Mask of Restrict"],["Necro Dragão Zumbi de Olhos Vermelhos","Red-Eyes Zombie Necro Dragon"]],"O Rei Carmesim":[["Ressonador da Alma","Soul Resonator"],["Ressonador da Visão","Vision Resonator"],["Arquidemônio de Ossos","Bone Archfiend"],["Ressonador Negro","Dark Resonator"],["Ressonador da Criação","Creation Resonator"],["Ressonador de Sinkron","Synkron Resonator"],["Ressonador Vermelho","Red Resonator"],["Ressonador Carmesim","Crimson Resonator"],["Vice-Dragão","Vice Dragon"],["Desvanecer da Batalha","Battle Fader"],["Corredor Vermelho","Red Sprinter"],["Warg Vermelho","Red Warg"],["Rei Vagante Vento Selvagem","Wandering King Wildwind"],["Rei Fantasma Hidreto","Phantom King Hydride"],["Rei Mágico Estrela Lunar","Magical King Moonstar"],["Rei Absoluto de Mochila a Jato","Absolute King Back Jack"],["Dragão Vermelho Arquidemônio/Modo de Ataque","Red Dragon Archfiend/Assault Mode"],["Besta de Ataque","Assault Beast"],["Refletor Psíquico","Psi-Reflector"],["Formiga de Fogo Ascator","Fire Ant Ascator"],["Ascator, o Andarilho da Aurora","Ascator, Dawnwalker"],["Perigo! Nessie!","Danger! Nessie!"],["Perigo! Chupa-cabra!","Danger! Chupacabra!"],["Bruxa da Floresta Negra","Witch of the Black Forest"],["Força de Poder Absoluta","Absolute Powerforce"],["Gaia Carmesim","Crimson Gaia"],["Motor do Ressonador","Resonator Engine"],["Chamado do Ressonador","Resonator Call"],["Comandar Ressonador","Resonator Command"],["Alma Ardente","Burning Soul"],["Pote da Extravagância","Pot of Extravagance"],["Golem Demoníaco","Fiendish Golem"],["Zona Vermelha","Red Zone"],["Sincro do Rei","King's Synchro"],["Reino Vermelho","Red Reign"],["Hora de se Levantar","Time to Stand Up"],["Corrente Demoníaca","Fiendish Chain"],["Renascimento Poderoso","Powerful Rebirth"],["Ativar Modo de Ataque","Assault Mode Activate"],["Terrores da Raiz Superior","Terrors of the Overroot"],["Incandescente Dragão Vermelho Arquidemônio","Scarlight Red Dragon Archfiend"],["Abrasador Dragão Vermelho Arquidemônio do Abismo","Hot Red Dragon Archfiend Abyss"],["Abrasador Dragão Vermelho Arquidemônio do Banimento","Hot Red Dragon Archfiend Bane"],["Dragão Vermelho Super Nova","Red Supernova Dragon"],["Dragão Vermelho Arquidemônio","Red Dragon Archfiend"],["Dragão Vermelho Nova","Red Nova Dragon"],["Abrasador Dragão Vermelho Arquidemônio Rei da Calamidade","Hot Red Dragon Archfiend King Calamity"],["Dragão da Ascendência Vermelha","Red Rising Dragon"],["Dragão Vermelho Arquidemônio com Cicatriz","Scarred Dragon Archfiend"]],"Correntes Glaciais":[["General Wayne da Barreira de Gelo","General Wayne of the Ice Barrier"],["Reveladora da Barreira de Gelo","Revealer of the Ice Barrier"],["Oradora da Barreira de Gelo","Speaker for the Ice Barriers"],["Espírito Hexa da Barreira de Gelo","Hexa Spirit of the Ice Barrier"],["Zuijin da Barreira de Gelo","Zuijin of the Ice Barrier"],["Blizzed, o Defensor da Barreira de Gelo","Blizzed, Defender of the Ice Barrier"],["Criomante da Barreira de Gelo","Cryomancer of the Ice Barrier"],["Prior da Barreira de Gelo","Prior of the Ice Barrier"],["Defensor da Barreira de Gelo","Defender of the Ice Barrier"],["Bruxo da Barreira de Gelo","Warlock of the Ice Barrier"],["Quebra-feitiços da Barreira de Gelo","Spellbreaker of the Ice Barrier"],["Estrategista da Barreira de Gelo","Strategist of the Ice Barrier"],["Princesa Dançarina da Barreira de Gelo","Dance Princess of the Ice Barrier"],["Dai-sojo da Barreira de Gelo","Dai-sojo of the Ice Barrier"],["General Raiho da Barreira de Gelo","General Raiho of the Ice Barrier"],["Médium da Barreira de Gelo","Medium of the Ice Barrier"],["General Gantala da Barreira de Gelo","General Gantala of the Ice Barrier"],["General Grunard da Barreira de Gelo","General Grunard of the Ice Barrier"],["Controlador Genex","Genex Controller"],["Undina Genex","Genex Undine"],["Espírito da Aqua","Aqua Spirit"],["Sapo Enganador","Dupe Frog"],["Roninrãnin","Ronintoadin"],["Lançador Peixeborgue","Fishborg Launcher"],["Moulingeleira, o Senhor Elemental","Moulinglacia the Elemental Lord"],["Tamboril Silencioso","Silent Angler"],["Ventos Sobre a Barreira de Gelo","Winds Over the Ice Barrier"],["Correntes Glaciais da Barreira de Gelo","Freezing Chains of the Ice Barrier"],["Triângulo Mágico da Barreira de Gelo","Magic Triangle of the Ice Barrier"],["Medalhão da Barreira de Gelo","Medallion of the Ice Barrier"],["Espelho da Barreira de Gelo","Mirror of the Ice Barrier"],["Salvamento","Salvage"],["Emergir","Surface"],["Onde Estarás Tu?","Where Arf Thou?"],["Designador da Lotus Vermelha","Appointer of the Red Lotus"],["Corrente Demoníaca","Fiendish Chain"],["Eisbahn","Eisbahn"],["Drenar Mente","Mind Drain"],["Tempestade Pesada de Pó","Heavy Storm Duster"],["Repressão","Crackdown"],["Trishula, o Dragão Zero da Barreira de Gelo","Trishula, Zero Dragon of the Ice Barrier"],["Dewloren, o Rei Tigre da Barreira de Gelo","Dewloren, Tiger King of the Ice Barrier"],["Brionac, o Dragão da Barreira de Gelo","Brionac, Dragon of the Ice Barrier"],["Gungnir, o Dragão da Barreira de Gelo","Gungnir, Dragon of the Ice Barrier"],["Trishula, o Dragão da Barreira de Gelo","Trishula, Dragon of the Ice Barrier"],["Terror de Trishula","Terror of Trishula"]],"Loucura Mecanizada":[["Cidadela Autômata","Machina Citadel"],["Ginete Aéreo Autômato","Machina Air Raider"],["Irradiador Autômato","Machina Irradiator"],["Fortaleza Autômata","Machina Fortress"],["Formecanismo Autômato","Machina Gearframe"],["Pacificador Autômato","Machina Peacekeeper"],["Força Autômata","Machina Force"],["Megaforma Autômata","Machina Megaform"],["Canhão Autômato","Machina Cannon"],["Soldado Autômato","Machina Soldier"],["Franco-atirador Autômato","Machina Sniper"],["Defensor Autômato","Machina Defender"],["Comandante Covington","Commander Covington"],["Jizukiru, o Kaiju Destruidor de Estrelas","Jizukiru, the Star Destroying Kaiju"],["Trator de Neve Ultraveloz","Snow Plow Hustle Rustle"],["Aliado Genex Homem-pássaro","Genex Ally Birdman"],["Reciclador de Restolhos","Scrap Recycler"],["Engrenagem de Motor a Corda","Torque Tune Gear"],["Chave da Direita","Righty Driver"],["Chave da Esquerda","Lefty Driver"],["Robô-secretário 001","Deskbot 001"],["Robô-secretário 003","Deskbot 003"],["Reagrupamento Autômato","Machina Redeployment"],["Perímetro de Defesa Autômato","Machina Defense Perimeter"],["Unidade Blindada Autômata","Machina Armored Unit"],["Chamado do Ferro","Iron Call"],["Saque de Ferro","Iron Draw"],["Reverso do Ímã","Magnet Reverse"],["Remover Limites","Limiter Removal"],["Laços de Irmãos","Ties of the Brethren"],["Pote da Avarice","Pot of Avarice"],["Ciclone Cósmico","Cosmic Cyclone"],["Suprir o Pelotão","Supply Squad"],["Extenuação Autômata","Machina Overdrive"],["Destruidor de Invocação Ciber","Cyber Summon Blaster"],["De Trás à Frente","Back to the Front",0,2],["Truque de Sapateado","Trap Trick"],["Vai-te Embora, Tratante!","Begone, Knave!"],["Golpe Solene","Solemn Strike"],["Depossuído Autômato","Machina Possesstorage"],["Reativação Não Autorizada","Unauthorized Reactivation"]],"Lenda das Feras Cristalinas":[["Fera Cristalina Carbúnculo Rubi","Crystal Beast Ruby Carbuncle"],["Fera Cristalina Gata Ametista","Crystal Beast Amethyst Cat"],["Fera Cristalina Tartaruga Esmeralda","Crystal Beast Emerald Tortoise"],["Fera Cristalina Tigre Topázio","Crystal Beast Topaz Tiger"],["Fera Cristalina Mamute Âmbar","Crystal Beast Amber Mammoth"],["Fera Cristalina Águia Cobalto","Crystal Beast Cobalt Eagle"],["Fera Cristalina Pégaso Safira","Crystal Beast Sapphire Pegasus"],["Dragão Negro Arco-Íris","Rainbow Dark Dragon"],["Mestre Cristalino","Crystal Master"],["Defensor Cristalino","Crystal Keeper"],["Hamon, o Senhor do Trovão Impactante","Hamon, Lord of Striking Thunder"],["Deslocador Dimensional","Dimension Shifter"],["\"B\" Contato","Contact \"C\""],["Florescer de Cinzas & Primavera Feliz","Ash Blossom & Joyous Spring"],["Fantasma Belle & Mansão Assombrada","Ghost Belle & Haunted Mansion"],["Despertar dos Definitivos Cristalinos","Awakening of the Crystal Ultimates"],["Égide Cristalino","Crystal Aegis"],["Cidade Antiga - Ruínas Arco-Íris","Ancient City - Rainbow Ruins"],["Ponte Arco-Íris","Rainbow Bridge"],["Farol Cristalino","Crystal Beacon"],["Bênção Cristalina","Crystal Blessing"],["Abundância Cristalina","Crystal Abundance"],["Promessa Cristalina","Crystal Promise"],["Árvore Cristalina","Crystal Tree"],["Libertação Cristalina","Crystal Release"],["Valor Raro","Rare Value"],["Refração Arco-Íris","Rainbow Refraction"],["Trevas Avançadas","Advanced Dark"],["A Melodia do Despertar do Dragão","The Melody of Awakening Dragon"],["Espólios do Enterro Tolo","Foolish Burial Goods"],["Ciclone Cósmico","Cosmic Cyclone"],["Dádiva Cristalina","Crystal Boon"],["Milagre Cristalino","Crystal Miracle"],["Brilho Cristalino","Crystal Brilliance"],["Par Cristalino","Crystal Pair"],["Conclave Cristalino","Crystal Conclave"],["Magia Cristalina Definitiva","Ultimate Crystal Magic"],["Contra Gema","Counter Gem"],["Furão de Chamas","Ferret Flames"],["Metaverso","Metaverse"],["Dragão Arco-Íris","Rainbow Dragon"],["Sobremarcha do Dragão Arco-Íris Cristalino Definitivo","Ultimate Crystal Rainbow Dragon Overdrive"],["Supradragão Arco-Íris","Rainbow Overdragon"],["Fera Cristalina Dragão Arco-Íris","Crystal Beast Rainbow Dragon"],["Ponte Arco-Íris do Coração","Rainbow Bridge of the Heart"],["Vínculo Cristalino","Crystal Bond"]],"Fúria do Dinosmagador":[["Petiteranodon","Petiteranodon"],["Ultimate Tyranno Condutor","Ultimate Conductor Tyranno"],["Oviraptor Comendo Almas","Souleating Oviraptor"],["Megalosmagador X","Megalosmasher X",0,2],["Sabressauro","Sabersaurus",0,2],["Tyranno Supercondutor","Super Conductor Tyranno"],["Ultimate Tyranno","Ultimate Tyranno"],["Dinobesta Super Antiga","Super-Ancient Dinobeast"],["Bráquio Sauropod","Sauropod Brachion"],["Tyranno Infinito","Tyranno Infinity"],["Braquio Negro","Black Brachios"],["Ovo Jurássico Milagroso","Miracle Jurassic Egg"],["Gilassauro","Gilasaurus"],["Bebecerassauro","Babycerasaurus"],["Miscelaneussauro","Miscellaneousaurus"],["Hordeum Maligno Salamandra","Evilswarm Salamandra"],["Estegociber","Stegocyber"],["Trifortalezatops","Trifortressops"],["Esqueletossauro","Skelesaurus"],["Mascaosso","Chewbone"],["Coelho de Socorro","Rescue Rabbit"],["Mundo Perdido","Lost World"],["Escavar Fóssil","Fossil Dig"],["Pílula de Grande Evolução","Big Evolution Pill"],["Tornados Gêmeos","Twin Twisters"],["Enterro de Outra Dimensão","Burial from a Different Dimension"],["Espadas da Luz Oculta","Swords of Concealing Light"],["Decisão Dolorosa","Painful Decision"],["Dai Inesperado","Unexpected Dai"],["Transformação Campal","Terraforming"],["Fim da Sobrevivência","Survival's End"],["Sobrevivência do Mais Apto","Survival of the Fittest"],["Escavação de Fósseis","Fossil Excavation"],["Extinção do Cronograma","Extinction on Schedule"],["Trio Ojama","Ojama Trio"],["Arquidemônios dos Pesadelos","Nightmare Archfiends"],["Força do Espelho Trêmula","Quaking Mirror Force"],["Grande Corneta Celestial","Grand Horn of Heaven"],["Explosão Secreta","Secret Blast"]],"Covil das Trevas":[["Lilith, a Dama da Lamentação","Lilith, Lady of Lament"],["Diábolos Tenebroso, Senhor do Covil","Darkest Diabolos, Lord of the Lair"],["Ahrima, o Soberano Perverso","Ahrima, the Wicked Warden"],["Duque Penumbra, o Senhor das Sombras Sinistro","Duke Shade, the Sinister Shadow Lord"],["Diábolos, o Rei do Abismo","Diabolos, King of the Abyss"],["Senhor dos Liches, o Rei do Submundo","Lich Lord, King of the Underworld"],["Prometeu, Rei das Sombras","Prometheus, King of the Shadows"],["Imperador Arquidemônio, o Primeiro Senhor do Terror","Archfiend Emperor, the First Lord of Horror"],["Caius, o Mega Monarca","Caius the Mega Monarch"],["Maju Garzett Lendário","Legendary Maju Garzett"],["Demônio da Vaidade","Vanity's Fiend"],["Arquidemônio da Névoa","Mist Archfiend"],["Dragão Infernal","Infernal Dragon"],["Cavalaria Arquidemônio","Archfiend Cavalry"],["Patrulha de Rua de Estígia","Stygian Street Patrol"],["Fantasma do Caos","Phantom of Chaos"],["Lobo da Praga","Plague Wolf"],["Guerreiro Rino Demoníaco","Fiendish Rhino Warrior"],["Kuribandido","Kuribandit"],["Guia de Excursão do Submundo","Tour Guide From the Underworld"],["Rei Absoluto de Mochila a Jato","Absolute King Back Jack"],["Renunkuriboh","Relinkuriboh"],["Covil das Trevas","Lair of Darkness"],["Pesadelo Recorrente","Recurring Nightmare"],["Fascinação das Trevas","Allure of Darkness"],["Destruição da Mão","Hand Destruction"],["Espólios do Enterro Tolo","Foolish Burial Goods"],["Armadilha Boogie","Boogie Trap"],["Fogos do Juízo Final","Fires of Doomsday"],["Véu da Escuridão","Veil of Darkness"],["Vírus Túmulo Sorridente","Grinning Grave Virus"],["Vírus Esmaga-Card","Crush Card Virus"],["Vírus Devastador de Decks","Deck Devastation Virus"],["Vírus Epidêmico Erradicador","Eradicator Epidemic Virus"],["Vírus de Força Total","Full Force Virus"],["Luz Negra","Darklight"],["Armadilha da Escuridão","Trap of Darkness"],["Aperto Mental","Mind Crush"],["Alcançar a Altura Integral","Rise to Full Height"],["Maldição das Trevas","Curse of Darkness"],["Yorishiro Sinistro","Sinister Yorishiro"]],"Ataque do Herói":[["Névoa Sombria, o HERÓI do Elemento","Elemental HERO Shadow Mist"],["Oceano, o HERÓI do Elemento","Elemental HERO Ocean"],["Lenhador, o HERÓI do Elemento","Elemental HERO Woodsman"],["Voltica, o HERÓI do Elemento","Elemental HERO Voltic"],["Calor, o HERÓI do Elemento","Elemental HERO Heat"],["Aviário, o HERÓI do Elemento","Elemental HERO Avian"],["Neos, o HERÓI do Elemento","Elemental HERO Neos"],["Neos Alius, o HERÓI do Elemento","Elemental HERO Neos Alius"],["Lâmina Afiada, o HERÓI do Elemento","Elemental HERO Bladedge"],["Necrosombra, o HERÓI do Elemento","Elemental HERO Necroshade"],["Coração Selvagem, o HERÓI do Elemento","Elemental HERO Wildheart"],["Homem Bolha, o HERÓI do Elemento","Elemental HERO Bubbleman"],["Grande Toupeira Neoespacial","Neo-Spacian Grand Mole"],["Honesto","Honest"],["Soldado Card","Card Trooper"],["Kuriboh Alado","Winged Kuriboh"],["Monge Invocador","Summoner Monk"],["Homunculos, o Ser Alquímico","Homunculus the Alchemic Being"],["Mudar a Máscara II","Mask Change II"],["Mudar a Forma","Form Change"],["Carregar Máscara","Mask Charge"],["Mudar a Máscara","Mask Change"],["Polimerização","Polymerization"],["Fusão Miraculosa","Miracle Fusion"],["Fusão do Mundo Paralelo","Parallel World Fusion"],["Um Herói Vive","A Hero Lives"],["Máscara do Herói","Hero Mask"],["H - Coração Ardente","H - Heated Heart"],["E - Chamada de Emergência","E - Emergency Call"],["R - Justiça Honrada","R - Righteous Justice"],["O - Sobrealma","O - Oversoul"],["Reforço do Exército","Reinforcement of the Army"],["O Regresso do Guerreiro Vivo","The Warrior Returning Alive"],["Pote da Dualidade","Pot of Duality"],["Sinal do Herói","Hero Signal"],["Explosão do Herói","Hero Blast"],["Chamado dos Assombrados","Call of the Haunted"],["Buraco Armadilha Sem Fundo","Bottomless Trap Hole"],["Aparelho de Evacuação Obrigatória","Compulsory Evacuation Device"],["Uivo do Guarda de Batalha","Battleguard Howling"],["Caos, o HERÓI do Contraste","Contrast HERO Chaos"],["Koga, o HERÓI Mascarado","Masked HERO Koga"],["Vento Divino, o HERÓI Mascarado","Masked HERO Divine Wind"],["Lei Obscura, o HERÓI Mascarado","Masked HERO Dark Law"],["Grande Tornado, o HERÓI do Elemento","Elemental HERO Great Tornado"]],"Bestas Sagradas":[["Raviel, o Senhor dos Fantasmas - Destruidor Cintilante","Raviel, Lord of Phantasms - Shimmering Scraper"],["Núcleo do Caos","Chaos Core"],["Besta do Conhecimento Negro","Dark Beckoning Beast"],["Besta da Invocação do Caos","Chaos Summoning Beast"],["Besta da Invocação Negra","Dark Summoning Beast"],["Fantasma do Caos","Phantom of Chaos"],["Fantasma Destruidor Celeste","Phantom Skyblaster"],["Recarregador Louco","Mad Reloader"],["Serpeador do Túmulo","Grave Squirmer"],["Dragão Negro Arco-Íris","Rainbow Dark Dragon"],["Tragoedia","Tragoedia"],["Radian, o Kaiju Multidimensional","Radian, the Multidimensional Kaiju"],["Caçador do Caos","Chaos Hunter"],["Mestre de Marionetes","Puppet Master"],["Patrulha de Rua de Estígia","Stygian Street Patrol"],["Farfa, Malebranche do Abismo Ardente","Farfa, Malebranche of the Burning Abyss"],["O Cerburrel Mitológico","The Fabled Cerburrel"],["Perigo! Chupa-cabra!","Danger! Chupacabra!"],["Fogo Celeste Cerúleo","Cerulean Skyfire"],["Abertura dos Portões Espirituais","Opening of the Spirit Gates"],["Paraíso Caído","Fallen Paradise"],["Mártires Fantasmais","Phantasmal Martyrs"],["Crônica da Magia","Spell Chronicle"],["Transformação Campal","Terraforming"],["Rotação de Cenário","Set Rotation"],["Colina do Criador Aprisionado","Mound of the Bound Creator"],["Um por Um","One for One"],["O Começo do Fim","The Beginning of the End"],["Pote dos Desejos","Pot of Desires"],["Selo do Dono","Owner's Seal"],["Barreira de Campo","Field Barrier"],["Espadas da Luz Oculta","Swords of Concealing Light"],["Tufão Espacial Místico","Mystical Space Typhoon"],["Hiperchamas","Hyper Blaze"],["Despertar das Bestas Sagradas","Awakening of the Sacred Beasts"],["Fuga da Dimensão Negra","Escape from the Dark Dimension"],["Metamorfídia","Shapesister"],["Costume Imperial","Imperial Custom"],["Erro","Mistake"],["Fábrica Negra de Mais Produção","Dark Factory of More Production"],["Imperador Fantasma Trilojig","Phantasm Emperor Trilojig"],["Uria, o Senhor das Chamas Cortantes","Uria, Lord of Searing Flames"],["Hamon, o Senhor do Trovão Impactante","Hamon, Lord of Striking Thunder"],["Raviel, o Senhor dos Fantasmas","Raviel, Lord of Phantasms"],["Armityle, o Fantasma do Caos","Armityle the Chaos Phantom"],["Destruição da Dimensão Fusão","Dimension Fusion Destruction"]],"Encantadoras Espirituais":[["Aussa, a Encantadora da Terra","Aussa the Earth Charmer"],["Eria, a Encantadora da Água","Eria the Water Charmer"],["Hiita, a Encantadora do Fogo","Hiita the Fire Charmer"],["Wynn, a Encantadora do Vento","Wynn the Wind Charmer"],["Despertar dos Possuídos - Arquidemônio Nefárior","Awakening of the Possessed - Nefariouser Archfiend"],["Despertar dos Possuídos - Grande Fogo Inari","Awakening of the Possessed - Greater Inari Fire"],["Arquidemônio Nefário, o Comedor da Perversidade","Nefarious Archfiend Eater of Nefariousness"],["Jigabyte","Jigabyte"],["Fogo Inari","Inari Fire"],["Ranryu","Ranryu"],["Cauda de Fadas - Adormecida","Fairy Tail - Sleeper"],["Cauda de Fadas - Rella","Fairy Tail - Rella"],["Cauda de Fadas - Luna","Fairy Tail - Luna"],["Fazticeira Golem Aruru","Witchcrafter Golem Aruru"],["Doriado Sombrio","Dark Doriado"],["Bruxa da Floresta Negra","Witch of the Black Forest"],["Ocultador de Efeitos","Effect Veiler"],["Denko Sekka","Denko Sekka"],["Ichirin - Arte Espiritual Maior","Grand Spiritual Art - Ichirin"],["Despertar dos Possuídos","Awakening of the Possessed"],["Raigeki","Raigeki"],["Vila Secreta dos Magos","Secret Village of the Spellcasters"],["Livro de Magia do Conhecimento","Spellbook of Knowledge"],["Transformação Campal","Terraforming"],["Livro do Eclipse","Book of Eclipse"],["Tornados Gêmeos","Twin Twisters"],["Governante Sombrio, Não Mais!","Dark Ruler No More"],["Parceria dos Possuídos","Possessed Partnerships"],["Despossuído","Unpossessed"],["Kurogane - Arte Espiritual da Terra","Spiritual Earth Art - Kurogane"],["Aoi - Arte Espiritual da Água","Spiritual Water Art - Aoi"],["Kurenai - Arte Espiritual do Fogo","Spiritual Fire Art - Kurenai"],["Miyabi - Arte Espiritual do Vento","Spiritual Wind Art - Miyabi"],["Metaverso","Metaverse"],["Barragem Dimensional","Dimensional Barrier"],["Aviso Solene","Solemn Warning"],["Espírito-Possuído - Aussa","Familiar-Possessed - Aussa"],["Espírito-Possuído - Eria","Familiar-Possessed - Eria"],["Espírito-Possuído - Hiita","Familiar-Possessed - Hiita"],["Espírito-Possuído - Wynn","Familiar-Possessed - Wynn"],["Encantadoras Espirituais","Spirit Charmers"]],"Reis de Fogo":[["Avatar Altíssimo do Rei de Fogo Garunix","Fire King High Avatar Garunix"],["Avatar do Rei de Fogo Barong","Fire King Avatar Barong"],["Avatar do Rei de Fogo Kirin","Fire King Avatar Kirin"],["Fênix Sagrada de Nephthys","Sacred Phoenix of Nephthys"],["Mantícora das Trevas","Manticore of Darkness"],["Goka, o Piro da Malícia","Goka, the Pyre of Malice"],["Hipogrifo da Chama Nebulosa","Hazy Flame Hyppogrif"],["Senhor da Lança Laval","Laval Lancelord"],["Cão de Fogo de Flamvell","Flamvell Firedog"],["Poun de Flamvell","Flamvell Poun"],["Sabre de Neo Flamvell","Neo Flamvell Sabre"],["Guardas Reais da Tempestade de Fogo","Royal Firestorm Guards"],["Foguete Vulcânico","Volcanic Rocket"],["Marcador Vulcânico","Volcanic Counter"],["Zumbi Fundido","Molten Zombie"],["Espírito das Chamas","Spirit of Flames"],["Espírito da Chama Furioso","Raging Flame Sprite"],["Fogo da Raposa","Fox Fire"],["Tigre das Chamas","Flame Tiger"],["Quimera Pequena","Little Chimera"],["Tartaruga Disco Voador","UFO Turtle",0,2],["Investida dos Reis de Fogo","Onslaught of the Fire Kings"],["Círculo dos Reis de Fogo","Circle of the Fire Kings"],["Reacender","Rekindling"],["Acelerador de Explosão","Blaze Accelerator"],["Libertação da Natureza Selvagem","Wild Nature's Release"],["Pote da Dualidade","Pot of Duality"],["Destruição da Mão","Hand Destruction"],["Troca de Criaturas","Creature Swap"],["Fardo do Poderoso","Burden of the Mighty"],["Contra-explosão","Backfire"],["Contra-ataque Flamvell","Flamvell Counter"],["Sopro da Asa da Fênix","Phoenix Wing Wind Blast"],["Chifre da Besta Fantasma","Horn of the Phantom Beast"],["Estouro com Correia","Blast with Chain"],["Kurenai - Arte Espiritual do Fogo","Spiritual Fire Art - Kurenai"],["Renascimento Arrependido","Regretful Rebirth"],["Roda dos Pesadelos","Nightmare Wheel"],["Chamado dos Assombrados","Call of the Haunted"]],"Onda de Luz":[["Eva","Eva"],["Sagrado Arquicavaleiro Celeste Parshath","Sacred Arch-Airknight Parshath"],["Minerva, a Estudiosa dos Céus","Minerva, Scholar of the Sky"],["Poderosa Anja Valquíria","Power Angel Valkyria"],["Neo-Parshath, o Paladino dos Céus","Neo-Parshath, the Sky Paladin"],["Cavaleiro Celeste Parshath","Airknight Parshath"],["Meltiel, a Sábia dos Céus","Meltiel, Sage of the Sky"],["Anjo da Sabedoria da Colheita","Harvest Angel of Wisdom"],["Artemis Benfeitor","Bountiful Artemis"],["Layard, o Liberador","Layard the Liberator"],["Ariadne Guia","Guiding Ariadne"],["Archlord Kristya","Archlord Kristya"],["Vênus Esplêndida","Splendid Venus"],["Atena","Athena"],["Tétis, a Deusa da Luz","Tethys, Goddess of Light"],["Hecatrice","Hecatrice"],["Gellenduo","Gellenduo"],["Invocador Nova","Nova Summoner"],["Honesto","Honest"],["Arauto da Luz Laranja","Herald of Orange Light"],["Arauto da Luz Verde","Herald of Green Light"],["Arauto da Luz Púrpura","Herald of Purple Light"],["Luz Guia","Guiding Light"],["D.D. Duende","D.D. Sprite"],["Hanewata","Hanewata"],["O Sacrário de Parshath","The Sanctum of Parshath"],["O Santuário no Céu","The Sanctuary in the Sky"],["Cards dos Céus","Cards from the Sky"],["Transformação Celestial","Celestial Transformation"],["Valhala, o Salão dos Caídos","Valhalla, Hall of the Fallen"],["Laços de Irmãos","Ties of the Brethren"],["Renascimento de Parshath","Rebirth of Parshath"],["Luz de Julgamento","Light of Judgment"],["Rasante Milagroso","Miraculous Descent"],["Serafim Sintético","Synthetic Seraphim"],["Castigo Divino","Divine Punishment"],["Suborno Obscuro","Dark Bribe"],["Aviso Solene","Solemn Warning"],["Providência Definitiva","Ultimate Providence"],["Jogar Tudo Fora","Drastic Drop Off"],["Chamamento","Recall"]],"Deuses: Obelisco":[["Obelisco, o Atormentador","Obelisk the Tormentor"],["Cruzar Almas","Soul Crossing"],["Punho do Destino","Fist of Fate"],["Evolução Divina","Divine Evolution"],["Barreira de Resistência a Nível","Level Resist Wall"],["Anjo O1","Angel O1"],["Momonga Ágil","Nimble Momonga"],["Bazoo, o Comedor de Almas","Bazoo the Soul-Eater"],["Dragão Cibernético","Cyber Dragon"],["Dragão Endurecido Armado","Hardened Armed Dragon"],["Mega Hamster Super-Ágil","Super-Nimble Mega Hamster"],["Hordeum Maligno Mandrágora","Evilswarm Mandragora"],["Tigre das Lâminas de Fóton","Photon Sabre Tiger"],["Hordeum Maligno Salamandra","Evilswarm Salamandra"],["Discípulo de Rá","Ra's Disciple"],["Dragão Desmascarado","Unmasked Dragon"],["Mare Mare","Mare Mare"],["Castor Ágil","Nimble Beaver"],["Bruxa Condenada","Condemned Witch"],["Bugiganga Uka, a Raposa Festiva da Fecundidade","Gizmek Uka, the Festive Fox of Fecundity"],["Bugiganga Makami, a Fortaleza de Presas Ferozes","Gizmek Makami, the Ferocious Fanged Fortress"],["Espanador de Penas da Harpia","Harpie's Feather Duster"],["Controle Cerebral","Brain Control"],["Reviver Monstro","Monster Reborn"],["Cápsula de uma Dimensão Diferente","Different Dimension Capsule"],["Pote da Avarice","Pot of Avarice"],["Invocação Dupla","Double Summon"],["Cálice Proibido","Forbidden Chalice"],["Lança Proibida","Forbidden Lance"],["Vestido Proibido","Forbidden Dress"],["Suprir o Pelotão","Supply Squad"],["O Monarca Avança","The Monarchs Stormforth"],["Chamado dos Assombrados","Call of the Haunted"],["Clonagem","Cloning"],["Força do Espelho do Afogamento","Drowning Mirror Force"]],"Deuses: Slifer":[["Slifer, o Dragão Celeste","Slifer the Sky Dragon"],["Cruzar Almas","Soul Crossing"],["Ataque Força Trovão","Thunderforce Attack"],["Besta Divina Definitiva","Ultimate Divine-Beast"],["Caçador do Milênio","Millennium Seeker"],["Tellus, o Anjo Menor","Tellus the Little Angel"],["Breaker, o Guerreiro Mágico","Breaker the Magical Warrior"],["Rei das Bestas Bárbaros","Beast King Barbaros"],["Raposa de Nove Caudas","Nine-Tailed Fox"],["Fantasma Destruidor Celeste","Phantom Skyblaster"],["Vigia Card","Card Guard"],["Corvo da Garra Negra","Caligo Claw Crow"],["Tartaruga Eletromagnética","Electromagnetic Turtle"],["Breaker, o Guerreiro Mágico Negro","Breaker the Dark Magical Warrior"],["Fantasma Expiatório","Scapeghost"],["Ahrima, o Soberano Perverso","Ahrima, the Wicked Warden",0,3],["Duque Penumbra, o Senhor das Sombras Sinistro","Duke Shade, the Sinister Shadow Lord"],["Wivern Clock","Clock Wyvern"],["Espírito Tenyi - Vishuda","Tenyi Spirit - Vishuda"],["Reator Limo","Reactor Slime"],["Espadas da Luz Reveladora","Swords of Revealing Light"],["Espanador de Penas da Harpia","Harpie's Feather Duster"],["Reviver Monstro","Monster Reborn"],["Livro da Lua","Book of Moon"],["Controlador de Inimigos","Enemy Controller"],["Pote da Avarice","Pot of Avarice"],["Marcha dos Monarcas","March of the Monarchs"],["Suprir o Pelotão","Supply Squad"],["Avançar Card","Card Advance"],["O Nome Verdadeiro","The True Name"],["Senha Única","One-Time Passcode"],["Covil das Trevas","Lair of Darkness"],["Compra Predestinada","Draw of Fate"],["Força do Espelho","Mirror Force"],["Ganância Descuidada","Reckless Greed"],["Limo Reflete Metal","Metal Reflect Slime"],["As Maçãs Douradas","The Golden Apples"],["De Trás à Frente","Back to the Front"]],"Rugido do Dragão":[["Dragão das Trevas de Olhos Vermelhos","Red-Eyes Darkness Dragon"],["Dragão Negro de Olhos Vermelhos","Red-Eyes Black Dragon"],["Dragão do Brilho","Luster Dragon",0,2],["Behemoth de Duas Cabeças","Twin-Headed Behemoth"],["Dragão Armado LV3","Armed Dragon LV3",0,2],["Dragão Armado LV5","Armed Dragon LV5",0,2],["Filhote do Dragão Negro","Black Dragon's Chick"],["Dragão do Elemento","Element Dragon"],["Dragão Mascarado","Masked Dragon",0,3],["Roubo Precipitado","Snatch Steal"],["Tufão Espacial Místico","Mystical Space Typhoon"],["O Nobre de Crossout","Nobleman of Crossout",0,2],["Enterro Precoce","Premature Burial"],["Espadas da Luz Reveladora","Swords of Revealing Light"],["Pote da Ganância","Pot of Greed"],["Tempestade Pesada","Heavy Storm"],["Destruição com os Pés","Stamping Destruction",0,3],["Troca de Criaturas","Creature Swap",0,2],["Recarregar","Reload",0,2],["O Cemitério na Quarta Dimensão","The Graveyard in the Fourth Dimension"],["Chamado dos Assombrados","Call of the Haunted"],["Cessar-Fogo","Ceasefire"],["A Conta do Dragão","The Dragon's Bead"],["Ira do Dragão","Dragon's Rage",0,2],["Ganância Descuidada","Reckless Greed"],["Transportador Interdimensional de Matéria","Interdimensional Matter Transporter",0,2],["Bloqueador de Armadilhas","Trap Jammer"],["Maldição de Anúbis","Curse of Anubis"]],"Yugi (Decks Lendários 2)":[[0,"The Legendary Exodia Incarnate"],[0,"The Tricky"],[0,"Exodia Necross"],[0,"Exodia the Forbidden One"],[0,"Left Arm of the Forbidden One"],[0,"Left Leg of the Forbidden One"],[0,"Right Arm of the Forbidden One"],[0,"Right Leg of the Forbidden One"],[0,"Dark Magician"],[0,"Dark Magician Girl"],[0,"Buster Blader"],[0,"Silent Magician LV8"],[0,"Silent Magician LV4"],[0,"Big Shield Gardna"],[0,"Magician's Valkyria"],[0,"Blast Magician"],[0,"Blockman"],[0,"Marshmallon"],[0,"Sangan"],[0,"The Winged Dragon of Ra",1],[0,"Obelisk the Tormentor",1],[0,"Slifer the Sky Dragon",1],[0,"Swords of Revealing Light"],[0,"Monster Reincarnation"],[0,"Ties of the Brethren"],[0,"Gold Sarcophagus"],[0,"Magical Dimension"],[0,"Magicians Unite"],[0,"Tricky Spell 4"],[0,"Thousand Knives"],[0,"Dark Magic Attack"],[0,"Contract with Exodia"],[0,"Messenger of Peace"],[0,"Dark Factory of Mass Production"],[0,"Secret Village of the Spellcasters"],[0,"Pot of Duality"],[0,"Dark Burning Attack"],[0,"Dark Burning Magic"],[0,"Obliterate!!!"],[0,"Magic Cylinder"],[0,"Mirror Force"],[0,"Magical Hats"],[0,"Magician's Circle"],[0,"Backup Soldier"],[0,"Gravity Bind"],[0,"Eternal Soul"]],"Kaiba (Blue-Eyes)":[[0,"Blue-Eyes White Dragon",0,3],[0,"The White Stone of Legend"],[0,"Alexandrite Dragon"],[0,"Vorse Raider"],[0,"Kaibaman"],[0,"The White Stone of Ancients"],[0,"Rider of the Storm Winds"],[0,"Battle Ox"],[0,"Tiger Dragon"],[0,"Kidmodo Dragon"],[0,"Blade Knight"],[0,"La Jinn the Mystical Genie of the Lamp"],[0,"Maiden with Eyes of Blue"],[0,"Master with Eyes of Blue"],[0,"Protector with Eyes of Blue"],[0,"Dragon Spirit of White"],[0,"King of the Swamp"],[0,"Ancient Lamp"],[0,"Ancient Rules"],[0,"Trade-In"],[0,"The Melody of Awakening Dragon"],[0,"Beacon of White"],[0,"Where Arf Thou?"],[0,"Fusion Substitute"],[0,"Unexpected Dai"],[0,"Polymerization"],[0,"Burst Stream of Destruction"],[0,"Mausoleum of White"],[0,"Pot of Dichotomy"],[0,"Shrink"],[0,"Enemy Controller"],[0,"Silent Doom"],[0,"Final Attack Orders"],[0,"Cloning"],[0,"Shadow Spell"],[0,"Negate Attack"],[0,"Jar of Avarice"],[0,"Fusion Reserve"],[0,"Azure-Eyes Silver Dragon"],[0,"Blue-Eyes Ultimate Dragon"],[0,"First of the Dragons"]],"Joey (Red-Eyes e Gemini)":[[0,"Red-Eyes Black Dragon"],[0,"Red-Eyes Black Flare Dragon"],[0,"Red-Eyes Archfiend of Lightning"],[0,"Red-Eyes Retro Dragon"],[0,"The Black Stone of Legend"],[0,"Black Metal Dragon"],[0,"Axe Raider"],[0,"Alligator's Sword"],[0,"Baby Dragon"],[0,"Jinzo"],[0,"Goblin Attack Force"],[0,"Gearfried the Iron Knight"],[0,"Rocket Warrior"],[0,"Blue Flame Swordsman"],[0,"Time Wizard"],[0,"Phoenix Gearfried"],[0,"Gemini Summoner"],[0,"Blazewing Butterfly"],[0,"Dark Valkyria"],[0,"Command Knight"],[0,"Valkyrian Knight"],[0,"Keeper of the Shrine"],[0,"Inferno Fire Blast"],[0,"Red-Eyes Fusion"],[0,"Cards of the Red Stone"],[0,"Polymerization"],[0,"Salamandra"],[0,"Scapegoat"],[0,"Foolish Burial"],[0,"Roulette Spider"],[0,"Supervise"],[0,"Mystical Space Typhoon"],[0,"Symbols of Duty"],[0,"Return of the Red-Eyes"],[0,"Red-Eyes Spirit"],[0,"Kunai with Chain"],[0,"Call of the Haunted"],[0,"Torrential Tribute"],[0,"Burst Breath"],[0,"Curse of Anubis"],[0,"Red-Eyes Flare Metal Dragon"],[0,"Archfiend Black Skull Dragon"],[0,"Alligator's Sword Dragon"]],"Yugi (Reino dos Duelistas)":[[0,"Battle Steer"],[0,"Beaver Warrior"],[0,"Celtic Guardian"],[0,"Curse of Dragon"],[0,"Dark Magician"],[0,"Feral Imp"],[0,"Gaia The Fierce Knight"],[0,"Giant Soldier of Stone"],[0,"Griffore"],[0,"Koumori Dragon"],[0,"Left Arm of the Forbidden One"],[0,"Left Leg of the Forbidden One"],[0,"Mammoth Graveyard"],[0,"Mystical Elf"],[0,"Right Arm of the Forbidden One"],[0,"Right Leg of the Forbidden One"],[0,"Rude Kaiser"],[0,"Silver Fang"],[0,"Summoned Skull"],[0,"Winged Dragon, Guardian of the Fortress #1"],[0,"Catapult Turtle"],[0,"Dark Sage"],[0,"Exodia the Forbidden One"],[0,"Kuriboh"],[0,"Sangan"],[0,"Black Luster Soldier"],[0,"Magician of Black Chaos"],[0,"Black Luster Ritual"],[0,"Book of Secret Arts"],[0,"Brain Control"],[0,"Breath of Light"],[0,"Burning Land"],[0,"Dark Hole"],[0,"Black Magic Ritual"],[0,"De-Spell"],[0,"Horn of the Unicorn"],[0,"Makiu, the Magical Mist"],[0,"Monster Reborn"],[0,"Monster Recovery"],[0,"Multiply"],[0,"Mystical Moon"],[0,"Mystic Box"],[0,"Polymerization"],[0,"Soul Release"],[0,"Spell Shattering Arrow"],[0,"Swords of Revealing Light"],[0,"Magical Hats"],[0,"Mirror Force"],[0,"Shift"],[0,"Spellbinding Circle"],[0,"The Eye of Truth"],[0,"Black Skull Dragon"],[0,"Dragon Master Knight"],[0,"Gaia the Dragon Champion"],[0,"Zombie Warrior"]],"Yugi (Dirigível Kaiba)":[[0,"Blockman"],[0,"Skilled White Magician"],[0,"Dark Magician"],[0,"Silent Magician LV8"],[0,"Skilled Dark Magician"],[0,"Magician of Black Chaos"],[0,"Dark Magician of Chaos"],[0,"Silent Swordsman LV5"],[0,"Buster Blader"],[0,"Red Gadget"],[0,"Jack's Knight"],[0,"The Tricky"],[0,"Marshmallon"],[0,"Silent Swordsman LV3"],[0,"Yellow Gadget"],[0,"Gandora the Dragon of Destruction"],[0,"Dark Magician Girl"],[0,"Queen's Knight"],[0,"Silent Swordsman LV7"],[0,"Green Gadget"],[0,"Kuriboh"],[0,"Silent Magician LV4"],[0,"King's Knight"],[0,"Gold Sarcophagus"],[0,"Tricky Spell 4"],[0,"Emblem of Dragon Destroyer"],[0,"Swords of Revealing Light"],[0,"Monster Reborn"],[0,"Card of Sanctity"],[0,"Dedication through Light and Darkness"],[0,"Marshmallon Glasses"],[0,"Polymerization"],[0,"Dark Magic Attack"],[0,"Magicians Unite"],[0,"Black Magic Ritual"],[0,"Mirror Force"],[0,"Stronghold the Moving Fortress"],[0,"Miracle Restoring"],[0,"Magician's Circle"],[0,"Shattered Axe"],[0,"Dark Paladin"]],"Akiza Izinski":[[0,"Lonefire Blossom",0,3],[0,"Witch of the Black Rose"],[0,"Spore"],[0,"Rose Lover"],[0,"Blue Rose Dragon"],[0,"Ghost Ogre & Snow Rabbit",0,2],[0,"Red Rose Dragon",0,3],[0,"White Rose Dragon",0,3],[0,"Ghost Sister & Spooky Dogwood"],[0,"Rose Princess"],[0,"Rose Girl"],[0,"Roxrose Dragon",0,3],[0,"Ruddy Rose Witch",0,3],[0,"Mulcharmy Meowls"],[0,"Monster Reborn"],[0,"Terraforming"],[0,"Miracle Fertilizer",0,2],[0,"Black Garden",0,2],[0,"Fragrance Storm"],[0,"Thorn of Malice"],[0,"Frozen Rose"],[0,"White Rose Cloister"],[0,"Basal Rose Shoot",0,2],[0,"Infinite Impermanence",0,2],[0,"Blooming of the Darkest Rose"],[0,"Black Rose Dragon"],[0,"Splendid Rose"],[0,"Black Rose Moonlight Dragon"],[0,"Garden Rose Maiden"],[0,"Crossrose Dragon",0,2],[0,"Periallis, Empress of Blossoms"],[0,"Ruddy Rose Dragon",0,2],[0,"Garden Rose Flora"]],"Crow Hogan":[[0,"Blackwing - Gale the Whirlwind"],[0,"Blackwing - Bora the Spear"],[0,"Blackwing - Vayu the Emblem of Honor"],[0,"Droll & Lock Bird",0,2],[0,"Blackwing - Kris the Crack of Dawn"],[0,"Blackwing - Sharnga the Waning Moon"],[0,"Blackwing - Oroshi the Squall"],[0,"Blackwing - Harmattan the Dust"],[0,"Ash Blossom & Joyous Spring",0,2],[0,"Blackwing - Simoon the Poison Wind",0,3],[0,"Ghost Mourner & Moonlit Chill"],[0,"Blackwing - Vata the Emblem of Wandering",0,3],[0,"Blackwing - Shamal the Sandstorm",0,3],[0,"Blackwing - Chinook the Snow Blast",0,3],[0,"Blackwing - Sudri the Phantom Glimmer",0,3],[0,"Mulcharmy Fuwalos"],[0,"Mystical Space Typhoon"],[0,"Book of Moon"],[0,"Black Whirlwind",0,2],[0,"Forbidden Chalice"],[0,"Called by the Grave"],[0,"Black Feather Whirlwind",0,2],[0,"Icarus Attack"],[0,"Delta Crow - Anti Reverse"],[0,"Blackbird Close"],[0,"Blackwing - Twin Shadow"],[0,"Blackwing Armor Master"],[0,"Blackwing Armed Wing"],[0,"Blackwing - Silverwind the Ascendant"],[0,"Black-Winged Dragon"],[0,"Blackwing - Nothung the Starlight"],[0,"Blackwing Full Armor Master"],[0,"Black-Winged Assault Dragon",0,2],[0,"Blackwing - Boreastorm the Wicked Wind",0,2]],"Yusei Fudo":[[0,"Stardust Dragon"],[0,"Full-Speed Warrior"],[0,"Anchorbolt Hedgehog"],[0,"Crossroad Sonic Chick"],[0,"Scrap Synchron"],[0,"Synchro Fellowship"],[0,"One-Way Synchro"],[0,"Junk Synchron",0,2],[0,"Wheel Synchron"],[0,"Stardust Synchron",0,3],[0,"Revolution Synchron"],[0,"Satellite Synchron"],[0,"Assault Synchron"],[0,"Jet Synchron"],[0,"Junk Converter",0,3],[0,"Doppelwarrior"],[0,"Effect Veiler",0,2],[0,"Ash Blossom & Joyous Spring"],[0,"Mulcharmy Purulia"],[0,"On Your Mark, Get Set, DUEL!",0,2],[0,"Tuning",0,3],[0,"Duelist Genesis"],[0,"Synchro Rumble"],[0,"Clashing Souls"],[0,"Scrap Fist"],[0,"One for One"],[0,"Scrapyard"],[0,"Called by the Grave"],[0,"Crossout Designator"],[0,"Forbidden Droplet"],[0,"Synchro Zone"],[0,"Infinite Impermanence"],[0,"Junk Warrior Extreme"],[0,"Scrap Warrior"],[0,"Junk Warrior"],[0,"Junk Speeder"],[0,"Accel Synchro Stardust Dragon"],[0,"Formula Synchron"],[0,"Stardust Warrior"],[0,"Shooting Star Dragon"],[0,"Crimson Dragon"]],"Revolução do Dragão Cibernético":[["Núcleo de Dragão Cibernético","Cyber Dragon Core"],["Dragão Cibernético Drei","Cyber Dragon Drei"],["Dragão Cibernético","Cyber Dragon"],["Dragão Cibernético Zwei","Cyber Dragon Zwei"],["Primeiro Dragão Cibernético","Proto-Cyber Dragon"],["Cibervale","Cyber Valley"],["Larva Cibernética","Cyber Larva"],["Fênix Cibernética","Cyber Phoenix"],["Dinossauro Cibernético","Cyber Dinosaur"],["Eltanin Cibernético","Cyber Eltanin"],["Cibern de Armadura","Armored Cybern"],["Canhão Satélite","Satellite Cannon"],["Disruptor do Vento Solar","Solar Wind Jammer"],["Cavaleiro Jade","Jade Knight"],["Alfanjeβ","Falchion B"],["Fronteira de Reflexão","Reflect Bounder"],["A Luz - Fusão Selada por Feitiço","The Light - Hex-Sealed Fusion"],["Anjo Resplandecente","Shining Angel"],["Usina de Reparos Cibernética","Cyber Repair Plant"],["Explosão Evolutiva","Evolution Burst"],["Super Polimerização","Super Polymerization"],["Vínculo de Poder","Power Bond"],["Remover Limites","Limiter Removal"],["Megamorph","Megamorph"],["D.O.D. - Reencarnação de Outra Dimensão","D.D.R. - Different Dimension Reincarnation"],["Tufão Espacial Místico","Mystical Space Typhoon"],["Luz da Redenção","Light of Redemption"],["Unidade Blindada Autômata","Machina Armored Unit"],["Rede Cibernética","Cyber Network"],["Tecnologia Cibernética Oculta","Cybernetic Hidden Technology"],["Trinca","Three of a Kind"],["Atordoar Armadilha","Trap Stun"],["Prisão Dimensional","Dimensional Prison"],["Catástrofe Malevolente","Malevolent Catastrophe"],["Waboku","Waboku"],["Chamado dos Assombrados","Call of the Haunted"],["Dragão Gêmeo Cibernético","Cyber Twin Dragon"],["Dragão Cibernético Nova","Cyber Dragon Nova"]]};
+const API='https://db.ygoprodeck.com/api/v7/cardinfo.php';
+const A_PT={DARK:'TREVAS',LIGHT:'LUZ',FIRE:'FOGO',WATER:'ÁGUA',EARTH:'TERRA',WIND:'VENTO',DIVINE:'DIVINO'};
+const R_PT={Zombie:'Zumbi',Dragon:'Dragão',Spellcaster:'Mago',Warrior:'Guerreiro',Beast:'Fera','Beast-Warrior':'Guerreiro-Fera',Fiend:'Demônio',Fairy:'Fada',Machine:'Máquina',Aqua:'Aqua',Pyro:'Piro',Thunder:'Trovão',Rock:'Pedra',Plant:'Planta',Insect:'Inseto',Dinosaur:'Dinossauro',Reptile:'Réptil','Winged Beast':'Besta Alada',Fish:'Peixe','Sea Serpent':'Serpente Marinha',Psychic:'Psíquico',Wyrm:'Wyrm',Cyberse:'Ciberso','Divine-Beast':'Besta Divina','Creator God':'Deus Criador',Illusion:'Ilusão'};
+const T_PT={Normal:'Normal',Effect:'Efeito',Tuner:'Regulador',Synchro:'Sincro',Fusion:'Fusão',XYZ:'Xyz',Link:'Link',Pendulum:'Pêndulo',Ritual:'Ritual',Spirit:'Espírito',Gemini:'Gêmeo',Union:'União',Flip:'Virar',Toon:'Toon',Token:'Token',Special:'Especial',Summon:'Invocação'};
+const S_PT={Normal:'Normal','Quick-Play':'Rápida',Continuous:'Contínua',Equip:'de Equipamento',Field:'de Campo',Ritual:'de Ritual',Counter:'de Resposta'};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function slim(x){const im=(x.card_images&&x.card_images[0])||{};return{id:x.id,t:x.type,r:x.race,a:x.attribute,k:x.atk,f:x.def,l:x.level,lk:x.linkval,e:x.desc,im:im.image_url,is:im.image_url_small}}
+function cat(d){if(!d)return'?';const t=d.t;return /Spell/.test(t)?'M':/Trap/.test(t)?'A':/Fusion|Synchro|XYZ|Link/.test(t)?'E':'O'}
+function ctype(d){if(/Spell/.test(d.t))return 'Magia '+(S_PT[d.r]||d.r);if(/Trap/.test(d.t))return 'Armadilha '+(S_PT[d.r]||d.r);
+ const p=d.t.replace(' Monster','').split(' ').map(w=>T_PT[w]||w);return [R_PT[d.r]||d.r].concat(p).join('／')}
+function lvl(d){return /XYZ/.test(d.t)?'Graduação '+d.l:/Link/.test(d.t)?'Link-'+d.lk:'Nível '+d.l}
+const stat=v=>v==null?'—':v;
+let CUR=null,CT=0;
+async function getDeck(n){const L=CARDS[n]||[];let c=await KV.get('dk:'+n);if(c&&c.length===L.length&&c.every((x,k)=>x.en===L[k][1]))return c;
+ const map={};let net=true;
+ for(let k=0;k<L.length&&net;k+=25){try{const j=await(await fetch(API+'?name='+encodeURIComponent(L.slice(k,k+25).map(x=>x[1]).join('|')))).json();(j.data||[]).forEach(x=>map[x.name.toLowerCase()]=slim(x))}catch(e){if(!Object.keys(map).length)net=false}}
+ if(!net)return null;
+ for(const x of L){if(map[x[1].toLowerCase()])continue;try{const j=await(await fetch(API+'?fname='+encodeURIComponent(x[1]))).json(),f=(j.data||[]).find(y=>y.name.toLowerCase()===x[1].toLowerCase());if(f)map[f.name.toLowerCase()]=slim(f)}catch(e){}}
+ const ids=[...new Set(Object.values(map).map(x=>x.id))],pt={};
+ for(let k=0;k<ids.length;k+=40){try{const j=await(await fetch(API+'?id='+ids.slice(k,k+40).join(',')+'&language=pt')).json();(j.data||[]).forEach(x=>pt[x.id]={n:x.name,e:x.desc})}catch(e){}}
+ c=L.map(x=>{const d=map[x[1].toLowerCase()]||null,p=d&&pt[d.id];return{pt:x[0]||(p&&p.n)||x[1],en:x[1],g:x[2]||0,d:d,pe:p&&p.e&&p.e!==d.e?p.e:null}});
+ if(c.some(x=>x.d))KV.set('dk:'+n,c);return c}
+function thumb(d){return d?`style="background-image:url('${d.is}')"`:''}
+function drawCards(i,c,msg){const el=$('#cl');if(!el)return;const L=CARDS[DECKS[i][0]]||[];$('#clN').textContent='('+L.length+')';
+ if(!c){el.innerHTML=(msg?`<p class="cnote">${msg}</p>`:'')+L.map(x=>`<div class="cr" style="cursor:default"><div class="ph">${x[3]>1?'<i class="qt">x'+x[3]+'</i>':''}</div><div><b>${esc(x[0]||x[1])}</b>${x[2]?'<em> · não usada</em>':''}</div></div>`).join('');return}
+ CUR={i,c};const G=[['O','MONSTROS'],['E','EXTRA DECK'],['M','MAGIAS'],['A','ARMADILHAS'],['?','SEM DETALHES (não achei na base)']];
+ el.innerHTML=G.map(([g,t])=>{const rows=c.map((x,k)=>[x,k]).filter(([x])=>cat(x.d)===g);if(!rows.length)return'';
+  return `<div class="cg">${t} · ${rows.length}</div>`+rows.map(([x,k])=>{const d=x.d,m=!d?'':g==='M'||g==='A'?ctype(d):`ATK ${stat(d.k)} / DEF ${stat(d.f)} · ${lvl(d)}`;
+   return `<div class="cr" onclick="cardDet(${k})"><div class="ph" ${thumb(d)}>${L[k][3]>1?'<i class="qt">x'+L[k][3]+'</i>':''}</div><div><b>${esc(x.pt)}</b>${x.g?'<em> · não usada</em>':''}<small>${esc(m)}</small></div></div>`}).join('')}).join('')}
+async function cardList(i){const my=++CT;drawCards(i,null,'Carregando detalhes das cartas…');const c=await getDeck(DECKS[i][0]);if(my!==CT||!$('#cl'))return;
+ if(!c)drawCards(i,null,'Sem internet. Abra este deck uma vez com conexão para guardar os detalhes no celular.');else drawCards(i,c)}
+async function cardDet(k){if(!CUR)return;const x=CUR.c[k],d=x.d;if(!d)return;const i=CUR.i,q=(CARDS[DECKS[i][0]][k]||[])[3]||1;
+ const big=await KV.get('img:'+d.id),src=big||d.im,at=A_PT[d.a],isM=cat(d)!=='M'&&cat(d)!=='A';
+ const rows=isM?`<tr><td class="ck">Atributo</td><td>${atr(at)}${at}</td></tr><tr><td class="ck">${/XYZ/.test(d.t)?'Graduação':/Link/.test(d.t)?'Link':'Nível'}</td><td>${/Link/.test(d.t)?d.lk:d.l}</td></tr><tr><td class="ck">ATK</td><td>${stat(d.k)}</td></tr><tr><td class="ck">DEF</td><td>${/Link/.test(d.t)?'—':stat(d.f)}</td></tr><tr><td class="ck">Tipo</td><td>${esc(ctype(d))}</td></tr>`:`<tr><td class="ck">Tipo</td><td>${esc(ctype(d))}</td></tr>`;
+ modal(`<h2 style="font-size:1.1rem;letter-spacing:1px">${esc(x.pt)}</h2>${x.pt!==x.en?`<div class="cnote" style="margin:-4px 0 8px">${esc(x.en)}</div>`:''}<div class="cdv"><div class="bigw"><div class="big" style="background-image:url('${src}')"></div>${q>1?'<i class="qt">x'+q+'</i>':''}</div><table class="ctb">${rows}</table></div><div class="ctx"><h4>Texto do Card</h4>${esc(x.pe||d.e).replace(/\n/g,'<br>')}${x.pe?'':'<div class="cnote">Texto em inglês (sem tradução na base).</div>'}</div><button class="btn" onclick="info(${i})">← Voltar ao deck</button>`);
+ $('#box').scrollTop=0;if(!big&&d.im)toData(d.im).then(u=>{if(u)KV.set('img:'+d.id,u)})}
+
+// ===== Fundo estilo Duel Links: cartas viram sozinhas =====
+const BGN={"Reis de Fogo": ["Fire King High Avatar Garunix", "Fire King Avatar Barong", "Fire King Avatar Arvata", "Fire King Avatar Yaksha", "Fire King Avatar Kirin", "Fire King Avatar Garuda", "Solar Flare Dragon", "Blaze Fenix, the Burning Bombardment Bird", "Fire Princess", "Inferno Fire Blast"], "O Rei Carmesim": ["Red Dragon Archfiend", "Red Nova Dragon", "Red Wyvern", "Hot Red Dragon Archfiend Abyss", "Scarlight Red Dragon Archfiend", "Crimson Blader", "Dark Resonator", "Red Resonator", "Black-Winged Dragon"], "Yusei Fudo": ["Stardust Dragon", "Junk Warrior", "Junk Synchron", "Road Warrior", "Quillbolt Hedgehog", "Nitro Warrior", "Turbo Warrior", "Speed Warrior", "Shooting Star Dragon", "Stardust Spark Dragon", "Formula Synchron"], "Crow Hogan": ["Black-Winged Dragon", "Blackwing - Gale the Whirlwind", "Blackwing - Shura the Blue Flame", "Blackwing - Kalut the Moon Shadow", "Blackwing - Sirocco the Dawn", "Blackwing - Bora the Spear", "Blackwing - Blizzard the Far North", "Blackwing Armor Master", "Blackwing - Zephyros the Elite", "Black Whirlwind"], "Horda Zumbi": ["Red-Eyes Zombie Necro Dragon", "Zombie World", "Mezuki", "Ryu Kokki", "Pyramid Turtle", "Vampire Lord", "Zombie Master", "Ghoul with an Appetite", "Doomkaiser Dragon", "Dark Necrofear"], "Akiza Izinski": ["Black Rose Dragon", "Black Rose Moonlight Dragon", "Lonefire Blossom", "Twilight Rose Knight", "Rose Archer", "Dandylion", "Doppelganger", "Mind Crush", "Dark Verger"], "Encantadoras Espirituais": ["Hiita the Fire Charmer", "Eria the Water Charmer", "Wynn the Wind Charmer", "Aussa the Earth Charmer", "Hiita the Fire Charmer, Ablaze", "Eria the Water Charmer, Gentle", "Wynn the Wind Charmer, Verdant", "Aussa the Earth Charmer, Immovable", "Lyna the Light Charmer", "Spiritual Water Art - Aoi", "Spiritual Fire Art - Kurenai", "Spiritual Earth Art - Kurogane", "Spiritual Wind Art - Miyabi"], "Correntes Glaciais": ["Revealer of the Ice Barrier", "Ice Master", "Mobius the Frost Monarch", "Brionac, Dragon of the Ice Barrier", "Gungnir, Dragon of the Ice Barrier", "Cryomancer of the Ice Barrier", "Secret of the Ice Barrier", "Cold Wave", "Spirit of the Ice Barrier", "Mist Wurm"], "Lenda das Feras Cristalinas": ["Crystal Beast Rainbow Dragon", "Crystal Beast Amethyst Cat", "Crystal Beast Ruby Carbuncle", "Crystal Beast Sapphire Pegasus", "Crystal Beast Topaz Tiger", "Crystal Beast Emerald Tortoise", "Crystal Beast Cobalt Eagle", "Crystal Beast Amber Mammoth", "Rare Value", "Crystal Release"], "Bestas Sagradas": ["Raviel, Lord of Phantasms", "Hamon, Lord of Striking Thunder", "Uria, Lord of Searing Flames", "Armityle the Chaos Phantasm", "Phantasmal Fiend", "Phantom Skyblaster"], "Kaiba (Blue-Eyes)": ["Blue-Eyes White Dragon", "Blue-Eyes Ultimate Dragon", "Blue-Eyes Alternative White Dragon", "Blue-Eyes Toon Dragon", "Dragon Master Knight", "Vorse Raider", "Battle Ox", "Lord of D.", "Melody of Awakening Dragon", "The White Stone of Legend", "Sage with Eyes of Blue", "Dragon Spirit of White"], "Yugi (Decks Lendários 2)": ["Dark Magician", "Dark Magician Girl", "Exodia the Forbidden One", "Left Arm of the Forbidden One", "Obliterate!!!", "Celtic Guardian", "Summoned Skull", "Gaia the Fierce Knight", "Kuriboh", "Silent Magician LV4", "Magician of Black Chaos", "Breaker the Magical Warrior"], "Onda de Luz": ["Airknight Parshath", "Shining Angel", "Honest", "Lumina, Lightsworn Summoner", "Mystical Shine Ball", "Sunlight Wolf", "Elemental HERO Shining Phoenix Enforcer", "Cyber Angel Benten", "Hysteric Fairy"], "Revolução do Dragão Cibernético": ["Cyber Dragon","Cyber Dragon Nova","Cyber Dragon Core","Cyber Dragon Drei","Cyber Dragon Zwei","Cyber Twin Dragon","Cyber Phoenix","Power Bond","Cyber Repair Plant"], "Loucura Mecanizada": ["Machina Citadel", "Machina Fortress", "Machina Gearframe", "Machina Air Raider", "Machina Peacekeeper", "Machina Cannon", "Machina Defender", "Machina Force", "Machina Megaform", "Machina Soldier", "Machina Sniper"], "Ataque do Herói": ["Contrast HERO Chaos", "Masked HERO Dark Law", "Masked HERO Koga", "Masked HERO Divine Wind", "Elemental HERO Shadow Mist", "Elemental HERO Neos", "Elemental HERO Bladedge", "Elemental HERO Wildheart", "Elemental HERO Great Tornado", "Elemental HERO Necroshade", "Elemental HERO Bubbleman", "Winged Kuriboh"], "Covil das Trevas": ["Darkest Diabolos, Lord of the Lair", "Dark Armed Dragon", "Dark Grepher", "Dark Dust Spirit", "Dark Hole", "Dark Sage", "Dark Necrofear", "Dark Magician of Chaos", "Dark Valkyria"], "Fúria do Dinosmagador": ["Ultimate Conductor Tyranno", "Black Tyranno", "Gilasaurus", "Babycerasaurus", "Dark Driceratops", "Giant Rex", "Super Conductor Tyranno", "Miracle Jurassic Egg", "Sauropod Brachion", "Jurrac Guaiba"], "Deuses: Obelisco": ["Obelisk the Tormentor", "Slifer the Sky Dragon", "The Winged Dragon of Ra", "Giant Soldier of Stone", "Soul of Fire", "Fist of Fate", "Kuriboh"], "Deuses: Slifer": ["Slifer the Sky Dragon", "Obelisk the Tormentor", "The Winged Dragon of Ra", "Sangan", "Kuriboh", "Slifer the Sky Dragon (Ra)"], "Joey (Red-Eyes e Gemini)": ["Red-Eyes Black Dragon", "Red-Eyes Black Flare Dragon", "Red-Eyes Archfiend of Lightning", "Archfiend Black Skull Dragon", "The Black Stone of Legend", "Baby Dragon", "Time Wizard", "Jinzo", "Gearfried the Iron Knight", "Rocket Warrior", "Blue Flame Swordsman", "Axe Raider", "Alligator's Sword", "Gemini Summoner", "Red-Eyes Fusion"], "Yugi (Reino dos Duelistas)": ["Exodia the Forbidden One", "Left Leg of the Forbidden One", "Right Arm of the Forbidden One", "Dark Magician", "Summoned Skull", "Celtic Guardian", "Gaia the Fierce Knight", "Curse of Dragon", "Feral Imp", "Mystical Elf", "Giant Soldier of Stone"], "Yugi (Dirigível Kaiba)": ["Green Gadget", "Red Gadget", "Yellow Gadget", "Silent Magician LV4", "Silent Magician LV8", "Silent Swordsman LV3", "Silent Swordsman LV5", "Magician of Faith", "Gadget Soldier"], "Rugido do Dragão": ["Red-Eyes Darkness Dragon", "Luster Dragon", "Masked Dragon", "Spear Dragon", "Armed Dragon LV3", "Armed Dragon LV5", "Armed Dragon LV7", "Cave Dragon", "Dragon Treasure", "Level Up!"]},POOL=[];
+function mkBg(){const w=$('#bgart');for(let i=0;i<14;i++){const s=document.createElement('div'),z=8+Math.random()*26;s.className='sq';s.style.cssText=`left:${Math.random()*95}%;top:${Math.random()*60}%;width:${z}px;height:${z}px;animation-delay:${-Math.random()*5}s`;w.appendChild(s)}
+ const cols=3,rows=4;for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){const e=document.createElement('div'),W=58+Math.random()*26;e.className='bc';
+  e.style.cssText=`--w:${W}px;left:${(c+.1+Math.random()*.4)*100/cols}%;top:${(r+.05+Math.random()*.4)*100/rows}%;--r:${Math.round(Math.random()*70-35)}deg;--rr:${Math.round(Math.random()*24-12)}deg;--x:${Math.round(Math.random()*24-12)}px;--y:${Math.round(Math.random()*30-15)}px;--d:${(7+Math.random()*7).toFixed(1)}s`;
+  e.innerHTML='<div class="cd"><div class="bk2"></div><div class="fc"></div></div>';w.appendChild(e)}}
+function flipTick(){if(!POOL.length)return;const all=[...document.querySelectorAll('#bgart .bc')],on=all.filter(e=>e.classList.contains('f'));if(on.length>=4)return;const off=all.filter(e=>!e.classList.contains('f'));if(!off.length)return;const e=off[Math.floor(Math.random()*off.length)];e.querySelector('.fc').style.backgroundImage=`url('${POOL[Math.floor(Math.random()*POOL.length)]}')`;e.classList.add('f');setTimeout(()=>e.classList.remove('f'),3500+Math.random()*3000)}
+async function loadBg(){for(const n of Object.keys(BGN)){let a=await KV.get('bgc:'+n);
+ if(!a){a=[];try{const j=await(await fetch('https://db.ygoprodeck.com/api/v7/cardinfo.php?name='+encodeURIComponent(BGN[n].join('|')))).json();for(const c of j.data.slice(0,10)){const u=c.card_images[0].image_url_small,d=await toData(u);a.push(d||u)}if(a.length&&a.every(x=>x.startsWith('data:')))KV.set('bgc:'+n,a)}catch(e){}await new Promise(r=>setTimeout(r,150))}
+ a.forEach(x=>POOL.push(x))}}
+// ===== Torneio: 24 decks, chave fixa =====
+// Caminho: R1 (12 duelos) → R2 (6) → Grupos A e B (3 decks, todos contra todos) → Semifinais → Final.
+// Lado 0 de cada duelo = Douglas, lado 1 = João.
+const STN={r1:'1ª Rodada',r2:'2ª Rodada',g:'Grupos',sf:'Semifinal',f:'Final'},STC={r1:'R1',r2:'R2',g:'Grupos',sf:'Semi',f:'Final'};
+const GRP={A:['r2-1','r2-2','r2-3'],B:['r2-4','r2-5','r2-6']};
+let T=null,TV=null,CAMP=[],tBusy=false;
+try{T=JSON.parse(localStorage.getItem('ygo_torneio')||'null')}catch(e){}
+try{CAMP=JSON.parse(localStorage.getItem('ygo_camp')||'[]')}catch(e){}
+function saveT(){const s=JSON.stringify(T);try{localStorage.setItem('ygo_torneio',s)}catch(e){}KV.set('torneio',s)}
+function saveCamp(){const s=JSON.stringify(CAMP);try{localStorage.setItem('ygo_camp',s)}catch(e){}KV.set('camp',s)}
+KV.get('torneio').then(s=>{if(T||!s)return;try{const x=JSON.parse(s);if(x&&x.M){T=x;rT();tBan()}}catch(e){}});
+KV.get('camp').then(s=>{if(CAMP.length||!s)return;try{const x=JSON.parse(s);if(Array.isArray(x)&&x.length){CAMP=x;rT()}}catch(e){}});
+
+function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a}
+function mkT(perm){const M={},add=(id,st,n,a,b)=>M[id]={id,st,n,a,b,w:null,lp:null,h:null};
+ for(let k=1;k<=12;k++)add('r1-'+k,'r1',k,{d:DECKS[perm[2*k-2]][0]},{d:DECKS[perm[2*k-1]][0]});
+ for(let k=1;k<=6;k++)add('r2-'+k,'r2',k,{win:'r1-'+(2*k-1)},{win:'r1-'+2*k});
+ ['A','B'].forEach(g=>[[0,1],[1,2],[2,0]].forEach(([x,y],j)=>add('g'+g+'-'+(j+1),'g',j+1,{grp:g,k:x},{grp:g,k:y})));
+ add('sf-1','sf',1,{pos:'A',p:1},{pos:'B',p:2});add('sf-2','sf',2,{pos:'A',p:2},{pos:'B',p:1});
+ add('f','f',1,{win:'sf-1'},{win:'sf-2'});
+ const tb={};DECKS.forEach(d=>tb[d[0]]=Math.random());return{v:1,t:Date.now(),M,tb}}
+const DI=n=>DECKS.findIndex(d=>d[0]===n),dn=i=>i!=null&&DECKS[i]?DECKS[i][0]:'?';
+const allM=()=>T?Object.values(T.M):[];
+function side(m,s){return res(s?m.b:m.a)}
+function res(r){if(r.d!=null){const i=DI(r.d);return i<0?null:i}
+ if(r.win){const m=T.M[r.win];return m&&m.w!=null?side(m,m.w):null}
+ if(r.grp)return res({win:GRP[r.grp][r.k]});
+ if(r.pos){const s=stand(r.pos);return s&&s.done?s.rows[r.p-1].i:null}return null}
+// Classificação do grupo: vitórias → soma de LP restante nas vitórias → sorteio guardado no início do torneio
+function stand(g){const ids=GRP[g].map(id=>res({win:id}));if(ids.some(x=>x==null))return null;
+ const ms=[1,2,3].map(j=>T.M['g'+g+'-'+j]),rows=ids.map(i=>({i,v:0,d:0,lp:0})),R=i=>rows.find(r=>r.i===i);
+ ms.forEach(m=>{if(m.w==null)return;const W=R(side(m,m.w)),L=R(side(m,1-m.w));if(!W||!L)return;W.v++;W.lp+=m.lp?m.lp[m.w]:0;L.d++});
+ const done=ms.every(m=>m.w!=null),tb=i=>T.tb[dn(i)]||0;
+ rows.sort((x,y)=>y.v-x.v||y.lp-x.lp||tb(y.i)-tb(x.i));
+ if(done)rows.forEach((r,k)=>{const n=rows[k+1];if(n&&n.v===r.v&&n.lp===r.lp)r.sor=n.sor=1});
+ return{rows,done}}
+function dir(r){return r.win?[r.win]:r.grp?[GRP[r.grp][r.k]]:r.pos?[1,2,3].map(j=>'g'+r.pos+'-'+j):[]}
+function deps(id,S=new Set()){const m=T.M[id];[...dir(m.a),...dir(m.b)].forEach(x=>{if(!S.has(x)){S.add(x);deps(x,S)}});return S}
+const locked=id=>allM().some(x=>x.w!=null&&x.id!==id&&deps(x.id).has(id));
+function mlab(m){return m.st==='lg'?`Rodada ${m.r} · Jogo ${m.n}`:m.st==='g'?`Grupo ${m.id[1]} · Duelo ${m.n}`:m.st==='f'?'Final':m.st==='sf'?'Semifinal '+m.n:STN[m.st]+' · C'+m.n}
+function srcTxt(r){if(r.d)return r.d;if(r.grp)r={win:GRP[r.grp][r.k]};
+ if(r.win){const [s,n]=r.win.split('-');return s==='sf'?'Vencedor da Semi '+n:'Vencedor '+s.toUpperCase()+' · C'+n}
+ return r.pos?`${r.p}º do Grupo ${r.pos}`:'?'}
+function destTxt(m){if(m.st==='r1')return `2ª Rodada · C${Math.ceil(m.n/2)} com ${NOMES[m.n%2?0:1]}`;
+ if(m.st==='r2')return 'Grupo '+(m.n<=3?'A':'B');if(m.st==='sf')return 'Final com '+NOMES[m.n-1];return 'Campeão do torneio'}
+const nextM=()=>allM().find(m=>m.w==null&&side(m,0)!=null&&side(m,1)!=null);
+function curSt(){const M=allM(),m=M.find(x=>x.w==null);if(T&&T.fmt==='liga')return String((m||M[M.length-1]).r);return m?m.st:'f'}
+function tmValid(){const m=duel.tm&&T&&T.M[duel.tm];return m&&m.w==null&&duel.decks&&side(m,0)===duel.decks[0]&&side(m,1)===duel.decks[1]?m:null}
+function tBan(){const el=$('#tmb');if(!el)return;const m=tmValid(),s=duel&&duel.sr;
+ el.innerHTML=m?`<div class="tmb" onclick="goT('${m.id}')"><span>🏟️ ${T.fmt==='liga'?'LIGA':'TORNEIO'} · ${mlab(m).toUpperCase()}</span><small>ver ${T.fmt==='liga'?'tabela':'chave'} ›</small></div>`
+ :s?`<div class="tmb" style="cursor:default"><span>🎯 MELHOR DE 3 · DUELO ${Math.min(3,s.g[0]+s.g[1]+(over?0:1))}</span><small><b style="color:var(--g)">${s.g[0]}</b> × <b style="color:var(--b)">${s.g[1]}</b></small></div>`:''}
+
+function playM(id){const m=T&&T.M[id];if(!m||m.w!=null)return;const a=side(m,0),b=side(m,1);if(a==null||b==null)return;
+ if(duel.tm===id&&!over){goTab('duelo');return}
+ if(duel.log.length&&!over&&!confirm('O contador tem um duelo em andamento. Começar '+mlab(m)+' mesmo assim?'))return;
+ newDuel([a,b],id);goTab('duelo');play('sweep')}
+function goT(id){if(!T)return;const m=T.M[id];TV=m?(T.fmt==='liga'?String(m.r):m.st):null;rT();goTab('torneio');
+ setTimeout(()=>{const e=document.getElementById('tm-'+id);if(e){e.scrollIntoView({block:'center',behavior:'smooth'});e.classList.add('flash');setTimeout(()=>e.classList.remove('flash'),1500)}},60)}
+function undoM(id){const m=T&&T.M[id];if(!m||m.w==null||locked(id))return;
+ if(!confirm(`Desfazer o resultado de ${mlab(m)}? Esse duelo também sai do Histórico e do placar.`))return;
+ if(m.h!=null){hist=hist.filter(h=>h.t!==m.h);save();rH()}m.w=m.lp=m.h=null;saveT();tBan();rT();play('click')}
+function sortT(){if(tBusy)return;if(T&&allM().some(m=>m.w!=null))return;
+ if(T&&!confirm('Sortear o chaveamento de novo?'))return;
+ if(DECKS.length!==24){alert('O torneio foi montado para 24 decks e a lista tem '+DECKS.length+'.');return}
+ tBusy=true;TV='r1';play('sweep');const ix=[...DECKS.keys()];let n=0;
+ const iv=setInterval(()=>{T=mkT(shuffle(ix));rT('shuf');play('tickU');if(++n>14){clearInterval(iv);T=mkT(shuffle(ix));saveT();tBusy=false;rT('pop');play('win');scrollTo({top:0,behavior:'smooth'})}},100)}
+function novoT(){const lg=T&&T.fmt==='liga',f=T&&(lg?null:T.M.f),fin=T&&(lg?allM().every(m=>m.w!=null):f&&f.w!=null);
+ if(T&&!confirm(fin?'Guardar o campeão na galeria e começar outro torneio?':'O torneio ainda não terminou. Apagar a chave e começar outro? (Os duelos já jogados continuam no Histórico.)'))return;
+ if(fin){const W=[0,1].map(p=>allM().filter(m=>m.w===p).length);if(lg){const st=ligaStand();CAMP.unshift({t:Date.now(),c:st[0].n,v:st[1].n,p:null,s:W,fmt:'liga',n:T.ds.length})}else CAMP.unshift({t:Date.now(),c:dn(side(f,f.w)),v:dn(side(f,1-f.w)),p:f.w,s:W});saveCamp()}
+ T=null;TV=null;saveT();if(duel.tm){duel.tm=null;tBan()}rT();play('click')}
+
+function mCard(m,an){const ii=[side(m,0),side(m,1)],done=m.w!=null,ready=!done&&ii[0]!=null&&ii[1]!=null;
+ const row=s=>{const i=ii[s],r=s?m.b:m.a;
+  return `<div class="ts ${done?(m.w===s?'win':'lose'):''}" style="--pc:${COR[s]}" ${i!=null?`onclick="info(${i})"`:''}>${i!=null?art(i):'<div class="art ph0"><span>?</span></div>'}<div class="tn"><small>${NOMES[s].toUpperCase()}${done&&m.w===s?' · VENCEU':''}</small>${i!=null?`<b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span>`:`<b class="src">${srcTxt(r)}</b>`}</div>${done&&m.lp?`<div class="tlp"><small>LP</small>${m.lp[s]}</div>`:''}</div>`};
+ const ft=`${ready&&!tBusy?`<button class="tplay" onclick="playM('${m.id}')">⚔️ Jogar</button>`:''}${done&&!locked(m.id)?`<button class="tund" onclick="undoM('${m.id}')">↩ Desfazer</button>`:''}`;
+ return `<div class="card tm ${done?'done':ready?'ready':''} ${an||''}" id="tm-${m.id}"><div class="tmh"><b>${mlab(m).toUpperCase()}</b><span>${done?'✓ Concluído':ready?'Pronto para jogar':'Aguardando'}</span></div>${row(0)}<div class="tvs">VS</div>${row(1)}
+ ${(m.st!=='g'&&m.st!=='lg')||ft?`<div class="tmf"><span>${m.st!=='g'&&m.st!=='lg'?(m.st==='f'?'🏆 ':'Vencedor ➜ ')+destTxt(m):''}</span>${ft}</div>`:''}</div>`}
+function gTable(g){const s=stand(g),ids=GRP[g].map(id=>res({win:id}));
+ const rows=s?s.rows:ids.map((i,k)=>({i,v:0,d:0,lp:0,src:srcTxt({grp:g,k})}));
+ return `<div class="card"><div class="clh">GRUPO ${g}</div><table class="gt"><tr><th>#</th><th style="text-align:left">Deck</th><th>V</th><th>D</th><th>Saldo LP</th></tr>`+
+  rows.map((r,k)=>`<tr class="${s&&s.done?(k<2?'q':'out'):''}"><td>${s?k+1+'º':'–'}</td><td class="dn">${r.i!=null?esc(dn(r.i)):`<span style="color:var(--mut);font-weight:600;font-style:italic">${r.src}</span>`}${s&&s.done?`<em>${k<2?'➜ Semifinal':'Eliminado'}${r.sor?' · 🎲 decidido no sorteio':''}</em>`:''}</td><td>${r.v}</td><td>${r.d}</td><td>${r.lp}</td></tr>`).join('')+
+  `</table><div class="cnote">Passam os 2 com mais vitórias. Se os três vencerem uma vez, fica na frente quem somou mais LP restante nas vitórias.</div></div>`}
+function rT(an){const el=$('#tour');if(!el)return;
+ if(!T){el.innerHTML=`<div class="card thd"><h2 style="margin:4px 0;color:var(--gd);font:900 1.4rem Impact,sans-serif;letter-spacing:3px">🏟️ MATA-MATA DOS 24 DECKS</h2>
+  <ul class="tfl"><li><b>1ª RODADA</b><span>12 duelos sorteados, quem perde sai</span></li><li><b>2ª RODADA</b><span>6 duelos entre os vencedores</span></li><li><b>GRUPOS</b><span>2 grupos de 3, todos contra todos; passam 2 de cada</span></li><li><b>SEMIFINAL</b><span>1º do A × 2º do B · 2º do A × 1º do B</span></li><li><b>FINAL</b><span>1 duelo valendo o título</span></li></ul>
+  <div class="trule"><p><b>Quem usa cada deck:</b> na 1ª rodada o sorteio define. Na 2ª, Douglas usa o vencedor do confronto ímpar e João o do par (C1 × C2, C3 × C4…). Nos grupos, cada um usa cada deck uma vez. Na semi, cada um fica com um 1º colocado. Na final, Douglas usa o vencedor da Semi 1 e João o da Semi 2.</p></div>
+  <button class="btn" onclick="sortT()">🎲 Sortear chaveamento</button></div>${ligaIntro()}${campHTML()}`;return}
+ if(T.fmt==='liga')return rLiga(an);
+ const M=allM(),done=M.filter(m=>m.w!=null).length,W=[0,1].map(p=>M.filter(m=>m.w===p).length),nx=nextM(),f=T.M.f;
+ if(!TV)TV=curSt();
+ let h=`<div class="card thd"><div class="tsc"><span style="color:var(--g)">Douglas ${W[0]}</span> × <span style="color:var(--b)">${W[1]} João</span></div><div class="tbar"><i style="width:${done/M.length*100}%"></i></div><small>${done} de ${M.length} duelos · ${STN[curSt()]}</small>
+  ${tBusy?'':nx?`<button class="btn" onclick="playM('${nx.id}')">⚔️ Próximo: ${mlab(nx)}</button>`:f.w!=null?`<p style="margin:10px 0 0;color:var(--gd);font-weight:800">🏆 ${esc(dn(side(f,f.w)))} é o campeão!</p>`:''}</div>`;
+ h+=`<div class="tstp">`+Object.keys(STN).map(s=>{const ms=M.filter(m=>m.st===s),d=ms.filter(m=>m.w!=null).length;return `<button class="${TV===s?'on':''} ${d===ms.length?'ok':''}" onclick="TV='${s}';rT();play('click')">${STC[s]}<small>${d===ms.length?'✓':d+'/'+ms.length}</small></button>`}).join('')+`</div>`;
+ const ms=M.filter(m=>m.st===TV);
+ if(TV==='g')h+=['A','B'].map(g=>gTable(g)+ms.filter(m=>m.id[1]===g).map(m=>mCard(m,an)).join('')).join('');
+ else{if(TV==='f'&&f.w!=null){const ci=side(f,f.w);h+=`<div class="card champ">${art(ci)}<h2>CAMPEÃO</h2><h3>${esc(dn(ci))}</h3><p>Usado por ${NOMES[f.w]} na final contra ${esc(dn(side(f,1-f.w)))}</p></div>`}
+  h+=ms.map(m=>mCard(m,an)).join('')}
+ h+=`<div class="row" style="margin-top:4px">${done?'':`<button class="btn" style="padding:12px;font-size:.85rem" onclick="sortT()">🔀 Sortear de novo</button>`}<button class="btn" style="padding:12px;font-size:.85rem;border-color:#2c58b8;color:var(--mut)" onclick="novoT()">${f.w!=null?'🏁 Novo torneio':'🗑 Encerrar torneio'}</button></div>`+campHTML();
+ el.innerHTML=h}
+// ===== Liga de pontos corridos =====
+// Todos contra todos uma vez (tabela de rodízio). Lado 0 = Douglas; os lados alternam para cada deck ser usado pelos dois.
+let LN=6,LPK=[];
+function mkLiga(ix,pk){const n=ix.length,M={},a=[...ix];
+ for(let r=0;r<n-1;r++){for(let k=0;k<n/2;k++){let x=a[k],y=a[n-1-k];if(k===0?r%2:(r+k)%2)[x,y]=[y,x];
+   const id='l'+(r+1)+'-'+(k+1);M[id]={id,st:'lg',r:r+1,n:k+1,a:{d:DECKS[x][0]},b:{d:DECKS[y][0]},w:null,lp:null,h:null}}
+  a.splice(1,0,a.pop())}
+ // Equilibra os lados: troca quem usa cada deck até que cada deck fique o mais dividido possível entre Douglas e João
+ const ms=Object.values(M),bal=()=>{const c={};ms.forEach(m=>{c[m.a.d]=(c[m.a.d]||0)+1;c[m.b.d]=(c[m.b.d]||0)-1});return c};
+ for(let it=0,ch=true;ch&&it<200;it++){ch=false;const c=bal();for(const m of ms){if(c[m.a.d]-c[m.b.d]>=3){[m.a,m.b]=[m.b,m.a];ch=true;break}}}
+ const tb={};ix.forEach(i=>tb[DECKS[i][0]]=Math.random());return{fmt:'liga',v:1,t:Date.now(),M,tb,ds:ix.map(i=>DECKS[i][0]),pk:!!pk}}
+function ligaStand(){const rows=T.ds.map(n=>({n,i:DI(n)<0?null:DI(n),j:0,v:0,d:0,lp:0})),R=n=>rows.find(r=>r.n===n);
+ allM().forEach(m=>{if(m.w==null)return;const W=R(m.w?m.b.d:m.a.d),L=R(m.w?m.a.d:m.b.d);if(!W||!L)return;W.j++;L.j++;W.v++;L.d++;W.lp+=m.lp?m.lp[m.w]:0});
+ rows.sort((x,y)=>y.v-x.v||y.lp-x.lp||(T.tb[y.n]||0)-(T.tb[x.n]||0));return rows}
+function ligaIntro(){return `<div class="card thd" style="margin-top:12px"><h2 style="margin:4px 0;color:var(--gd);font:900 1.3rem Impact,sans-serif;letter-spacing:3px">📋 LIGA DE PONTOS CORRIDOS</h2>
+ <div class="trule"><p>Todos contra todos, uma vez. Quem somar mais vitórias é o campeão; empate decide pelo saldo de LP restante nas vitórias. Cada deck é usado mais ou menos metade das vezes por cada um de vocês.</p></div>
+ <div class="opt"><b>Quantos decks?</b><div class="seg">${[[4,6],[6,15],[8,28]].map(([n,j])=>`<button class="${LN===n?'on':''}" onclick="LN=${n};rT();play('click')">${n} decks<br><small>${j} duelos</small></button>`).join('')}</div></div>
+ <div class="row"><button class="btn" style="padding:13px;font-size:.85rem" onclick="ligaRand()">🎲 Sortear decks</button><button class="btn" style="padding:13px;font-size:.85rem" onclick="ligaPick()">✋ Escolher</button></div></div>`}
+function ligaAnim(ix,pk){tBusy=true;play('sweep');let n=0;const all=[...DECKS.keys()];
+ const iv=setInterval(()=>{T=mkLiga(pk?shuffle(ix):shuffle(all).slice(0,ix.length),pk);TV='1';rT('shuf');play('tickU');if(++n>12){clearInterval(iv);T=mkLiga(pk?shuffle(ix):shuffle(all).slice(0,ix.length),pk);TV='1';saveT();tBusy=false;rT('pop');play('win');scrollTo({top:0,behavior:'smooth'})}},100)}
+function ligaRand(){if(!tBusy)ligaAnim([...Array(LN).keys()],false)}
+function ligaPick(){LPK=[];rPick()}
+function rPick(){const y=$('#box').scrollTop;modal(`<h2>ESCOLHER ${LN} DECKS</h2><p class="cnote" style="text-align:center">${LPK.length} de ${LN} escolhidos</p>`+
+ [...DECKS.keys()].sort((a,b)=>DECKS[a][1]-DECKS[b][1]).map(i=>`<div class="rk ${LPK.includes(i)?'sel':''}" onclick="pk(${i})">${art(i)}<div class="mid"><b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">T${DECKS[i][1]}</span></div><div class="vd">${LPK.includes(i)?'✓':''}</div></div>`).join('')+
+ `<button class="btn" ${LPK.length===LN?'':'disabled style="opacity:.4"'} onclick="if(LPK.length===LN){fechar();ligaAnim(LPK,true)}">Montar a liga</button><button ${BTN2} onclick="fechar()">Cancelar</button>`);$('#box').scrollTop=y}
+function pk(i){const k=LPK.indexOf(i);if(k>=0)LPK.splice(k,1);else if(LPK.length<LN)LPK.push(i);else{toast('Já escolheram '+LN+' decks');return}play('click');rPick()}
+function ligaRedo(){if(tBusy||allM().some(m=>m.w!=null))return;if(!confirm(T.pk?'Sortear a ordem dos jogos de novo?':'Sortear outros decks para a liga?'))return;
+ const ix=T.ds.map(DI).filter(i=>i>=0);LN=ix.length;ligaAnim(ix,T.pk)}
+function rLiga(an){const el=$('#tour'),M=allM(),done=M.filter(m=>m.w!=null).length,W=[0,1].map(p=>M.filter(m=>m.w===p).length),nx=nextM(),fin=done===M.length,st=ligaStand(),R=Math.max(...M.map(m=>m.r));
+ if(!TV||!(+TV>=1&&+TV<=R))TV=curSt();
+ let h=`<div class="card thd"><div class="cnote" style="margin:0 0 4px;letter-spacing:2px;font-weight:800">📋 LIGA DE ${T.ds.length} DECKS</div><div class="tsc"><span style="color:var(--g)">Douglas ${W[0]}</span> × <span style="color:var(--b)">${W[1]} João</span></div><div class="tbar"><i style="width:${done/M.length*100}%"></i></div><small>${done} de ${M.length} duelos · Rodada ${curSt()} de ${R}</small>
+  ${tBusy?'':nx?`<button class="btn" onclick="playM('${nx.id}')">⚔️ Próximo: ${mlab(nx)}</button>`:''}</div>`;
+ if(fin&&!tBusy)h+=`<div class="card champ">${art(st[0].i)}<h2>CAMPEÃO</h2><h3>${esc(st[0].n)}</h3><p>${st[0].v} vitórias em ${st[0].j} jogos · vice: ${esc(st[1].n)}</p>${st[1].v===st[0].v&&st[1].lp===st[0].lp?'<p>🎲 Empate em vitórias e saldo de LP, decidido no sorteio</p>':''}</div>`;
+ h+=`<div class="card"><div class="clh" style="margin-top:0">CLASSIFICAÇÃO</div><table class="gt lgt"><tr><th>#</th><th style="text-align:left">Deck</th><th>J</th><th>V</th><th>D</th><th>Saldo LP</th></tr>`+
+  st.map((r,k)=>`<tr class="${fin?(k===0?'q':''):''}"><td>${k+1}º</td><td class="dn" onclick="${r.i!=null?`info(${r.i})`:''}" style="cursor:pointer"><div class="lgn">${art(r.i)}<span>${esc(r.n)}</span></div></td><td>${r.j}</td><td>${r.v}</td><td>${r.d}</td><td>${r.lp}</td></tr>`).join('')+
+  `</table><div class="cnote">Ordem: vitórias, depois saldo de LP restante nas vitórias.</div></div>`;
+ h+=`<div class="tstp" style="flex-wrap:wrap">`+[...Array(R).keys()].map(k=>{const r=k+1,ms=M.filter(m=>m.r===r),d=ms.filter(m=>m.w!=null).length;return `<button style="min-width:40px" class="${TV===String(r)?'on':''} ${d===ms.length?'ok':''}" onclick="TV='${r}';rT();play('click')">R${r}<small>${d===ms.length?'✓':d+'/'+ms.length}</small></button>`}).join('')+`</div>`;
+ h+=M.filter(m=>String(m.r)===TV).map(m=>mCard(m,an)).join('');
+ h+=`<div class="row" style="margin-top:4px">${done?'':`<button class="btn" style="padding:12px;font-size:.85rem" onclick="ligaRedo()">🔀 Sortear de novo</button>`}<button class="btn" style="padding:12px;font-size:.85rem;border-color:#2c58b8;color:var(--mut)" onclick="novoT()">${fin?'🏁 Nova competição':'🗑 Encerrar liga'}</button></div>`+campHTML();
+ el.innerHTML=h}
+function campHTML(){if(!CAMP.length)return'';return `<div class="card" style="margin-top:12px"><div class="clh" style="margin-top:0">🏅 GALERIA DE CAMPEÕES</div>`+CAMP.map(c=>{const i=DI(c.c);return `<div class="cmp">${art(i<0?null:i)}<div><b>${esc(c.c)}</b><small>${new Date(c.t).toLocaleDateString('pt-BR')} · ${c.fmt==='liga'?`📋 Liga de ${c.n||'?'} decks · vice: ${esc(c.v)}`:`🏟️ Mata-mata · final com ${NOMES[c.p]} contra ${esc(c.v)}`} · placar ${c.s[0]} × ${c.s[1]}</small></div></div>`}).join('')+`</div>`}
+
+// ===== Animações: tela de VS e vitória =====
+function fxOpen(html,ms){return new Promise(ok=>{const f=$('#fx');f.className='on';f.innerHTML=html;let done=false;const t0=Date.now();
+ const end=()=>{if(done)return;done=true;clearTimeout(tm);f.classList.add('out');setTimeout(()=>{f.className='';f.innerHTML='';ok()},330)};
+ const tm=setTimeout(end,ms);f.onclick=()=>{if(Date.now()-t0>400)end()}})}
+const deckArt=di=>di!=null&&DECKS[di]?art(di):'<div class="art" style="--c:#556"><span>👤</span></div>';
+function showVS(){const d=duel.decks;play('clash');setTimeout(()=>moment('start','É hora do duelo!'),380);
+ return fxOpen(`<div class="vsp">${[0,1].map(p=>`<div class="hf h${p}" style="--pc:${COR[p]}">${deckArt(d[p])}<div class="nm"><b>${NOMES[p].toUpperCase()}</b><small>${esc(dn(d[p]))}</small></div></div>`).join('')}<div class="vsx">VS</div><div class="cap">É HORA DO DUELO!</div></div>`,2700)}
+function duelStart(){if(!duel.decks||duel.ann||duel.log.length||over)return;duel.ann=1;const ask=()=>{if(duel.first==null&&!over&&$('#duelo').classList.contains('on'))quemComeca()};
+ if(CFG.vs)showVS().then(ask);else{play('clash');moment('start','É hora do duelo!');ask()}}
+// A carta sobe girando, vira mostrando a arte do deck vencedor e explode em luz. Na final do torneio: dourado, coroa e confete.
+function victoryFX(di,w,fin){const d=di!=null?DECKS[di]:null,vc=fin?'#f2c14e':d?ATTR[d[2]]:'#f2c14e';
+ const sp=[...Array(28)].map((_,k)=>`<i class="sp" style="--a:${(k*360/28+Math.random()*8).toFixed(0)}deg;--ds:${(30+Math.random()*25).toFixed(0)}vmin;--dl:${(Math.random()*.12).toFixed(2)}s;--sc:${k%3?vc:'#fff'}"></i>`).join('');
+ const cf=fin?[...Array(46)].map(()=>`<i class="cf" style="left:${(Math.random()*100).toFixed(1)}%;--dx:${Math.round(Math.random()*120-60)}px;--rt:${Math.round(Math.random()*900)}deg;--du:${(2.4+Math.random()*2).toFixed(2)}s;--dl:${(1.1+Math.random()*2.5).toFixed(2)}s;--sc:${pick(['#f2c14e','#3dff7a','#4aa3ff','#ff5a6e','#fff','#35e0ff'])}"></i>`).join(''):'';
+ play('rise');setTimeout(()=>play('boom'),950);setTimeout(()=>{play('win');fin?moment('champ',`${dn(di)} é o campeão do torneio!`):moment('win',`${NOMES[w]} vence o duelo!`)},1300);
+ return fxOpen(`<div class="vic shk" style="--vc:${vc};background:radial-gradient(circle at 50% 42%,${vc}55,#000000f0 62%)"><div class="rays"></div><i class="ring"></i><i class="ring r2"></i>${sp}
+  <div class="stage"><div class="vc"><div class="vb"></div><div class="vf"><div class="nb">${esc(d?d[0]:NOMES[w])}</div>${deckArt(di)}<div class="ft">${fin?'★ CAMPEÃO ★':'VITÓRIA'}</div></div></div></div>
+  ${fin?'<div class="crn">👑</div>':''}<div class="ttl"><b>${fin?'CAMPEÃO!':NOMES[w].toUpperCase()+' VENCE!'}</b><small>${fin?esc(dn(di))+(w!=null?' · '+NOMES[w]:''):d?esc(d[0]):''}</small></div>${cf}<div class="tip">toque para continuar</div></div>`,fin?7500:4300)}
+function celebrate(di,w,fin){if(CFG.vic==='all'||(CFG.vic==='final'&&fin))return victoryFX(di,w,fin);
+ play('win');fin?moment('champ',`${dn(di)} é o campeão do torneio!`):moment('win',`${NOMES[w]} vence o duelo!`);return Promise.resolve()}
+function prevFX(fin){const ok=[...DECKS.keys()].filter(i=>LD[DECKS[i][7]]),i=pick(ok.length?ok:[...DECKS.keys()]);victoryFX(i,Math.random()<.5?0:1,fin)}
+function cfgM(){const sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${CFG[k]===v?'on':''}" onclick="CFG.${k}=${JSON.stringify(v).replace(/"/g,"'")};saveCfg();cfgM();wake($('#duelo').classList.contains('on'));play('click')">${l}</button>`).join('')}</div>`;
+ modal(`<h2>SONS E ANIMAÇÕES</h2>
+ <div class="opt"><b>🗣 Voz do narrador</b>${sg('voz',[[1,'Ligada'],[0,'Desligada']])}</div>
+ <div class="opt"><b>⚡ Tela “É hora do duelo”</b>${sg('vs',[[1,'Ligada'],[0,'Desligada']])}</div>
+ <div class="opt"><b>🏆 Animação de vitória</b>${sg('vic',[['all','Todos'],['final','Só finais'],['off','Desligada']])}</div>
+ <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake',[[1,'Sim'],[0,'Não']])}${navigator.wakeLock?'':'<p class="cnote">Este navegador não permite manter a tela ligada.</p>'}</div>
+ <div class="row" style="margin:6px 0 4px"><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(0)">▶ Ver vitória</button><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(1)">▶ Ver final</button></div>
+ <div class="clh">🎵 ÁUDIOS PRÓPRIOS</div><p class="cnote" style="text-align:left;margin-top:0">Escolham um áudio do celular (mp3, m4a…) para tocar no lugar da voz do narrador. Fica salvo neste aparelho.</p>
+ ${Object.entries(MOM).map(([k,[l,t]])=>`<div class="slot"><div><b>${l}</b><small>${CSND[k]?'🎵 Áudio próprio':'Narrador: '+t}</small></div><button onclick="testM('${k}')" aria-label="Testar">▶</button><label aria-label="Escolher áudio">📁<input type="file" accept="audio/*" hidden onchange="setSnd('${k}',this)"></label>${CSND[k]?`<button onclick="delSnd('${k}')" aria-label="Remover">✕</button>`:''}</div>`).join('')}
+ <button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="menu()">← Voltar</button>`)}
+function testM(k){const s=mute;mute=false;moment(k,k==='start'?'É hora do duelo!':k==='win'?'Douglas vence o duelo!':'Blue-Eyes é o campeão do torneio!');mute=s}
+function setSnd(k,inp){const f=inp.files[0];inp.value='';if(!f)return;if(f.size>4e6){alert('Arquivo grande demais (máximo 4 MB). Usem um trecho curto.');return}
+ const r=new FileReader();r.onload=()=>{CSND[k]=r.result;KV.set('snd:'+k,r.result);cfgM();testM(k)};r.readAsDataURL(f)}
+function delSnd(k){delete CSND[k];KV.set('snd:'+k,null);cfgM()}
+
+// ===== Estatísticas =====
+let SF='all',SO='pct',SR=[],SD={};
+const nf=n=>Math.round(n).toLocaleString('pt-BR'),pct=(a,b)=>b?Math.round(a/b*100)+'%':'–',dt=t=>new Date(t).toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+// Reconstrói o duelo pelo registro de LP: dano causado, maior golpe, cura, quanto cada um ficou para trás
+function replay(h){const L=[8000,8000],r={dmg:[0,0],big:[0,0],heal:[0,0],bigHeal:[0,0],gap:[0,0],hits:h.log.length};
+ h.log.forEach(e=>{L[e.p]=e.lp;if(e.d<0){r.dmg[1-e.p]-=e.d;r.big[1-e.p]=Math.max(r.big[1-e.p],-e.d)}else{r.heal[e.p]+=e.d;r.bigHeal[e.p]=Math.max(r.bigHeal[e.p],e.d)}
+  for(const p of [0,1])r.gap[p]=Math.max(r.gap[p],L[1-p]-L[p])});return r}
+function deckStats(R){const S={},g=n=>S[n]||(S[n]={n,g:0,v:0,d:0,bp:[[0,0],[0,0]],wd:0,wc:0,lpw:0,op:{},dmg:0,big:0});
+ R.forEach(({h,r})=>{if(!h.decks)return;[0,1].forEach(p=>{const s=g(h.decks[p]),won=h.w===p,o=h.decks[1-p],q=s.op[o]||(s.op[o]=[0,0]);
+  s.g++;won?s.v++:s.d++;s.bp[p][won?0:1]++;q[won?0:1]++;s.dmg+=r.dmg[p];s.big=Math.max(s.big,r.big[p]);if(won){s.lpw+=h.lp[p];if(h.dur>0){s.wd+=h.dur;s.wc++}}})});return S}
+// ---- Conquistas (calculadas a partir do histórico inteiro)
+const ACH={
+ first:{e:'🩸',n:'Primeiro sangue',d:'Vencer o primeiro duelo'},
+ vir3:{e:'🔄',n:'Virada',d:'Vencer estando 3000+ LP atrás'},
+ vir5:{e:'🌪️',n:'Virada épica',d:'Vencer estando 5000+ LP atrás'},
+ perf:{e:'💎',n:'Intocável',d:'Vencer com os 8000 LP'},
+ lim:{e:'😰',n:'Por um fio',d:'Vencer com 500 LP ou menos'},
+ zeb:{e:'🦓',n:'Zebra',d:'Vencer um deck 2+ tiers acima'},
+ mzeb:{e:'🦄',n:'Zebra lendária',d:'Vencer um Tier 1 usando um Tier 5'},
+ rel:{e:'⚡',n:'Relâmpago',d:'Vencer em menos de 5 minutos'},
+ blitz:{e:'🚀',n:'Blitz',d:'Vencer até o 3º turno'},
+ otk:{e:'☠️',n:'One Turn Kill',d:'Tirar os 8000 LP do rival em um único turno'},
+ big:{e:'💥',n:'Golpe devastador',d:'Causar 4000+ de dano de uma vez'},
+ heal:{e:'💚',n:'Curandeiro',d:'Recuperar 3000+ LP em um duelo'},
+ mar:{e:'🏃',n:'Maratona',d:'Vencer um duelo de 30+ minutos'},
+ st3:{e:'🔥',n:'Embalado',d:'3 vitórias seguidas'},
+ st5:{e:'🌋',n:'Imparável',d:'5 vitórias seguidas'},
+ rev:{e:'⚔️',n:'Volta por cima',d:'Vencer uma série MD3 depois de perder o 1º duelo'},
+ col10:{e:'🎴',n:'Colecionador',d:'Vencer com 10 decks diferentes'},
+ col24:{e:'👑',n:'Mestre de todos os decks',d:'Vencer com todos os 24 decks'},
+ champ:{e:'🏆',n:'Campeão',d:'Vencer a final do mata-mata'},
+ vet:{e:'🎖️',n:'Veteranos',d:'50 duelos jogados'}};
+function otk(h){if(!h.tn)return false;const L=h.log.filter(e=>e.p===1-h.w);if(!L.length||L.some(e=>e.tn==null))return false;const last=L[L.length-1].tn;let b=8000;
+ for(const e of L){if(e.tn===last)return b===8000;b=e.lp}return false}
+function achv(H){const A=[{},{}],set=(p,id,t)=>{if(!A[p][id])A[p][id]=t},wd=[new Set,new Set],sk=[0,0],srs={};
+ H.slice().sort((a,b)=>a.t-b.t).forEach((h,k)=>{const w=h.w,l=1-w,r=replay(h),t=h.t;set(w,'first',t);
+  if(r.gap[w]>=3000)set(w,'vir3',t);if(r.gap[w]>=5000)set(w,'vir5',t);if(h.lp[w]===8000)set(w,'perf',t);if(h.lp[w]>0&&h.lp[w]<=500)set(w,'lim',t);
+  if(h.decks){const a=tierOf(h.decks[w]),b=tierOf(h.decks[l]);if(a&&b){if(a-b>=2)set(w,'zeb',t);if(a===5&&b===1)set(w,'mzeb',t)}
+   wd[w].add(h.decks[w]);if(wd[w].size>=10)set(w,'col10',t);if(wd[w].size>=DECKS.length)set(w,'col24',t)}
+  if(h.dur>0&&h.dur<3e5)set(w,'rel',t);if(h.dur>=18e5)set(w,'mar',t);if(h.tn&&h.tn<=3)set(w,'blitz',t);if(otk(h))set(w,'otk',t);
+  [0,1].forEach(p=>{if(r.big[p]>=4000)set(p,'big',t);if(r.heal[p]>=3000)set(p,'heal',t)});
+  sk[w]++;sk[l]=0;if(sk[w]>=3)set(w,'st3',t);if(sk[w]>=5)set(w,'st5',t);
+  if(h.tid==='f')set(w,'champ',t);if(k+1>=50){set(0,'vet',t);set(1,'vet',t)}
+  if(h.sr){const s=srs[h.sr]||(srs[h.sr]=[]);s.push(h);const g=[0,0];s.forEach(x=>g[x.w]++);if(g[w]===2&&s[0].w!==w)set(w,'rev',t)}});return A}
+function newAch(a,b){const o=[];[0,1].forEach(p=>Object.keys(b[p]).forEach(id=>{if(!a[p][id])o.push({p,id})}));return o}
+// ---- Força real (Elo): cada deck começa pelo tier original e ganha/perde pontos a cada duelo
+const TE={1:1700,2:1600,3:1500,4:1400,5:1300};
+function elo(){const E={},G={};DECKS.forEach((d,i)=>{E[d[0]]=TE[BT[i]]||1500;G[d[0]]=0});
+ hist.slice().sort((a,b)=>a.t-b.t).forEach(h=>{if(!h.decks)return;const[a,b]=h.decks;if(E[a]==null||E[b]==null||a===b)return;const ea=1/(1+10**((E[b]-E[a])/400)),d=40*((h.w===0?1:0)-ea);E[a]+=d;E[b]-=d;G[a]++;G[b]++});
+ return DECKS.map((d,i)=>{const e=E[d[0]];return{n:d[0],i,e,g:G[d[0]],cur:d[1],sug:Math.min(5,Math.max(1,Math.round((1700-e)/100)+1))}})}
+// ---- Desempenho por confronto: vitórias e derrotas contra deck mais fraco / mesmo tier / mais forte
+const CFX=[.65,.5,.35],CFN=5,CFL=.15;
+function conf(){const S={};DECKS.forEach((d,i)=>S[d[0]]={i,g:0,w:0,exp:0,b:[[0,0],[0,0],[0,0]]});
+ hist.forEach(h=>{if(!h.decks)return;const[a,b]=h.decks;if(a===b||!S[a]||!S[b])return;
+  [[a,b,0],[b,a,1]].forEach(([me,op,p])=>{const x=S[me],t1=DECKS[x.i][1],t2=DECKS[S[op].i][1],k=t2>t1?0:t2===t1?1:2,win=h.w===p?1:0;x.g++;x.w+=win;x.exp+=CFX[k];x.b[k][win?0:1]++})});
+ return DECKS.map(d=>{const x=S[d[0]],cur=d[1],sc=x.g?(x.w-x.exp)/x.g:0,sug=x.g<CFN?cur:sc>=CFL?Math.max(1,cur-1):sc<=-CFL?Math.min(5,cur+1):cur;return Object.assign({n:d[0],cur,sc,sug},x)})}
+function applyTier(i,t){if(!confirm(`Mudar ${DECKS[i][0]} para o Tier ${t}?`))return;setTier(i,t);rS();toast(`${DECKS[i][0]} agora é Tier ${t}`)}
+const tierOf=n=>{const i=DI(n);return i<0?null:DECKS[i][1]};
+function rS(){const el=$('#stx');if(!el)return;
+ const H=hist.filter(h=>SF==='all'||(SF==='t'?h.tid:!h.tid)).slice().sort((a,b)=>a.t-b.t),R=SR=H.map(h=>({h,r:replay(h)}));
+ let o=`<div class="chips">${[['all','Tudo'],['t','Torneio'],['a','Amistosos']].map(([k,t])=>`<button class="${SF===k?'on':''}" onclick="SF='${k}';rS();play('click')">${t}</button>`).join('')}</div>`;
+ if(!R.length){el.innerHTML=o+`<div class="card" style="text-align:center;color:var(--mut)">Nenhum duelo ${SF==='t'?'de torneio ':SF==='a'?'amistoso ':''}registrado ainda.<br>Joguem um duelo e as estatísticas aparecem aqui.</div>`;return}
+ // --- Jogadores
+ const P=[0,1].map(p=>{const W=R.filter(x=>x.h.w===p),Wt=W.filter(x=>x.h.dur>0);return{v:W.length,
+  lpw:W.length?W.reduce((a,x)=>a+x.h.lp[p],0)/W.length:null,fast:Wt.length?Math.min(...Wt.map(x=>x.h.dur)):null,
+  dmg:R.reduce((a,x)=>a+x.r.dmg[p],0),big:Math.max(0,...R.map(x=>x.r.big[p])),heal:R.reduce((a,x)=>a+x.r.heal[p],0),
+  vir:W.filter(x=>x.r.gap[p]>=2000).length,perf:W.filter(x=>x.h.lp[p]===8000).length,suf:W.filter(x=>x.h.lp[p]>0&&x.h.lp[p]<=1000).length,
+  tit:CAMP.filter(c=>c.p===p).length,best:0,
+  st:R.filter(x=>x.h.first===p).length,sw:R.filter(x=>x.h.first===p&&x.h.w===p).length,mt:(a=>a.length?Math.min(...a):null)(W.filter(x=>x.h.first!=null&&x.h.tn).map(x=>x.h.tn))}});
+ let cw=null,cn=0;R.forEach(x=>{cw===x.h.w?cn++:(cw=x.h.w,cn=1);P[cw].best=Math.max(P[cw].best,cn)});
+ const n=R.length,row=(lab,a,b,f,lo)=>{const ok=a!=null&&b!=null&&a!==b,bA=ok&&(lo?a<b:a>b),bB=ok&&!bA;return `<div class="sv"><b class="${bA?'best':''}">${a==null?'–':f(a)}</b><span>${lab}</span><b class="${bB?'best':''}">${b==null?'–':f(b)}</b></div>`},id=x=>x;
+ o+=`<div class="sh">⚔️ DOUGLAS × JOÃO</div><div class="card"><div class="vsh"><div><b style="color:var(--g)">DOUGLAS</b><span class="bn">${P[0].v}</span></div><span class="x">×</span><div><b style="color:var(--b)">JOÃO</b><span class="bn">${P[1].v}</span></div></div>
+  <div class="sbar">${P[0].v?`<i style="width:${P[0].v/n*100}%;background:var(--g)"></i>`:''}${P[1].v?`<i style="width:${P[1].v/n*100}%;background:var(--b)"></i>`:''}</div>
+  <div class="sbl"><span>${pct(P[0].v,n)} das vitórias</span><span>${n} duelo${n>1?'s':''}</span><span>${pct(P[1].v,n)} das vitórias</span></div>
+  <div class="mini" style="margin-bottom:6px">${cn>1?`🔥 ${NOMES[cw]} está numa sequência de ${cn} vitórias`:`Última vitória: ${NOMES[cw]}`}</div>
+  ${row('Maior sequência de vitórias',P[0].best,P[1].best,id)}${row('Títulos de torneio',P[0].tit,P[1].tit,id)}
+  ${row('Vitória mais rápida',P[0].fast,P[1].fast,fmt,1)}${row('LP médio ao vencer',P[0].lpw,P[1].lpw,nf)}
+  ${row('Dano causado',P[0].dmg,P[1].dmg,nf)}${row('Maior golpe único',P[0].big,P[1].big,nf)}${row('LP recuperado',P[0].heal,P[1].heal,nf)}
+  ${row('Viradas (venceu estando 2000+ LP atrás)',P[0].vir,P[1].vir,id)}${row('Vitórias perfeitas (8000 LP)',P[0].perf,P[1].perf,id)}${row('Vitórias no sufoco (≤1000 LP)',P[0].suf,P[1].suf,id)}
+  ${row('Aproveitamento quando começa',P[0].st?Math.round(P[0].sw/P[0].st*100):null,P[1].st?Math.round(P[1].sw/P[1].st*100):null,x=>x+'%')}${row('Vitória em menos turnos',P[0].mt,P[1].mt,x=>x+' turno'+(x>1?'s':''),1)}</div>`;
+ // --- Corrida do placar
+ o+=`<div class="sh">📈 CORRIDA DO PLACAR</div><div class="card">${n<2?'<div class="mini">Aparece a partir de 2 duelos.</div>':raceSVG(R)+'<div class="mini">Saldo de vitórias ao longo dos duelos · toque no gráfico para ver cada duelo</div>'}</div>`;
+ // --- Tempo
+ const T2=R.filter(x=>x.h.dur>0),tot=T2.reduce((a,x)=>a+x.h.dur,0),lg=T2.slice().sort((a,b)=>b.h.dur-a.h.dur)[0],sh=T2.slice().sort((a,b)=>a.h.dur-b.h.dur)[0];
+ const days={};R.forEach(x=>{const k=new Date(x.h.t).toLocaleDateString('pt-BR');days[k]=(days[k]||0)+1});const bd=Object.entries(days).sort((a,b)=>b[1]-a[1])[0];
+ const vs=x=>x&&x.h.decks?`${esc(x.h.decks[0])} × ${esc(x.h.decks[1])}`:'decks não sorteados';
+ o+=`<div class="sh">⏱ TEMPO</div><div class="tiles">
+  <div class="tile"><small>Tempo total de duelo</small><b>${T2.length?(tot>=36e5?Math.floor(tot/36e5)+'h '+String(Math.floor(tot%36e5/6e4)).padStart(2,'0')+'m':fmt(tot)):'–'}</b><span>${T2.length} duelo${T2.length===1?'':'s'} cronometrado${T2.length===1?'':'s'}</span></div>
+  <div class="tile"><small>Duração média</small><b>${T2.length?fmt(tot/T2.length):'–'}</b><span>por duelo</span></div>
+  <div class="tile"><small>Duelo mais longo</small><b>${lg?fmt(lg.h.dur):'–'}</b><span>${lg?vs(lg):''}</span></div>
+  <div class="tile"><small>Duelo mais rápido</small><b>${sh?fmt(sh.h.dur):'–'}</b><span>${sh?vs(sh):''}</span></div>
+  ${(()=>{const F=R.filter(x=>x.h.first!=null),Tn=F.filter(x=>x.h.tn);return `<div class="tile"><small>Turnos por duelo</small><b>${Tn.length?(Tn.reduce((a,x)=>a+x.h.tn,0)/Tn.length).toFixed(1).replace('.',','):'–'}</b><span>média${Tn.length?' de '+Tn.length+' duelo'+(Tn.length>1?'s':''):' (usem o contador de turnos)'}</span></div>
+  <div class="tile"><small>Quem começa vence</small><b>${F.length?pct(F.filter(x=>x.h.w===x.h.first).length,F.length):'–'}</b><span>${F.length?'em '+F.length+' duelo'+(F.length>1?'s':'')+' com registro':'registrem quem começa'}</span></div>`})()}
+  <div class="tile" style="grid-column:span 2"><small>Dia com mais duelos</small><b class="nm">${bd[0]} · ${bd[1]} duelo${bd[1]>1?'s':''}</b></div></div>`;
+ // --- Recordes
+ const mx=(f)=>{let b=null;R.forEach(x=>[0,1].forEach(p=>{const v=f(x,p);if(v>0&&(!b||v>b.v))b={x,p,v}}));return b};
+ const rb=mx((x,p)=>x.r.big[p]),rh=mx((x,p)=>x.r.bigHeal[p]),rv=mx((x,p)=>x.h.w===p?x.r.gap[p]:0),rs=mx((x,p)=>x.h.w===p&&x.h.lp[p]>0?8001-x.h.lp[p]:0),rm=R.slice().sort((a,b)=>b.r.hits-a.r.hits)[0];
+ const dk=(x,p)=>x.h.decks?' com '+esc(x.h.decks[p]):'';
+ o+=`<div class="sh">🏅 RECORDES</div><div class="card">
+  ${rb?`<div class="rec"><i>💥</i><div><b>Maior golpe único</b><small>${NOMES[rb.p]}${dk(rb.x,rb.p)} · ${dt(rb.x.h.t)}</small></div><em>${nf(rb.v)}</em></div>`:''}
+  ${rv?`<div class="rec"><i>🔄</i><div><b>Maior virada</b><small>${NOMES[rv.p]}${dk(rv.x,rv.p)} estava ${nf(rv.v)} LP atrás e venceu · ${dt(rv.x.h.t)}</small></div><em>${nf(rv.v)}</em></div>`:''}
+  ${rs?`<div class="rec"><i>😰</i><div><b>Vitória mais no sufoco</b><small>${NOMES[rs.p]}${dk(rs.x,rs.p)} venceu com ${nf(8001-rs.v)} LP · ${dt(rs.x.h.t)}</small></div><em>${nf(8001-rs.v)}</em></div>`:''}
+  ${rh?`<div class="rec"><i>💚</i><div><b>Maior cura</b><small>${NOMES[rh.p]}${dk(rh.x,rh.p)} · ${dt(rh.x.h.t)}</small></div><em>+${nf(rh.v)}</em></div>`:''}
+  ${(x=>x?`<div class="rec"><i>🔁</i><div><b>Duelo com mais turnos</b><small>${vs(x)} · venceu ${NOMES[x.h.w]} · ${dt(x.h.t)}</small></div><em>${x.h.tn} <small>turnos</small></em></div>`:'')(R.filter(x=>x.h.first!=null&&x.h.tn>1).sort((a,b)=>b.h.tn-a.h.tn)[0])}
+  ${rm&&rm.r.hits?`<div class="rec"><i>🎢</i><div><b>Duelo mais movimentado</b><small>${vs(rm)} · ${dt(rm.h.t)}</small></div><em>${rm.r.hits} <small>mudanças</small></em></div>`:''}</div>`;
+ const mvm={};R.forEach(({h})=>{if(!h.mvp||!h.decks)return;const k=h.mvp.en+'|'+h.decks[h.w],q=mvm[k]||(mvm[k]={...h.mvp,dk:h.decks[h.w],c:0});q.c++});
+ const mvl=Object.values(mvm).sort((a,b)=>b.c-a.c).slice(0,10);
+ o+=`<div class="sh">⭐ CARTAS MVP</div><div class="card">${mvl.length?mvl.map((x,k)=>`<div class="rk" style="cursor:default"><span class="no">${k+1}</span><div class="ph" ${x.is?`style="background-image:url('${x.is}')"`:''}></div><div class="mid"><b>${esc(x.n)}</b><small>${esc(x.dk)}</small></div><div class="vd">${x.c}×<small>MVP</small></div></div>`).join(''):'<div class="mini">Escolham a carta MVP no fim de cada duelo para montar este ranking.</div>'}</div>`;
+ // --- Decks
+ const S=SD=deckStats(R),L=Object.values(S);
+ if(L.length){const by=(f,min=1)=>L.filter(s=>s.g>=min).sort(f)[0],t=(lab,s,v,sub)=>`<div class="tile" ${s?`onclick="dStat('${s.n.replace(/'/g,"\\'")}')" style="cursor:pointer"`:''}><small>${lab}</small><b class="nm">${s?esc(s.n):'–'}</b><span>${s?v:sub||''}</span></div>`;
+  const mv=by((a,b)=>b.v-a.v||a.d-b.d),bp=by((a,b)=>b.v/b.g-a.v/a.g||b.g-a.g,3),ml=by((a,b)=>b.d-a.d||a.v-b.v),fs=L.filter(s=>s.wc).sort((a,b)=>a.wd/a.wc-b.wd/b.wc)[0],mu=by((a,b)=>b.g-a.g),bd2=by((a,b)=>b.dmg/b.g-a.dmg/a.g,2);
+  o+=`<div class="sh">🃏 DECKS</div><div class="tiles">${t('Mais vitórias',mv,mv.v+' vitória'+(mv.v>1?'s':''))}${t('Melhor aproveitamento',bp,bp&&pct(bp.v,bp.g)+' em '+bp.g+' jogos','mínimo de 3 jogos')}
+   ${t('Mais rápido para vencer',fs,fs&&'média de '+fmt(fs.wd/fs.wc))}${t('Mais destrutivo',bd2,bd2&&nf(bd2.dmg/bd2.g)+' de dano por duelo','mínimo de 2 jogos')}
+   ${t('Mais jogado',mu,mu.g+' duelos')}${t('Mais derrotas',ml,ml.d+' derrota'+(ml.d>1?'s':''))}</div>`;
+  const sorts={pct:(a,b)=>b.v/b.g-a.v/a.g||b.g-a.g,v:(a,b)=>b.v-a.v||b.g-a.g,g:(a,b)=>b.g-a.g||b.v-a.v};
+  const un=DECKS.map(d=>d[0]).filter(x=>!S[x]);
+  o+=`<div class="card" style="margin-top:12px"><div class="clh" style="margin-top:0">RANKING DE DECKS</div><div class="chips" style="margin-bottom:4px">${[['pct','Aproveitamento'],['v','Vitórias'],['g','Jogos']].map(([k,l])=>`<button class="${SO===k?'on':''}" onclick="SO='${k}';rS()">${l}</button>`).join('')}</div>`+
+   L.sort(sorts[SO]).map((s,k)=>{const i=DI(s.n);return `<div class="rk" onclick="dStat('${s.n.replace(/'/g,"\\'")}')"><span class="no">${k+1}</span>${art(i<0?null:i)}<div class="mid"><b>${esc(s.n)}</b><div class="pb"><i style="width:${s.v/s.g*100}%"></i></div></div><div class="vd">${s.v}V · ${s.d}D<small>${pct(s.v,s.g)}</small></div></div>`}).join('')+
+   (un.length?`<details><summary>Ainda sem duelos (${un.length})</summary><div class="cnote" style="font-size:.8rem;line-height:1.5">${un.map(esc).join(' · ')}</div></details>`:'')+`</div>`;
+  const CF=conf().filter(x=>x.g>0).sort((a,b)=>b.sc-a.sc||b.g-a.g);
+  o+=`<div class="sh">📊 DESEMPENHO POR CONFRONTO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Para cada deck, vitórias e derrotas contra um deck <b>mais fraco</b>, do <b>mesmo tier</b> e <b>mais forte</b>. Contra um mais fraco, o esperado é vencer 65%; contra o mesmo tier, 50%; contra um mais forte, 35%. Vencer um deck forte rende bastante e perder para um fraco pesa bastante. O saldo é a média de (resultado − esperado) por duelo. Com ${CFN} duelos ou mais, saldo de +${CFL*100} pontos ou mais sugere subir um tier e −${CFL*100} ou menos sugere descer. Conta todos os duelos.</div>`+
+   (CF.length?CF.map(x=>`<div class="rk" onclick="info(${x.i})">${art(x.i)}<div class="mid"><b>${esc(x.n)}</b><span class="tier t${x.cur}">T${x.cur}</span> <small style="display:inline">${x.g} jogo${x.g>1?'s':''} · ${x.w}V ${x.g-x.w}D</small><div class="cf3">${[['↓ fraco',0],['= igual',1],['↑ forte',2]].map(([l,k])=>`<span>${l} <b>${x.b[k][0]}-${x.b[k][1]}</b></span>`).join('')}</div></div><div class="cfr"><b class="${x.sc>0?'pos':x.sc<0?'neg':''}">${x.sc>0?'+':''}${Math.round(x.sc*100)}</b><small>pts vs esperado</small>${x.g<CFN?`<span class="sug">poucos jogos (${x.g}/${CFN})</span>`:x.sug===x.cur?'<span class="sug">✓ tier certo</span>':`<button class="sug ${x.sug<x.cur?'up':'dn'}" onclick="event.stopPropagation();applyTier(${x.i},${x.sug})">${x.sug<x.cur?'↑':'↓'} Tier ${x.sug}</button>`}</div></div>`).join(''):'<div class="mini" style="text-align:left">Ainda sem duelos com decks sorteados.</div>')+`<div class="cnote">Legenda: ↓ fraco = deck de tier pior que o seu · ↑ forte = deck de tier melhor. Tier 1 é o mais forte.</div></div>`;
+  const EL=elo().filter(x=>x.g>0).sort((a,b)=>b.e-a.e);
+  o+=`<div class="sh">⚖️ FORÇA REAL · TIER SUGERIDO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Cada deck começa com a pontuação do tier original e ganha ou perde pontos a cada duelo; vencer um deck mais forte vale mais. Com 4 jogos ou mais, o app sugere o tier que os resultados indicam. Conta todos os duelos.</div>`+
+   EL.map((x,k)=>`<div class="rk" onclick="info(${x.i})"><span class="no">${k+1}</span>${art(x.i)}<div class="mid"><b>${esc(x.n)}</b><span class="tier t${x.cur}">T${x.cur}</span> <small style="display:inline">${x.g} jogo${x.g>1?'s':''}</small></div><span class="elo">${Math.round(x.e)}</span>${x.g<4?'<span class="sug">poucos jogos</span>':x.sug===x.cur?'<span class="sug">✓ tier certo</span>':`<button class="sug ${x.sug<x.cur?'up':'dn'}" onclick="event.stopPropagation();applyTier(${x.i},${x.sug})">${x.sug<x.cur?'↑':'↓'} Tier ${x.sug}</button>`}</div>`).join('')+`</div>`;
+  // --- Tiers e zebras
+  const tg={},zb=[];R.forEach(({h})=>{if(!h.decks)return;const tt=h.decks.map(tierOf);if(tt.some(x=>x==null))return;
+   [0,1].forEach(p=>{const q=tg[tt[p]]||(tg[tt[p]]=[0,0]);q[0]+=h.w===p?1:0;q[1]++});const d=tt[h.w]-tt[1-h.w];if(d>0)zb.push({h,d,tt})});
+  o+=`<div class="sh">🎯 TIERS</div><div class="card">`+[1,2,3,4,5].map(k=>{const q=tg[k];return `<div class="hb"><span class="tier t${k}" style="text-align:center">TIER ${k}</span><div class="pb"><i style="width:${q?q[0]/q[1]*100:0}%"></i></div><span>${q?`<b>${pct(q[0],q[1])}</b> · ${q[1]} jogo${q[1]>1?'s':''}`:'sem jogos'}</span></div>`}).join('')+
+   `<div class="cnote">Aproveitamento dos decks de cada tier. Tier 1 é o mais forte.</div>
+   <div class="clh">🦓 ZEBRAS · ${zb.length}</div><div class="cnote" style="margin-top:-2px">Vitórias de um deck de tier mais fraco sobre um mais forte.</div>`+
+   (zb.length?zb.sort((a,b)=>b.d-a.d||b.h.t-a.h.t).slice(0,5).map(({h,tt})=>`<div class="rec"><i>🦓</i><div><b>${esc(h.decks[h.w])} <span class="tier t${tt[h.w]}">T${tt[h.w]}</span></b><small>venceu ${esc(h.decks[1-h.w])} (T${tt[1-h.w]}) · ${NOMES[h.w]} · ${dt(h.t)}</small></div></div>`).join(''):'<div class="mini" style="text-align:left">Nenhuma zebra ainda.</div>')+`</div>`;
+  // --- Atributos
+  const ag={};R.forEach(({h})=>{if(!h.decks)return;[0,1].forEach(p=>{const i=DI(h.decks[p]);if(i<0)return;const a=DECKS[i][2],q=ag[a]||(ag[a]=[0,0]);q[0]+=h.w===p?1:0;q[1]++})});
+  o+=`<div class="sh">🌗 ATRIBUTOS</div><div class="card">`+Object.entries(ag).sort((a,b)=>b[1][0]/b[1][1]-a[1][0]/a[1][1]).map(([a,q])=>`<div class="hb"><span style="display:flex;align-items:center;gap:5px;font-weight:800;font-size:.72rem">${atr(a).replace('class="atr"','class="atr" style="position:static;width:18px;height:18px;display:inline-block"')}${a}</span><div class="pb"><i style="width:${q[0]/q[1]*100}%"></i></div><span><b>${pct(q[0],q[1])}</b> · ${q[1]} jogo${q[1]>1?'s':''}</span></div>`).join('')+`</div>`}
+ else o+=`<div class="sh">🃏 DECKS</div><div class="card mini">Os duelos registrados não têm decks sorteados. Usem o Sorteio ou o Torneio para ter estatísticas por deck.</div>`;
+ const A=achv(hist),ids=Object.keys(ACH),cnt=[0,1].map(p=>Object.keys(A[p]).length);
+ o+=`<div class="sh">🏅 CONQUISTAS</div><div class="card"><div class="sbl" style="margin:0 0 4px;font-size:.85rem"><span style="color:var(--g)">Douglas ${cnt[0]}/${ids.length}</span><span style="color:var(--b)">João ${cnt[1]}/${ids.length}</span></div>`+
+  ids.map(id=>{const a=ACH[id],y=[0,1].map(p=>A[p][id]),any=y[0]||y[1];return `<div class="ach ${any?'on':''}"><i>${a.e}</i><div><b>${a.n}</b><small>${a.d}${any?' · '+[0,1].filter(p=>y[p]).map(p=>NOMES[p]+' em '+dt(y[p])).join(', '):''}</small></div><span class="who">${[0,1].map(p=>`<em class="${y[p]?'y':''}" style="--pc:${COR[p]}" aria-label="${NOMES[p]}${y[p]?' desbloqueou':''}">${NOMES[p][0]}</em>`).join('')}</span></div>`}).join('')+`<div class="cnote">Contam todos os duelos, sem filtro.</div></div>`;
+ el.innerHTML=o;const sv=$('#race');if(sv)raceHover(sv,R)}
+// Gráfico: saldo de vitórias (Douglas − João) duelo a duelo
+const RW=340,RH=150,RPL=26,RPR=8,RPT=12,RPB=12;
+function raceSVG(R){let s=0;const pts=[0].concat(R.map(x=>s+=x.h.w===0?1:-1)),n=R.length,m=Math.max(1,...pts.map(Math.abs));
+ const X=i=>RPL+i*(RW-RPL-RPR)/n,Y=v=>RPT+(m-v)*(RH-RPT-RPB)/(2*m),z=Y(0),d=pts.map((v,i)=>(i?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)).join(''),ar=d+`L${X(n)} ${z}L${X(0)} ${z}Z`;
+ return `<div class="chw"><svg viewBox="0 0 ${RW} ${RH}" id="race" role="img" aria-label="Saldo de vitórias ao longo dos duelos"><defs><clipPath id="rcu"><rect width="${RW}" height="${z}"/></clipPath><clipPath id="rcd"><rect y="${z}" width="${RW}" height="${RH}"/></clipPath></defs>
+  <line x1="${RPL}" x2="${RW-RPR}" y1="${z}" y2="${z}" stroke="#8fb0d8" stroke-opacity=".55" stroke-dasharray="3 3"/>
+  <g font-size="9" fill="#8fb0d8" text-anchor="end"><text x="${RPL-5}" y="${Y(m)+3}">+${m}</text><text x="${RPL-5}" y="${z+3}">0</text><text x="${RPL-5}" y="${Y(-m)+3}">+${m}</text></g>
+  <path d="${ar}" fill="#3dff7a" fill-opacity=".2" clip-path="url(#rcu)"/><path d="${ar}" fill="#4aa3ff" fill-opacity=".2" clip-path="url(#rcd)"/>
+  <path d="${d}" fill="none" stroke="#e6f4ff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+  <g font-size="9" font-weight="700"><text x="${RPL+5}" y="${RPT+2}" fill="#e6f4ff"><tspan fill="#3dff7a">▲</tspan> Douglas na frente</text><text x="${RPL+5}" y="${RH-3}" fill="#e6f4ff"><tspan fill="#4aa3ff">▼</tspan> João na frente</text></g>
+  <line id="rcx" y1="${RPT-4}" y2="${RH-RPB+4}" stroke="#35e0ff" stroke-width="1" opacity="0"/><circle id="rcd2" r="4.5" fill="#35e0ff" stroke="#07122f" stroke-width="2" opacity="0"/>
+  <rect id="rhit" x="${RPL-6}" y="0" width="${RW-RPL-RPR+12}" height="${RH}" fill="transparent"/></svg><div class="ctt" id="rtt"></div></div>`}
+function raceHover(sv,R){let s=0;const pts=[0].concat(R.map(x=>s+=x.h.w===0?1:-1)),n=R.length,m=Math.max(1,...pts.map(Math.abs)),X=i=>RPL+i*(RW-RPL-RPR)/n,Y=v=>RPT+(m-v)*(RH-RPT-RPB)/(2*m);
+ const tt=$('#rtt'),cx=$('#rcx'),dt2=$('#rcd2');
+ const show=ev=>{const b=sv.getBoundingClientRect(),xs=(ev.clientX-b.left)*RW/b.width,i=Math.max(0,Math.min(n,Math.round((xs-RPL)/((RW-RPL-RPR)/n)))),v=pts[i];
+  cx.setAttribute('x1',X(i));cx.setAttribute('x2',X(i));cx.setAttribute('opacity',1);dt2.setAttribute('cx',X(i));dt2.setAttribute('cy',Y(v));dt2.setAttribute('opacity',1);
+  const h=i?R[i-1].h:null;tt.innerHTML=i?`<b>Duelo ${i}</b> · ${dt(h.t)}<br>Venceu: ${NOMES[h.w]}${h.decks?' ('+esc(h.decks[h.w])+')':''}<br>${v>0?'Douglas +'+v:v<0?'João +'+(-v):'Empate'}`:'<b>Início</b>';
+  tt.style.display='block';const px=X(i)*b.width/RW;tt.style.left=Math.max(70,Math.min(b.width-70,px))+'px';tt.style.top=(Y(v)*b.height/RH>b.height/2?4:b.height-tt.offsetHeight-4)+'px'};
+ const hide=()=>{tt.style.display='none';cx.setAttribute('opacity',0);dt2.setAttribute('opacity',0)};
+ const hit=$('#rhit');hit.addEventListener('pointermove',show);hit.addEventListener('pointerdown',show);hit.addEventListener('pointerleave',hide)}
+function dStat(nm){const s=SD[nm];if(!s)return;const i=DI(nm),d=DECKS[i],tit=CAMP.filter(c=>c.c===nm).length;
+ const op=Object.entries(s.op).sort((a,b)=>b[1][0]+b[1][1]-a[1][0]-a[1][1]);
+ modal(`<h2>${esc(nm)}</h2>${d?`<span class="tier t${d[1]}">TIER ${d[1]}</span>`:''}${art(i<0?null:i)}
+  <div class="tiles" style="text-align:left"><div class="tile"><small>Aproveitamento</small><b>${pct(s.v,s.g)}</b><span>${s.v} vitória${s.v===1?'':'s'} · ${s.d} derrota${s.d===1?'':'s'}</span></div>
+  <div class="tile"><small>Títulos de torneio</small><b>${tit}</b><span>${tit?'🏆'.repeat(Math.min(tit,5)):'nenhum ainda'}</span></div>
+  <div class="tile"><small>Tempo médio p/ vencer</small><b>${s.wc?fmt(s.wd/s.wc):'–'}</b></div><div class="tile"><small>LP médio ao vencer</small><b>${s.v?nf(s.lpw/s.v):'–'}</b></div>
+  ${(x=>x?`<div class="tile"><small>Força real (Elo)</small><b>${Math.round(x.e)}</b><span>${x.g<4?'poucos jogos para sugerir':x.sug===x.cur?'tier atual confere':'sugere Tier '+x.sug}</span></div>`:'')(elo().find(x=>x.n===nm))}<div class="tile"><small>Dano por duelo</small><b>${nf(s.dmg/s.g)}</b></div><div class="tile"><small>Maior golpe</small><b>${s.big?nf(s.big):'–'}</b></div></div>
+  <div class="clh">COM CADA JOGADOR</div>${[0,1].map(p=>`<div class="hb"><span style="color:${COR[p]};font-weight:800">${NOMES[p]}</span><div class="pb"><i style="width:${s.bp[p][0]+s.bp[p][1]?s.bp[p][0]/(s.bp[p][0]+s.bp[p][1])*100:0}%"></i></div><span><b>${s.bp[p][0]}V · ${s.bp[p][1]}D</b></span></div>`).join('')}
+  <div class="clh">CONFRONTOS</div>${op.map(([o,q])=>`<div class="rk" style="cursor:default"><div class="mid"><b>${esc(o)}</b></div><div class="vd" style="color:${q[0]>q[1]?'var(--g)':q[0]<q[1]?'#ff8a8a':'var(--mut)'}">${q[0]}V · ${q[1]}D</div></div>`).join('')}
+  ${i>=0?`<button class="btn" onclick="info(${i})">📚 Ver estratégia e cartas</button>`:''}<button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`);$('#box').scrollTop=0}
+
+mkBg();setInterval(flipTick,1300);
+Object.keys(MOM).forEach(k=>KV.get('snd:'+k).then(u=>{if(u)CSND[k]=u}));
+rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(loadBg);
+</script>
+</body>
+</html>
