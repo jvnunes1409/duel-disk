@@ -296,6 +296,10 @@ details.tinfo summary{cursor:pointer;text-align:center;color:var(--cy);font-weig
 #sbar button:active{filter:brightness(1.25)}
 @media(max-height:760px){.opts{flex-direction:row;gap:6px;margin-bottom:8px}.opts .tg{flex:1;padding:8px;gap:8px;font-size:.75rem}.opts .tg small{display:none}.mode{margin-bottom:8px}.mode button{padding:9px 4px}#pool{margin:-2px 0 6px!important}}
 #sbar button{font-size:.8rem;letter-spacing:1px}
+/* ---- Modo leve: sem sombras/brilhos, fundo sólido ---- */
+body.lite{background:#061236!important}
+body.lite *,body.lite *::before,body.lite *::after{box-shadow:none!important;text-shadow:none!important;filter:none!important;backdrop-filter:none!important}
+body.lite #bgart{background:linear-gradient(#0a22b8,#040f55)}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -868,12 +872,15 @@ function victoryFX(di,w,fin){const d=di!=null?DECKS[di]:null,vc=fin?'#f2c14e':d?
 function celebrate(di,w,fin){if(CFG.vic==='all'||(CFG.vic==='final'&&fin))return victoryFX(di,w,fin);
  play('win');fin?moment('champ',`${dn(di)} é o campeão do torneio!`):moment('win',`${NOMES[w]} vence o duelo!`);return Promise.resolve()}
 function prevFX(fin){const ok=[...DECKS.keys()].filter(i=>LD[DECKS[i][7]]),i=pick(ok.length?ok:[...DECKS.keys()]);victoryFX(i,Math.random()<.5?0:1,fin)}
-function cfgM(){const sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${CFG[k]===v?'on':''}" onclick="CFG.${k}=${JSON.stringify(v).replace(/"/g,"'")};saveCfg();cfgM();wake($('#duelo').classList.contains('on'));play('click')">${l}</button>`).join('')}</div>`;
+function cfgM(){const sp=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${PERF[k]===v?'on':''}" onclick="PERF.${k}=${v};savePerf();applyPerf();cfgM();play('click')">${l}</button>`).join('')}</div>`,sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${CFG[k]===v?'on':''}" onclick="CFG.${k}=${JSON.stringify(v).replace(/"/g,"'")};saveCfg();cfgM();wake($('#duelo').classList.contains('on'));play('click')">${l}</button>`).join('')}</div>`;
  modal(`<h2>SONS E ANIMAÇÕES</h2>
  <div class="opt"><b>🗣 Voz do narrador</b>${sg('voz',[[1,'Ligada'],[0,'Desligada']])}</div>
  <div class="opt"><b>⚡ Tela “É hora do duelo”</b>${sg('vs',[[1,'Ligada'],[0,'Desligada']])}</div>
  <div class="opt"><b>🏆 Animação de vitória</b>${sg('vic',[['all','Todos'],['final','Só finais'],['off','Desligada']])}</div>
  <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake',[[1,'Sim'],[0,'Não']])}${navigator.wakeLock?'':'<p class="cnote">Este navegador não permite manter a tela ligada.</p>'}</div>
+ <div class="clh">🚀 DESEMPENHO <small style="font-size:.6rem;color:var(--mut);letter-spacing:0">só neste aparelho</small></div>
+ <div class="opt"><b>🌌 Fundo animado (cartas virando)</b>${sp('bg',[[1,'Ligado'],[0,'Desligado']])}</div>
+ <div class="opt"><b>⚡ Modo leve (sem brilhos e sombras)</b>${sp('lite',[[0,'Desligado'],[1,'Ligado']])}<p class="cnote" style="text-align:left">Se o app estiver travando, desligue o fundo e ligue o modo leve.</p></div>
  <div class="row" style="margin:6px 0 4px"><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(0)">▶ Ver vitória</button><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(1)">▶ Ver final</button></div>
  <div class="clh">🎵 ÁUDIOS PRÓPRIOS</div><p class="cnote" style="text-align:left;margin-top:0">Escolham um áudio do celular (mp3, m4a…) para tocar no lugar da voz do narrador. Fica salvo neste aparelho.</p>
  ${Object.entries(MOM).map(([k,[l,t]])=>`<div class="slot"><div><b>${l}</b><small>${CSND[k]?'🎵 Áudio próprio':DEF[k]?'🎵 Áudio padrão do app':'Narrador: '+t}</small></div><button onclick="testM('${k}')" aria-label="Testar">▶</button><label aria-label="Escolher áudio">📁<input type="file" accept="audio/*" hidden onchange="setSnd('${k}',this)"></label>${CSND[k]?`<button onclick="delSnd('${k}')" aria-label="Remover">✕</button>`:''}</div>`).join('')}
@@ -1055,9 +1062,18 @@ function dStat(nm){const s=SD[nm];if(!s)return;const i=DI(nm),d=DECKS[i],tit=CAM
   <div class="clh">CONFRONTOS</div>${op.map(([o,q])=>`<div class="rk" style="cursor:default"><div class="mid"><b>${esc(o)}</b></div><div class="vd" style="color:${q[0]>q[1]?'var(--g)':q[0]<q[1]?'#ff8a8a':'var(--mut)'}">${q[0]}V · ${q[1]}D</div></div>`).join('')}
   ${i>=0?`<button class="btn" onclick="info(${i})">📚 Ver estratégia e cartas</button>`:''}<button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`);$('#box').scrollTop=0}
 
-mkBg();setInterval(flipTick,1300);
+// Desempenho (guardado só neste aparelho, não vai no backup): fundo animado e modo leve
+const PERF={bg:1,lite:0};try{Object.assign(PERF,JSON.parse(localStorage.getItem('ygo_perf')||'{}'))}catch(e){}
+const savePerf=()=>{try{localStorage.setItem('ygo_perf',JSON.stringify(PERF))}catch(e){}};
+let BGT=null,BGL=false;
+function applyPerf(){document.body.classList.toggle('lite',!!PERF.lite);const w=$('#bgart');
+ if(PERF.bg){if(!w.querySelector('.bc')){w.innerHTML='<div class="gr"></div>';mkBg()}if(!BGT)BGT=setInterval(flipTick,1300);if(!BGL&&window.ART_READY){BGL=true;loadBg()}}
+ else{clearInterval(BGT);BGT=null;w.innerHTML=''}}
+applyPerf();
+// Celular fraco: se o app rodar a menos de 20 quadros/s (medido uma única vez, alguns segundos depois de abrir), pergunta se quer desligar o fundo animado.
+setTimeout(()=>{if(!PERF.bg||PERF.probe)return;let n=0,t0=0;const f=t=>{if(!t0)t0=t;n++;if(t-t0<2000)requestAnimationFrame(f);else{PERF.probe=1;const fps=n/((t-t0)/1000);if(fps<20&&document.visibilityState==='visible'&&confirm('O app parece estar pesado neste celular. Desligar o fundo animado (as cartas virando) para ele ficar mais leve?\n\nDá para religar depois em ☰ → Sons e animações.')){PERF.bg=0;applyPerf()}savePerf()}};requestAnimationFrame(f)},9000);
 Object.keys(MOM).forEach(k=>KV.get('snd:'+k).then(u=>{if(u)CSND[k]=u}));
-rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(loadBg);
+rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
 </script>
 <script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
