@@ -264,10 +264,30 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
 .rk.sel{background:#f2c14e1f;box-shadow:inset 3px 0 0 var(--gd)}
 .lgn{display:flex;align-items:center;gap:6px;min-width:0}.lgn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lgt .art{width:26px;height:26px;flex:none;border-width:1px}.lgt .art span{font-size:.8rem}.lgt .art>.atr{display:none}
 .slot button,.slot label{flex:none;padding:8px 10px;border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--tx);font-size:.85rem;cursor:pointer}
+
+/* ---- Revisão de interface: a aba Duelo cabe inteira na tela, sem rolar ---- */
+h1{padding:6px;font-size:1.1rem}
+body[data-t=duelo] h1{display:none}body[data-t=duelo] main{padding-top:8px}body[data-t=duelo]{padding-bottom:0}
+#duelo.on{display:flex;flex-direction:column;height:calc(100vh - 66px);height:calc(100dvh - 66px - env(safe-area-inset-bottom,0px))}
+#duelo .tb{margin-bottom:6px;flex:none}#duelo .ib{min-height:clamp(36px,6dvh,50px);padding:0;font-size:1.25rem}
+#duelo .pl{height:clamp(70px,12.5dvh,128px);margin-bottom:6px;flex:none}
+#duelo .calc{padding:4px 12px;margin-bottom:6px;flex:none}#duelo .calc span{font-size:1.7rem}
+#duelo .lab{margin:0 0 2px;font-size:.7rem;flex:none}
+#duelo .pad{flex:1;min-height:0;gap:5px;grid-template-rows:repeat(7,minmax(30px,1fr))}
+#duelo .k{padding:0;display:grid;place-items:center;font-size:clamp(1.05rem,3.2dvh,1.5rem)}#duelo .k.sm{font-size:clamp(.9rem,2.6dvh,1.1rem)}
+@media(min-height:860px){#duelo .pad{max-height:460px}}
+#duelo .ptw b{font-size:clamp(.5rem,1.75dvh,.7rem);letter-spacing:.5px;padding-top:6px}#duelo .ptw b small{font-size:clamp(.48rem,1.5dvh,.55rem)}
+.btn small{display:block;font:600 .7rem system-ui;letter-spacing:0;text-transform:none;opacity:.85;margin-top:3px}
+.box .btn{letter-spacing:1.5px}.btn.red{border-color:#c0394d;color:#ff7a8a}.btn.sec{border-color:#2c58b8;color:var(--mut)}
+.mlb{margin:12px 0 -2px;color:var(--mut);font:800 .7rem system-ui;letter-spacing:2px;text-transform:uppercase}
+.lnk{display:block;margin:12px auto 0;background:none;border:0;color:#ff7a8a;font-size:.8rem;text-decoration:underline}
+.hbar .btn{padding:10px 4px;font-size:.78rem;letter-spacing:1px}
+details.hlp{margin:0 0 10px;color:var(--mut);font-size:.78rem}details.hlp summary{cursor:pointer;text-align:center;padding:4px;color:var(--cy)}details.hlp p{margin:6px 0 0;text-align:left;line-height:1.4}
+details.tinfo summary{cursor:pointer;text-align:center;color:var(--cy);font-weight:800;font-size:.85rem;padding:8px 0}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
-<body>
+<body data-t="duelo">
 <div id="bgart"><div class="gr"></div></div>
 <h1>⚡ DUEL DISK ⚡</h1>
 <main>
@@ -288,7 +308,7 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
   <div class="pad" id="pad"></div>
 </section>
 <section id="stats"><div id="stx"></div></section>
-<section id="hist"><div id="score"></div><div id="hl"></div><div class="row" style="margin:10px 0"><button class="btn" id="bTxt" style="padding:12px;font-size:.8rem">📄 Exportar TXT</button><button class="btn" id="bExp" style="padding:12px;font-size:.8rem">💾 Backup</button><label class="btn" style="padding:12px;font-size:.85rem;text-align:center;cursor:pointer">⬇ Importar<input type="file" id="fImp" accept=".json,application/json" hidden></label></div><p class="cnote" style="text-align:center;margin:-4px 0 10px">O TXT é para ler em qualquer aparelho. O backup (.json) é para restaurar ou juntar com outro celular e leva duelos, torneio, campeões, áudios próprios, tiers e configurações.</p><button class="btn" id="bClear" style="border-color:#2c58b8;color:var(--mut)">Limpar histórico</button></section>
+<section id="hist"><div id="score"></div><div id="hl"></div><div class="row hbar" style="margin:10px 0"><button class="btn" id="bTxt">📄 TXT</button><button class="btn" id="bExp">💾 Backup</button><label class="btn" style="text-align:center;cursor:pointer">⬇ Importar<input type="file" id="fImp" accept=".json,application/json" hidden></label></div><details class="hlp"><summary>O que é cada botão?</summary><p><b>TXT</b>: para ler em qualquer aparelho. <b>Backup</b> (.json): para restaurar ou juntar com outro celular; leva duelos, torneio, campeões, áudios próprios, tiers e configurações. <b>Importar</b>: carrega um backup.</p></details><button class="lnk" id="bClear">Limpar histórico</button></section>
 </main>
 <nav><button data-t="decks">📚<br>Decks</button><button data-t="sorteio">🎴<br>Sorteio</button><button data-t="torneio">🏟️<br>Torneio</button><button data-t="duelo" class="on">⚔️<br>Duelo</button><button data-t="stats">📊<br>Stats</button><button data-t="hist">🏆<br>Histórico</button></nav>
 <div id="modal"><div class="box" id="box"></div></div>
@@ -384,7 +404,7 @@ function art(i,c='',x=''){const d=DECKS[i];if(!d)return `<div class="art ${c}"><
  return `<div class="art ${c}" data-i="${i}" style="--c:${ATTR[d[2]]};${u?`background-image:url('${u}')`:''}">${u?'':`<span>${d[3]}</span>`}${atr(d[2])}${x}</div>`}
 
 // ===== Navegação e modal =====
-function goTab(t){document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));$('#'+t).classList.add('on');document.querySelector(`nav [data-t=${t}]`).classList.add('on');wake(t==='duelo');if(t==='duelo')setTimeout(duelStart,60)}
+function goTab(t){document.body.dataset.t=t;document.querySelectorAll('nav button,section').forEach(e=>e.classList.remove('on'));$('#'+t).classList.add('on');document.querySelector(`nav [data-t=${t}]`).classList.add('on');wake(t==='duelo');if(t==='duelo')setTimeout(duelStart,60)}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.t==='torneio'){TV=null;rT()}if(b.dataset.t==='stats')rS();goTab(b.dataset.t);play('click')});
 function modal(h){$('#box').innerHTML=h;$('#modal').classList.add('on')}
 function fechar(){$('#modal').classList.remove('on')}
@@ -449,7 +469,7 @@ function quemComeca(){if(over)return;const pv=duel.prevW;
  modal(`<h2>QUEM COMEÇA?</h2><div class="st" style="height:130px"><div id="tw"><div class="coin" id="coin">${COIN_H}</div></div></div><div class="res" id="rs">&nbsp;</div>
  <button class="btn" onclick="sortFirst()">🪙 Sortear na moeda</button><p class="cnote" style="margin:4px 0 8px">Cara = Douglas · Coroa = João</p>
  <div class="row"><button class="btn" style="border-color:var(--g);color:var(--g)" onclick="setFirst(0)">Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b)" onclick="setFirst(1)">João</button></div>
- <button class="btn" style="border-color:#c0394d;color:#ff7a8a;margin-top:8px;padding:10px" onclick="cancelDuel()">✖ Cancelar duelo</button>${pv!=null?`<p class="cnote">Pela regra, quem perdeu o duelo anterior (${NOMES[1-pv]}) escolhe quem começa.</p>`:''}`)}
+ <button class="lnk" onclick="cancelDuel()">Cancelar duelo</button>${pv!=null?`<p class="cnote">Pela regra, quem perdeu o duelo anterior (${NOMES[1-pv]}) escolhe quem começa.</p>`:''}`)}
 function sortFirst(){if(bt)return;bt=true;const k=Math.random()<.5;cr=Math.ceil(cr/360)*360+1800+(k?180:0);$('#coin').style.transform=`rotateY(${cr}deg)`;toss();play('coin');
  setTimeout(()=>{const r=$('#rs');if(r)r.textContent=(k?'COROA':'CARA')+' · '+NOMES[k?1:0].toUpperCase()+' COMEÇA';play('coin');bt=false;setTimeout(()=>setFirst(k?1:0),1000)},1450)}
 function setFirst(p){if(over)return;duel.first=p;rTurn();fechar();play('click');say(NOMES[p]+' começa!')}
@@ -480,7 +500,9 @@ function go(){if(!run){run=true;requestAnimationFrame(loop)}}
 // ---- Tela sempre ligada durante o duelo
 let WL=null;async function wake(on){try{if(on&&CFG.wake&&!WL&&navigator.wakeLock&&document.visibilityState==='visible'){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){WL=null}}
 document.addEventListener('visibilitychange',()=>wake(document.visibilityState==='visible'&&$('#duelo').classList.contains('on')));
-function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" style="border-color:#c0394d;color:#ff7a8a" onclick="cancelDuel()">✖ Cancelar duelo</button><button class="btn" onclick="if(confirm('Resetar o duelo?')){fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}">🔄 Resetar duelo</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><button class="btn" onclick="fechar();finish(0)">🏆 Douglas venceu</button><button class="btn" onclick="fechar();finish(1)">🏆 João venceu</button><button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="fechar()">Fechar</button>`)}
+function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="fechar()">Fechar</button>`)}
+function endM(){modal(`<h2>ENCERRAR DUELO</h2><button class="btn" onclick="resetDuel()">🔄 Reiniciar<small>mesmos decks, LP volta a 8000</small></button><button class="btn red" onclick="cancelDuel(1)">✖ Cancelar<small>descarta o duelo, nada vai para o histórico</small></button><button class="btn sec" onclick="menu()">Voltar</button>`)}
+function resetDuel(){if(duel.log.length&&!confirm('Reiniciar? Os lances deste duelo serão perdidos.'))return;fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}
 // ---- Escolher os decks manualmente (sem sorteio)
 let PK=[null,null];
 function escolher(){PK=duel.decks?[...duel.decks]:[null,null];pickM()}
@@ -492,7 +514,7 @@ function pickM(){const opt=p=>`<select id="pk${p}" onchange="PK[${p}]=this.value
 function pickGo(){if(PK[0]==null||PK[1]==null)return;const prog=duel&&(duel.log.length||lp[0]!==8000||lp[1]!==8000)&&!over;if(prog&&!confirm('Há um duelo em andamento. Descartar e começar com os decks escolhidos?'))return;
  fechar();useDecks(PK);newDuel([...PK],null,SRT.md3?mkSr():null);duelStart();play('click')}
 // Cancela o duelo atual sem salvar nada no histórico e volta ao estado inicial (decks não escolhidos)
-function cancelDuel(){if(!confirm('Cancelar este duelo? Nada será salvo no histórico.'))return;if(CA)CA.pause();try{speechSynthesis.cancel()}catch(e){}
+function cancelDuel(q){if(!q&&!confirm('Cancelar este duelo? Nada será salvo no histórico.'))return;if(q&&duel.log.length&&!confirm('Cancelar? Os lances deste duelo serão perdidos e nada vai para o histórico.'))return;if(CA)CA.pause();try{speechSynthesis.cancel()}catch(e){}
  fechar();const f=$('#fx');if(f){f.className='';f.innerHTML=''}newDuel(null);toast('Duelo cancelado');play('click')}
 function rematch(){fechar();const pw=LH?LH.w:null;newDuel(duel.decks,null,duel.sr?mkSr():null);duel.prevW=pw;duelStart()}
 function nextSerie(){fechar();const sr=duel.sr,pw=LH?LH.w:null;newDuel(duel.decks,null,sr);duel.prevW=pw;duelStart()}
@@ -734,9 +756,9 @@ function gTable(g){const s=stand(g),ids=GRP[g].map(id=>res({win:id}));
   rows.map((r,k)=>`<tr class="${s&&s.done?(k<2?'q':'out'):''}"><td>${s?k+1+'º':'–'}</td><td class="dn">${r.i!=null?esc(dn(r.i)):`<span style="color:var(--mut);font-weight:600;font-style:italic">${r.src}</span>`}${s&&s.done?`<em>${k<2?'➜ Semifinal':'Eliminado'}${r.sor?' · 🎲 decidido no sorteio':''}</em>`:''}</td><td>${r.v}</td><td>${r.d}</td><td>${r.lp}</td></tr>`).join('')+
   `</table><div class="cnote">Passam os 2 com mais vitórias. Se os três vencerem uma vez, fica na frente quem somou mais LP restante nas vitórias.</div></div>`}
 function rT(an){const el=$('#tour');if(!el)return;
- if(!T){el.innerHTML=`<div class="card thd"><h2 style="margin:4px 0;color:var(--gd);font:900 1.4rem Impact,sans-serif;letter-spacing:3px">🏟️ MATA-MATA DOS 24 DECKS</h2>
-  <ul class="tfl"><li><b>1ª RODADA</b><span>12 duelos sorteados, quem perde sai</span></li><li><b>2ª RODADA</b><span>6 duelos entre os vencedores</span></li><li><b>GRUPOS</b><span>2 grupos de 3, todos contra todos; passam 2 de cada</span></li><li><b>SEMIFINAL</b><span>1º do A × 2º do B · 2º do A × 1º do B</span></li><li><b>FINAL</b><span>1 duelo valendo o título</span></li></ul>
-  <div class="trule"><p><b>Quem usa cada deck:</b> na 1ª rodada o sorteio define. Na 2ª, Douglas usa o vencedor do confronto ímpar e João o do par (C1 × C2, C3 × C4…). Nos grupos, cada um usa cada deck uma vez. Na semi, cada um fica com um 1º colocado. Na final, Douglas usa o vencedor da Semi 1 e João o da Semi 2.</p></div>
+ if(!T){el.innerHTML=`<div class="card thd"><h2 style="margin:4px 0;color:var(--gd);font:900 1.05rem Impact,sans-serif;letter-spacing:1.5px">🏟️ MATA-MATA DOS 24 DECKS</h2>
+  <details class="tinfo"><summary>ℹ️ Como funciona</summary><ul class="tfl"><li><b>1ª RODADA</b><span>12 duelos sorteados, quem perde sai</span></li><li><b>2ª RODADA</b><span>6 duelos entre os vencedores</span></li><li><b>GRUPOS</b><span>2 grupos de 3, todos contra todos; passam 2 de cada</span></li><li><b>SEMIFINAL</b><span>1º do A × 2º do B · 2º do A × 1º do B</span></li><li><b>FINAL</b><span>1 duelo valendo o título</span></li></ul>
+  <div class="trule"><p><b>Quem usa cada deck:</b> na 1ª rodada o sorteio define. Na 2ª, Douglas usa o vencedor do confronto ímpar e João o do par (C1 × C2, C3 × C4…). Nos grupos, cada um usa cada deck uma vez. Na semi, cada um fica com um 1º colocado. Na final, Douglas usa o vencedor da Semi 1 e João o da Semi 2.</p></div></details>
   <button class="btn" onclick="sortT()">🎲 Sortear chaveamento</button></div>${ligaIntro()}${campHTML()}`;return}
  if(T.fmt==='liga')return rLiga(an);
  const M=allM(),done=M.filter(m=>m.w!=null).length,W=[0,1].map(p=>M.filter(m=>m.w===p).length),nx=nextM(),f=T.M.f;
@@ -764,8 +786,8 @@ function mkLiga(ix,pk){const n=ix.length,M={},a=[...ix];
 function ligaStand(){const rows=T.ds.map(n=>({n,i:DI(n)<0?null:DI(n),j:0,v:0,d:0,lp:0})),R=n=>rows.find(r=>r.n===n);
  allM().forEach(m=>{if(m.w==null)return;const W=R(m.w?m.b.d:m.a.d),L=R(m.w?m.a.d:m.b.d);if(!W||!L)return;W.j++;L.j++;W.v++;L.d++;W.lp+=m.lp?m.lp[m.w]:0});
  rows.sort((x,y)=>y.v-x.v||y.lp-x.lp||(T.tb[y.n]||0)-(T.tb[x.n]||0));return rows}
-function ligaIntro(){return `<div class="card thd" style="margin-top:12px"><h2 style="margin:4px 0;color:var(--gd);font:900 1.3rem Impact,sans-serif;letter-spacing:3px">📋 LIGA DE PONTOS CORRIDOS</h2>
- <div class="trule"><p>Todos contra todos, uma vez. Quem somar mais vitórias é o campeão; empate decide pelo saldo de LP restante nas vitórias. Cada deck é usado mais ou menos metade das vezes por cada um de vocês.</p></div>
+function ligaIntro(){return `<div class="card thd" style="margin-top:12px"><h2 style="margin:4px 0;color:var(--gd);font:900 1.15rem Impact,sans-serif;letter-spacing:2px">📋 LIGA DE PONTOS CORRIDOS</h2>
+ <details class="tinfo"><summary>ℹ️ Como funciona</summary><div class="trule"><p>Todos contra todos, uma vez. Quem somar mais vitórias é o campeão; empate decide pelo saldo de LP restante nas vitórias. Cada deck é usado mais ou menos metade das vezes por cada um de vocês.</p></div></details>
  <div class="opt"><b>Quantos decks?</b><div class="seg">${[[4,6],[6,15],[8,28]].map(([n,j])=>`<button class="${LN===n?'on':''}" onclick="LN=${n};rT();play('click')">${n} decks<br><small>${j} duelos</small></button>`).join('')}</div></div>
  <div class="row"><button class="btn" style="padding:13px;font-size:.85rem" onclick="ligaRand()">🎲 Sortear decks</button><button class="btn" style="padding:13px;font-size:.85rem" onclick="ligaPick()">✋ Escolher</button></div></div>`}
 function ligaAnim(ix,pk){tBusy=true;play('sweep');let n=0;const all=[...DECKS.keys()];
