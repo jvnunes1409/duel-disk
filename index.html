@@ -356,7 +356,7 @@ const MOM={start:['Início do duelo','É hora do duelo!'],win:['Vitória','“[n
 let VOZ=null;function pickVoz(){try{const v=speechSynthesis.getVoices();VOZ=v.find(x=>/^pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null}catch(e){}}
 try{pickVoz();speechSynthesis.onvoiceschanged=pickVoz}catch(e){}
 function say(t){if(mute||!CFG.voz||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(VOZ)u.voice=VOZ;u.rate=1.02;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
-let CA=null;function moment(k,txt){if(mute)return;const u=CSND[k]||DEF[k];if(u){try{if(CA)CA.pause();CA=new Audio(u);CA.play().catch(()=>{})}catch(e){}}else say(txt)}
+let CA=null;function moment(k,txt){if(mute)return null;const u=CSND[k]||DEF[k];if(u){try{if(CA)CA.pause();const a=CA=new Audio(u);a.play().catch(()=>a.dispatchEvent(new Event('error')));return a}catch(e){}}else say(txt);return null}
 let un=false;addEventListener('pointerdown',()=>{if(un)return;un=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}Object.values(SFX).forEach(s=>s.a.forEach(a=>{a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{a.muted=false})}))},{passive:true});
 $('#bMute').onclick=e=>{mute=!mute;e.currentTarget.textContent=mute?'🔇':'🔊';if(mute){try{speechSynthesis.cancel();if(CA)CA.pause()}catch(x){}}play('click')};
 
@@ -770,14 +770,14 @@ function rLiga(an){const el=$('#tour'),M=allM(),done=M.filter(m=>m.w!=null).leng
 function campHTML(){if(!CAMP.length)return'';return `<div class="card" style="margin-top:12px"><div class="clh" style="margin-top:0">🏅 GALERIA DE CAMPEÕES</div>`+CAMP.map(c=>{const i=DI(c.c);return `<div class="cmp">${art(i<0?null:i)}<div><b>${esc(c.c)}</b><small>${new Date(c.t).toLocaleDateString('pt-BR')} · ${c.fmt==='liga'?`📋 Liga de ${c.n||'?'} decks · vice: ${esc(c.v)}`:`🏟️ Mata-mata · final com ${NOMES[c.p]} contra ${esc(c.v)}`} · placar ${c.s[0]} × ${c.s[1]}</small></div></div>`}).join('')+`</div>`}
 
 // ===== Animações: tela de VS e vitória =====
-function fxOpen(html,ms){return new Promise(ok=>{const f=$('#fx');f.className='on';f.innerHTML=html;let done=false;const t0=Date.now();
+function fxOpen(html,ms,hook){return new Promise(ok=>{const f=$('#fx');f.className='on';f.innerHTML=html;let done=false;const t0=Date.now();
  const end=()=>{if(done)return;done=true;clearTimeout(tm);f.classList.add('out');setTimeout(()=>{f.className='';f.innerHTML='';ok()},330)};
- const tm=setTimeout(end,ms);f.onclick=()=>{if(Date.now()-t0>400)end()}})}
+ const tm=setTimeout(end,ms);f.onclick=()=>{if(Date.now()-t0>400)end()};if(hook)hook(end)})}
 const deckArt=di=>di!=null&&DECKS[di]?art(di):'<div class="art" style="--c:#556"><span>👤</span></div>';
-function showVS(){const d=duel.decks;play('clash');setTimeout(()=>moment('start','É hora do duelo!'),380);
- return fxOpen(`<div class="vsp">${[0,1].map(p=>`<div class="hf h${p}" style="--pc:${COR[p]}">${deckArt(d[p])}<div class="nm"><b>${NOMES[p].toUpperCase()}</b><small>${esc(dn(d[p]))}</small></div></div>`).join('')}<div class="vsx">VS</div><div class="cap">É HORA DO DUELO!</div></div>`,2700)}
+function showVS(){const d=duel.decks;play('clash');const snd=!mute&&(CSND.start||DEF.start);
+ return fxOpen(`<div class="vsp">${[0,1].map(p=>`<div class="hf h${p}" style="--pc:${COR[p]}">${deckArt(d[p])}<div class="nm"><b>${NOMES[p].toUpperCase()}</b><small>${esc(dn(d[p]))}</small></div></div>`).join('')}<div class="vsx">VS</div><div class="cap">É HORA DO DUELO!</div></div>`,snd?14000:2700,end=>{const stop=()=>{if(CA)CA.pause();end()};setTimeout(()=>{const a=moment('start','É hora do duelo!');if(a){a.onended=end;a.onerror=end}},380);if(snd){const f=$('#fx'),old=f.onclick;f.onclick=()=>{old();if(CA)CA.pause()}}})}
 function duelStart(){if(!duel.decks||duel.ann||duel.log.length||over)return;duel.ann=1;const ask=()=>{if(duel.first==null&&!over&&$('#duelo').classList.contains('on'))quemComeca()};
- if(CFG.vs)showVS().then(ask);else{play('clash');moment('start','É hora do duelo!');ask()}}
+ if(CFG.vs)showVS().then(ask);else{play('clash');const a=moment('start','É hora do duelo!');if(a){a.onended=ask;a.onerror=ask}else ask()}}
 // A carta sobe girando, vira mostrando a arte do deck vencedor e explode em luz. Na final do torneio: dourado, coroa e confete.
 function victoryFX(di,w,fin){const d=di!=null?DECKS[di]:null,vc=fin?'#f2c14e':d?ATTR[d[2]]:'#f2c14e';
  const sp=[...Array(28)].map((_,k)=>`<i class="sp" style="--a:${(k*360/28+Math.random()*8).toFixed(0)}deg;--ds:${(30+Math.random()*25).toFixed(0)}vmin;--dl:${(Math.random()*.12).toFixed(2)}s;--sc:${k%3?vc:'#fff'}"></i>`).join('');
