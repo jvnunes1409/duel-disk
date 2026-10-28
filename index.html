@@ -430,7 +430,8 @@ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}ca
 let IMG={},LD={};try{IMG=JSON.parse(localStorage.getItem('ygo_img')||'{}')}catch(e){}
 function setImg(i,u){document.querySelectorAll(`.art[data-i="${i}"]`).forEach(e=>{e.style.backgroundImage=`url('${u}')`;const s=e.querySelector('span');if(s)s.remove()})}
 function pre(i,u){const m=new Image();m.onload=()=>{LD[DECKS[i][7]]=u;setImg(i,u)};m.src=u}
-async function toData(u){try{const b=await(await fetch(u)).blob();return await new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=no;f.readAsDataURL(b)})}catch(e){return null}}
+async function toData0(u){try{const r=await fetch(u);if(!r.ok)return null;const b=await r.blob();return await new Promise((ok,no)=>{const f=new FileReader();f.onload=()=>ok(f.result);f.onerror=no;f.readAsDataURL(b)})}catch(e){return null}}
+async function toData(u){let d=await toData0(u);if(!d&&/^https?:/.test(u))d=await toData0('https://wsrv.nl/?url='+encodeURIComponent(u.replace(/^https?:\/\//,''))+'&w=600');return d}
 async function loadArt(from=0,to=DECKS.length-1){for(let i=from;i<=to;i++){const q=DECKS[i][7];
  if(DECKS[i][8]){pre(i,DECKS[i][8]);continue}
  const d=await KV.get('art:'+q);if(d){pre(i,d);continue}
@@ -732,7 +733,9 @@ function rH(){bkBan();const w=[0,0];hist.forEach(h=>w[h.w]++);$('#score').innerH
 // ===== Imagem do resultado (para compartilhar) =====
 const CH=['#3dff7a','#4aa3ff'];
 const loadImg=s=>new Promise(ok=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>ok(null);i.src=s});
-async function deckImg(nm){const i=DI(nm);if(i<0)return null;let u=LD[DECKS[i][7]]||await KV.get('art:'+DECKS[i][7]);if(!u)return null;if(!u.startsWith('data:'))u=await toData(u);return u?loadImg(u):null}
+async function deckImg(nm){const i=DI(nm);if(i<0)return null;const q=DECKS[i][7];let u=LD[q]||await KV.get('art:'+q)||DECKS[i][8]||IMG[q];
+ if(!u){try{const j=await(await fetch('https://db.ygoprodeck.com/api/v7/cardinfo.php?fname='+encodeURIComponent(q))).json(),c=j.data.find(x=>x.name.toLowerCase()===q.toLowerCase())||j.data[0];u=c.card_images[0].image_url_cropped}catch(e){return null}}
+ if(!u.startsWith('data:')){const d=await toData(u);if(!d)return null;KV.set('art:'+q,d);u=d}return loadImg(u)}
 function atrImg(a){try{const s=atr(a).match(/<svg[\s\S]*<\/svg>/)[0].replace('<svg ','<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140" ');return loadImg('data:image/svg+xml;charset=utf-8,'+encodeURIComponent(s))}catch(e){return Promise.resolve(null)}}
 function rrect(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath()}
 function fitTxt(c,t,w,px,min,font){while(px>min){c.font=`${font.replace('#',px)}`;if(c.measureText(t).width<=w)break;px-=2}c.font=font.replace('#',px);return px}
@@ -757,7 +760,7 @@ async function resultImg(h){const W=1080,H=1350,cv=document.createElement('canva
   const ax=x+22,ay=cy+22,as=cw-44;c.save();rrect(c,ax,ay,as,as,18);c.clip();
   const col=ix[p]>=0?ATTR[DECKS[ix[p]][2]]||'#556':'#445';g=c.createLinearGradient(ax,ay,ax+as,ay+as);g.addColorStop(0,col);g.addColorStop(1,'#050b20');c.fillStyle=g;c.fillRect(ax,ay,as,as);
   const im=IMGS[p];if(im){const s=Math.max(as/im.width,as/im.height),dw=im.width*s,dh=im.height*s;c.drawImage(im,ax+(as-dw)/2,ay+(as-dh)/2,dw,dh)}
-  else{c.font='200px serif';c.fillStyle='#fff';c.textBaseline='middle';c.fillText(ix[p]>=0?DECKS[ix[p]][3]:'🃏',ax+as/2,ay+as/2+10);c.textBaseline='alphabetic'}
+  else{c.font='200px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';c.fillStyle='#fff';c.textBaseline='middle';c.fillText(ix[p]>=0?DECKS[ix[p]][3]:'🃏',ax+as/2,ay+as/2+10);c.textBaseline='alphabetic'}
   c.restore();rrect(c,ax,ay,as,as,18);c.lineWidth=4;c.strokeStyle='#cfe7ff';c.stroke();
   if(ATI[p])c.drawImage(ATI[p],ax+as-96,ay+10,86,86);
   c.fillStyle=CH[p];c.font=IMP.replace('#',34);c.fillText(NOMES[p].toUpperCase(),x+cw/2,cy+as+76);
