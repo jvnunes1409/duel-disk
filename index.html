@@ -261,6 +261,7 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
 .lgn{display:flex;align-items:center;gap:6px;min-width:0}.lgn span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lgt .art{width:26px;height:26px;flex:none;border-width:1px}.lgt .art span{font-size:.8rem}.lgt .art>.atr{display:none}
 .slot button,.slot label{flex:none;padding:8px 10px;border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--tx);font-size:.85rem;cursor:pointer}
 </style>
+<link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body>
 <div id="bgart"><div class="gr"></div></div>
@@ -979,5 +980,6 @@ mkBg();setInterval(flipTick,1300);
 Object.keys(MOM).forEach(k=>KV.get('snd:'+k).then(u=>{if(u)CSND[k]=u}));
 rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(loadBg);
 </script>
+<script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
 </html>
