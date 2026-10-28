@@ -352,11 +352,11 @@ reg('clash',t=>.45*nz()*ex(t,16)+.25*sn(1760,t)*ex(t,7)+.2*sn(2350,t)*ex(t,9)+.3
 // ===== Narrador e áudios próprios =====
 let CFG={voz:1,vs:1,vic:'all',wake:1};try{Object.assign(CFG,JSON.parse(localStorage.getItem('ygo_cfg')||'{}'))}catch(e){}
 const saveCfg=()=>{try{localStorage.setItem('ygo_cfg',JSON.stringify(CFG))}catch(e){}};
-const MOM={start:['Início do duelo','É hora do duelo!'],win:['Vitória','“[nome] vence o duelo!”'],champ:['Campeão do torneio','“[deck] é o campeão do torneio!”']},CSND={};
+const MOM={start:['Início do duelo','É hora do duelo!'],win:['Vitória','“[nome] vence o duelo!”'],champ:['Campeão do torneio','“[deck] é o campeão do torneio!”']},CSND={},DEF={start:'sons/inicio.mp3'};
 let VOZ=null;function pickVoz(){try{const v=speechSynthesis.getVoices();VOZ=v.find(x=>/^pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null}catch(e){}}
 try{pickVoz();speechSynthesis.onvoiceschanged=pickVoz}catch(e){}
 function say(t){if(mute||!CFG.voz||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(VOZ)u.voice=VOZ;u.rate=1.02;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
-let CA=null;function moment(k,txt){if(mute)return;if(CSND[k]){try{if(CA)CA.pause();CA=new Audio(CSND[k]);CA.play().catch(()=>{})}catch(e){}}else say(txt)}
+let CA=null;function moment(k,txt){if(mute)return;const u=CSND[k]||DEF[k];if(u){try{if(CA)CA.pause();CA=new Audio(u);CA.play().catch(()=>{})}catch(e){}}else say(txt)}
 let un=false;addEventListener('pointerdown',()=>{if(un)return;un=true;try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;speechSynthesis.speak(u)}catch(e){}Object.values(SFX).forEach(s=>s.a.forEach(a=>{a.muted=true;a.play().then(()=>{a.pause();a.currentTime=0;a.muted=false}).catch(()=>{a.muted=false})}))},{passive:true});
 $('#bMute').onclick=e=>{mute=!mute;e.currentTarget.textContent=mute?'🔇':'🔊';if(mute){try{speechSynthesis.cancel();if(CA)CA.pause()}catch(x){}}play('click')};
 
@@ -797,7 +797,7 @@ function cfgM(){const sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<butto
  <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake',[[1,'Sim'],[0,'Não']])}${navigator.wakeLock?'':'<p class="cnote">Este navegador não permite manter a tela ligada.</p>'}</div>
  <div class="row" style="margin:6px 0 4px"><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(0)">▶ Ver vitória</button><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(1)">▶ Ver final</button></div>
  <div class="clh">🎵 ÁUDIOS PRÓPRIOS</div><p class="cnote" style="text-align:left;margin-top:0">Escolham um áudio do celular (mp3, m4a…) para tocar no lugar da voz do narrador. Fica salvo neste aparelho.</p>
- ${Object.entries(MOM).map(([k,[l,t]])=>`<div class="slot"><div><b>${l}</b><small>${CSND[k]?'🎵 Áudio próprio':'Narrador: '+t}</small></div><button onclick="testM('${k}')" aria-label="Testar">▶</button><label aria-label="Escolher áudio">📁<input type="file" accept="audio/*" hidden onchange="setSnd('${k}',this)"></label>${CSND[k]?`<button onclick="delSnd('${k}')" aria-label="Remover">✕</button>`:''}</div>`).join('')}
+ ${Object.entries(MOM).map(([k,[l,t]])=>`<div class="slot"><div><b>${l}</b><small>${CSND[k]?'🎵 Áudio próprio':DEF[k]?'🎵 Áudio padrão do app':'Narrador: '+t}</small></div><button onclick="testM('${k}')" aria-label="Testar">▶</button><label aria-label="Escolher áudio">📁<input type="file" accept="audio/*" hidden onchange="setSnd('${k}',this)"></label>${CSND[k]?`<button onclick="delSnd('${k}')" aria-label="Remover">✕</button>`:''}</div>`).join('')}
  <button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="menu()">← Voltar</button>`)}
 function testM(k){const s=mute;mute=false;moment(k,k==='start'?'É hora do duelo!':k==='win'?'Douglas vence o duelo!':'Blue-Eyes é o campeão do torneio!');mute=s}
 function setSnd(k,inp){const f=inp.files[0];inp.value='';if(!f)return;if(f.size>4e6){alert('Arquivo grande demais (máximo 4 MB). Usem um trecho curto.');return}
