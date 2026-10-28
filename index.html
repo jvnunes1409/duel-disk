@@ -460,18 +460,18 @@ function half(p){if(over)return;const v=Math.floor(lp[p]/2);if(!v)return;amt=Str
 function undoLP(){if(over||!duel.log.length){toast(over?'O duelo já terminou':'Nada para desfazer');return}const e=duel.log.pop();lp[e.p]=e.lp-e.d;play('tickU');go();toast(`Desfeito: ${NOMES[e.p]} ${e.d<0?'−':'+'}${Math.abs(e.d)}`)}
 // Dano: o áudio toca inteiro e a contagem dos LP dura o mesmo tempo. Dano grande = áudio na velocidade normal (~2,5 s);
 // dano pequeno = áudio acelerado (sem mudar o tom) e contagem curta (~1 s).
-const AN=[null,null],DA=[new Audio(),new Audio()];let DT=2.56,RV=null,RD=700;
+const AN=[null,null],DA=[new Audio(),new Audio()];let DT=2.56,RV=null,RD=700;const RC=2000,RP=900;
 // Os LP só aparecem depois do 'É hora do duelo!': os painéis entram pelos lados e os números sobem de 0 até 8000, no tempo do efeito sonoro.
 const LA=new Audio();LA.addEventListener('loadedmetadata',()=>{if(isFinite(LA.duration)&&LA.duration>.2)RD=LA.duration*1000});
 function lpsSnd(){const u=CSND.lps||DEF.lps;if(!u||LA.dataset.u===u&&0)return;if(LA.dataset.u!==u){LA.dataset.u=u;LA.src=u}if(mute)return;try{LA.pause();LA.currentTime=0;LA.play().catch(()=>{})}catch(e){}}
 function revealLP(){const el=$('#players');if(!el.classList.contains('lphide'))return Promise.resolve();
- return new Promise(ok=>{sh[0]=sh[1]=0;draw();el.classList.add('lpin');el.classList.remove('lphide');lpsSnd();RV={t0:performance.now(),D:RD};go();setTimeout(()=>{el.classList.remove('lpin');ok()},RD+250)})}
+ return new Promise(ok=>{sh[0]=sh[1]=0;draw();el.classList.add('lpin');el.classList.remove('lphide');lpsSnd();RV={t0:performance.now(),D:RC};go();setTimeout(()=>el.classList.remove('lpin'),1000);setTimeout(ok,RC+RP)})}
 const dmgU=()=>CSND.dmg||DEF.dmg,dmgRate=d=>1+1.4*(1-Math.min(1,d/6000));
 DA[0].addEventListener('loadedmetadata',()=>{if(isFinite(DA[0].duration)&&DA[0].duration>.2)DT=DA[0].duration});
 function dmgInit(){const u=dmgU();DA.forEach(a=>{if(a.dataset.u!==u){a.dataset.u=u;a.preload='auto';a.src=u;try{a.preservesPitch=true;a.webkitPreservesPitch=true}catch(e){}}})}
 function dmgSnd(p,r){if(mute||!dmgU())return;dmgInit();const a=DA[p];try{a.pause();a.currentTime=0;a.defaultPlaybackRate=r;a.playbackRate=r;a.play().catch(()=>{})}catch(e){}}
 function dmgTest(){const s=mute;mute=false;dmgSnd(0,dmgRate(3000));mute=s}
-function loop(){const now=performance.now();let mv=false;dmgInit();if(RV){const u=Math.min(1,(now-RV.t0)/RV.D),e=1-(1-u)**2;for(let p=0;p<2;p++)sh[p]=u>=1?lp[p]:Math.round(lp[p]*e);if(u>=1)RV=null;draw();requestAnimationFrame(loop);return}for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d){AN[p]=null;continue}mv=true;
+function loop(){const now=performance.now();let mv=false;dmgInit();if(RV){const u=Math.min(1,(now-RV.t0)/RV.D),e=1-(1-u)**1.5;for(let p=0;p<2;p++)sh[p]=u>=1?lp[p]:Math.round(lp[p]*e);if(u>=1)RV=null;draw();requestAnimationFrame(loop);return}for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d){AN[p]=null;continue}mv=true;
   if(d<0){let a=AN[p];if(!a||a.to!==lp[p]){const r=dmgRate(-d);a=AN[p]={f:sh[p],to:lp[p],t0:now,D:DT/r*1000};dmgSnd(p,r)}
    const u=Math.min(1,(now-a.t0)/a.D);sh[p]=u>=1?lp[p]:Math.round(a.f+(a.to-a.f)*u);if(u>=1)AN[p]=null;if(!dmgU()&&fr++%3==0)play('tickD')}
   else{AN[p]=null;const s=Math.max(10,Math.ceil(Math.abs(d)/18));sh[p]=Math.abs(d)<=s?lp[p]:sh[p]+Math.sign(d)*s;if(fr++%3==0)play('tickU')}}
