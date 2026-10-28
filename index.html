@@ -309,7 +309,7 @@ body.lite #bgart{background:linear-gradient(#0a22b8,#040f55)}
 .dfl{display:block;text-align:left;margin:0 0 8px}.dfl>span{display:block;color:var(--mut);font:800 .68rem system-ui;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px}
 .dfl input,.dfl select,.dfl textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #2c58b8;background:#0a1740;color:var(--tx);font:inherit;font-size:.9rem;user-select:text;-webkit-user-select:text}
 .dfl textarea{resize:vertical}.dfl input[readonly]{opacity:.6}
-#bkban .bkb{border-left:5px solid var(--y,#f2c14e);margin:8px 0}#bkban small{display:block;margin:4px 0 8px;opacity:.85}.bki{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #ffffff1a}.bki small{display:block;opacity:.75}.bki .btn{flex:none;padding:6px 12px}</style>
+#bkban .bkb{border-left:5px solid var(--y,#f2c14e);margin:8px 0}#bkban small{display:block;margin:4px 0 8px;opacity:.85}.bki{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-top:1px solid #ffffff1a}.bki small{display:block;opacity:.75}.bki .btn{flex:none;padding:6px 12px}#resultado .dcard{grid-column:1/-1}.drf{grid-template-columns:1fr!important;gap:10px!important}.drf .dro{display:flex;align-items:center;gap:12px;padding:8px;text-align:left}.drf .dro .art{width:min(42%,17dvh)!important;flex:none;aspect-ratio:1/1}.drf .dro .art span{font-size:3.6rem}.drf .dro .dn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px}.drf .dro b{font-size:1.05rem!important;min-height:0!important;margin:0!important;text-align:center;-webkit-line-clamp:3}.drf .dro .tier{font-size:.8rem!important}.drf .dro .ii{width:30px;height:30px;top:4px;left:4px}.drf .dro.shuf{opacity:.85}</style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
 <body data-t="duelo">
@@ -534,12 +534,12 @@ function spinDraw(fin,ix,done){const N=[10,15];let i=0,last=[-1,-1];showR(fin,1)
   setTimeout(step,65+i*13)};
  setTimeout(step,80)}
 // Draft: cada um recebe 3 decks sorteados e escolhe 1 (Douglas primeiro, João vê a escolha dele)
-function draftStart(){busy=true;play('sweep');const P=drawPool(6);DR={o:[P.slice(0,3),P.slice(3,6)],c:[null,null],k:0};let n=0;
- const iv=setInterval(()=>{rDraft(1);play('tickU');if(++n>8){clearInterval(iv);busy=false;rDraft();play('win')}},100)}
+function draftAnim(){busy=true;play('sweep');setTimeout(()=>{const r=$('#resultado');r&&scrollTo({top:r.getBoundingClientRect().top+scrollY-8,behavior:'smooth'})},60);let n=0;const N=12;const st=()=>{rDraft(1);play('tickU');if(++n>N){busy=false;rDraft();play('win');return}setTimeout(st,70+n*14)};st()}
+function draftStart(){const P=drawPool(6);DR={o:[P.slice(0,3),P.slice(3,6)],c:[null,null],k:0};draftAnim()}
 function rDraft(sh){sbar(0);const k=DR.k,o=sh?[0,1,2].map(()=>pick([...DECKS.keys()])):DR.o[k];
- $('#resultado').innerHTML=(k&&!sh?`<div class="mini" style="margin-bottom:8px">Douglas escolheu <b style="color:var(--g)">${esc(dn(DR.c[0]))}</b></div>`:'')+`<div class="card" style="border-color:${COR[k]};text-align:center"><b style="color:${COR[k]};font:900 1rem Impact,sans-serif;letter-spacing:2px">${NOMES[k].toUpperCase()}, ESCOLHA SEU DECK</b><div class="cnote">Toque em um dos três · ⓘ mostra a estratégia</div>
- <div class="drf">${o.map(i=>`<div class="dro ${sh?'shuf':'pop'}" ${sh?'':`onclick="draftPick(${i})"`}>${sh?'':`<button class="ii" onclick="event.stopPropagation();info(${i})" aria-label="Ver estratégia">i</button>`}${art(i)}<b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">T${DECKS[i][1]}</span></div>`).join('')}</div></div>`}
-function draftPick(i){if(!DR||busy)return;DR.c[DR.k]=i;play('click');if(DR.k===0){DR.k=1;rDraft();return}
+ $('#resultado').innerHTML=(k?`<div class="mini" style="margin-bottom:8px">Douglas escolheu <b style="color:var(--g)">${esc(dn(DR.c[0]))}</b></div>`:'')+`<div class="card dcard" style="border-color:${COR[k]};text-align:center"><b style="color:${COR[k]};font:900 1rem Impact,sans-serif;letter-spacing:2px">${NOMES[k].toUpperCase()}, ESCOLHA SEU DECK</b><div class="cnote">Toque em um dos três · ⓘ mostra a estratégia</div>
+ <div class="drf">${o.map(i=>`<div class="dro ${sh?'shuf':'pop'}" ${sh?'':`onclick="draftPick(${i})"`}>${sh?'':`<button class="ii" onclick="event.stopPropagation();info(${i})" aria-label="Ver estratégia">i</button>`}${art(i)}<div class="dn"><b>${esc(DECKS[i][0])}</b><span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></div></div>`).join('')}</div></div>`}
+function draftPick(i){if(!DR||busy)return;DR.c[DR.k]=i;play('click');if(DR.k===0){DR.k=1;draftAnim();return}
  const ds=DR.c;DR=null;useDecks(ds);newDuel(ds,null,SRT.md3?mkSr():null);showR(ds);play('win')}
 
 // ===== Duelo =====
