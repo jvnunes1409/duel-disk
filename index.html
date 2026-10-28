@@ -284,16 +284,18 @@ body[data-t=duelo] h1{display:none}body[data-t=duelo] main{padding-top:8px}body[
 .hbar .btn{padding:10px 4px;font-size:.78rem;letter-spacing:1px}
 details.hlp{margin:0 0 10px;color:var(--mut);font-size:.78rem}details.hlp summary{cursor:pointer;text-align:center;padding:4px;color:var(--cy)}details.hlp p{margin:6px 0 0;text-align:left;line-height:1.4}
 details.tinfo summary{cursor:pointer;text-align:center;color:var(--cy);font-weight:800;font-size:.85rem;padding:8px 0}
-#resultado{display:grid;grid-template-columns:1fr 1fr;gap:8px}#resultado .card{margin:0;padding:8px}#resultado .rc h3{font-size:.95rem;margin:4px 0}#resultado .rc .art{width:100%;margin:6px 0}#resultado .rc .art span{font-size:2.6rem}#resultado .info{padding:6px;font-size:.75rem;width:100%}
-#resultado .rc>b{font-size:.85rem}
+#resultado{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:84px}#resultado .mini{grid-column:1/-1}
+#resultado .card{margin:0;padding:8px 8px 10px}#resultado .rc>b{font-size:.85rem}#resultado .rc .art{width:100%;aspect-ratio:4/5;margin:6px 0}#resultado .rc .art span{font-size:3.4rem}
+#resultado .rc h3{margin:4px 0;font-size:.95rem;min-height:2.4em;display:flex;flex-direction:column;align-items:center;justify-content:center}#resultado .rc h3 .tier{margin:4px 0 0;white-space:nowrap}
+#resultado .info{width:100%;padding:7px;font-size:.78rem;margin:2px 0 0}
+.rc.spin .art{animation:spn .13s ease-out}@keyframes spn{from{transform:translateY(-14px) scale(.97);opacity:.45;filter:brightness(1.8)}to{transform:none;opacity:1;filter:none}}
 #sbar{position:fixed;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));transform:translate(-50%,30px);width:calc(100% - 20px);max-width:500px;display:flex;border-radius:14px;overflow:hidden;border:2px solid var(--gd);box-shadow:0 6px 24px #000c,0 0 18px #f2c14e55;opacity:0;pointer-events:none;transition:opacity .25s,transform .3s cubic-bezier(.2,1.4,.4,1);z-index:5}
 #sbar.on{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
 #sbar button{flex:1;padding:15px 6px;border:0;font:900 .9rem Impact,sans-serif;letter-spacing:1.5px;text-transform:uppercase}
 #sbar .sb1{background:linear-gradient(#2a2f66,#12163a);color:var(--mut);border-right:2px solid var(--gd)}#sbar .sb2{flex:1.25;background:linear-gradient(#f6d36b,#c58d12);color:#2a1a00}
 #sbar button:active{filter:brightness(1.25)}
-@media(max-height:760px){.opts{flex-direction:row;gap:6px;margin-bottom:8px}.opts .tg{flex:1;padding:8px;gap:8px;font-size:.75rem}.opts .tg small{display:none}.mode{margin-bottom:8px}.mode button{padding:9px 4px}#resultado .rc .art{aspect-ratio:4/3}#pool{margin:-2px 0 6px!important}}
+@media(max-height:760px){.opts{flex-direction:row;gap:6px;margin-bottom:8px}.opts .tg{flex:1;padding:8px;gap:8px;font-size:.75rem}.opts .tg small{display:none}.mode{margin-bottom:8px}.mode button{padding:9px 4px}#pool{margin:-2px 0 6px!important}}
 #sbar button{font-size:.8rem;letter-spacing:1px}
-#resultado .rc h3 .tier{display:table;margin:4px auto 0;white-space:nowrap}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -370,7 +372,7 @@ function wav(fn,dur,sr=22050){const n=sr*dur|0,b=new ArrayBuffer(44+n*2),v=new D
  for(let i=0;i<n;i++)v.setInt16(44+i*2,Math.max(-1,Math.min(1,fn(i/sr)))*32767,true);return URL.createObjectURL(new Blob([b],{type:'audio/wav'}))}
 const SFX={};let mute=false;
 function reg(n,fn,d,k=3){const u=wav(fn,d);SFX[n]={i:0,a:Array.from({length:k},()=>{const a=new Audio(u);a.preload='auto';return a})}}
-function play(n){if(mute)return;const s=SFX[n];if(!s)return;const a=s.a[s.i++%s.a.length];try{a.currentTime=0;a.play().catch(()=>{})}catch(e){}}
+function play(n,rate){if(mute)return;const s=SFX[n];if(!s)return;const a=s.a[s.i++%s.a.length];try{a.currentTime=0;if(rate){a.preservesPitch=false;a.webkitPreservesPitch=false;a.playbackRate=rate}else a.playbackRate=1;a.play().catch(()=>{})}catch(e){}}
 reg('click',t=>.3*sn(800,t)*ex(t,60),.07);
 reg('tickU',t=>.3*sq(2000,t)*ex(t,80),.05,6);
 reg('tickD',t=>.3*sq(1200,t)*ex(t,80),.05,6);
@@ -382,6 +384,8 @@ reg('sweep',t=>.2*ch(200,1400,.7,t)*(t<.6?1:ex(t-.6,30)),.7,2);
 reg('win',t=>[523,659,784,1047,784,1047,1319].reduce((a,f,i)=>t>i*.12?a+.2*(sn(f,t)+.4*sn(2*f,t))*ex(t-i*.12,3):a,0),1.4,2);
 reg('boom',t=>.75*ch(130,28,.9,t)*ex(t,3.5)+.45*nz()*ex(t,10),1,2);
 reg('rise',t=>.16*ch(140,1100,.95,t)*Math.min(1,t*3)*(t<.9?1:ex(t-.9,40))+.07*nz()*t,.95,2);
+reg('lpt',t=>.22*(sn(1500,t)+.5*sn(3000,t))*ex(t,70),.06,8);
+reg('lpend',t=>[1319,1976,2637].reduce((a,f,i)=>a+.14*sn(f,t)*ex(t,5+i*2),0),.8,2);
 reg('clash',t=>.45*nz()*ex(t,16)+.25*sn(1760,t)*ex(t,7)+.2*sn(2350,t)*ex(t,9)+.3*ch(300,90,.6,t)*ex(t,6),.7,2);
 
 // ===== Narrador e áudios próprios =====
@@ -446,13 +450,22 @@ function drawPool(need){let a=shuffle(avail());if(a.length<need)a=a.concat(shuff
 function rSort(){['justo','total','draft'].forEach(m=>$('#m_'+m).classList.toggle('on',SRT.modo===m));$('#oRep').checked=!!SRT.rep;$('#oMd3').checked=!!SRT.md3;
  const n=avail().length;$('#pool').innerHTML=SRT.rep?`🔁 ${n} de ${DECKS.length} decks ainda não usados nesta volta${USED.length?` · <a onclick="resetUsed()">recomeçar volta</a>`:''}`:'';
  $('#bSort').textContent=SRT.modo==='draft'?'Sortear opções do draft':'Sortear decks'}
-function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div class="card rc ${s?'shuf':'pop'}" style="border-color:${COR[k]}"><b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s?'':`<button class="info" onclick="info(${i})">Ver Info</button>`}</div>`).join('')+(s?'':`${SRT.md3?'<div class="mini" style="grid-column:1/-1;margin-bottom:4px">🎯 Melhor de 3: vence quem ganhar 2 duelos</div>':''}`);sbar(!s)}
+function rcHTML(i,k,s){return `<b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s?'':`<button class="info" onclick="info(${i})">Ver Info</button>`}`}
+function setRC(k,i,s,pop){const e=$('#rc'+k);if(!e)return;e.className='card rc '+(s?'spin':pop?'pop':'');e.style.borderColor=COR[k];e.innerHTML=rcHTML(i,k,s)}
+function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div id="rc${k}"></div>`).join('')+(s?'':SRT.md3?'<div class="mini" style="margin-bottom:4px">🎯 Melhor de 3: vence quem ganhar 2 duelos</div>':'');p.forEach((i,k)=>setRC(k,i,!!s,!s));sbar(!s)}
 // Barra flutuante dividida: sortear de novo | ir para o duelo (sempre visível, sem rolar)
 function sbar(on){const e=$('#sbar');if(e)e.classList.toggle('on',!!on&&document.body.dataset.t==='sorteio')}
 function sortear(){if(busy)return;if(SRT.modo==='draft')return draftStart();
  busy=true;play('sweep');const ix=[...DECKS.keys()];let A=avail();if(A.length<2){USED=[];A=ix}const a=pick(A),near=i=>i!==a&&Math.abs(DECKS[i][1]-DECKS[a][1])<=1;
  let pool=SRT.modo==='justo'?A.filter(near):A.filter(i=>i!==a);if(!pool.length&&SRT.modo==='justo')pool=ix.filter(near);if(!pool.length)pool=ix.filter(i=>i!==a);const b=pick(pool);let n=0;
- const iv=setInterval(()=>{showR([pick(ix),pick(ix)],1);play('tickU');if(++n>14){clearInterval(iv);useDecks([a,b]);newDuel([a,b],null,SRT.md3?mkSr():null);showR([a,b]);play('win');busy=false}},100)}
+ spinDraw([a,b],ix,()=>{useDecks([a,b]);newDuel([a,b],null,SRT.md3?mkSr():null);busy=false})}
+// Efeito de roleta: os ícones dos decks se alternam e vão desacelerando; o do Douglas trava primeiro e depois o do João.
+function spinDraw(fin,ix,done){const N=[10,15];let i=0,last=[-1,-1];showR(fin,1);const rs=$('#resultado');if(rs)rs.scrollIntoView({behavior:'smooth',block:'center'});
+ const step=()=>{i++;let tk=0;for(let k=0;k<2;k++){if(i<=N[k]){let x;do{x=pick(ix)}while(x===last[k]||x===fin[k]&&i<N[k]);last[k]=x;setRC(k,x,1);tk=1}else if(i===N[k]+1){setRC(k,fin[k],0,1);play(k?'boom':'click')}}
+  if(tk)play('tickU');
+  if(i>N[1]){done();play('win');sbar(1);setTimeout(()=>scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'}),350);return}
+  setTimeout(step,65+i*13)};
+ setTimeout(step,80)}
 // Draft: cada um recebe 3 decks sorteados e escolhe 1 (Douglas primeiro, João vê a escolha dele)
 function draftStart(){busy=true;play('sweep');const P=drawPool(6);DR={o:[P.slice(0,3),P.slice(3,6)],c:[null,null],k:0};let n=0;
  const iv=setInterval(()=>{rDraft(1);play('tickU');if(++n>8){clearInterval(iv);busy=false;rDraft();play('win')}},100)}
@@ -504,13 +517,13 @@ const LA=new Audio();LA.addEventListener('loadedmetadata',()=>{if(isFinite(LA.du
 LA.addEventListener('error',()=>{if(!mute)play('boom')});
 function lpsSnd(){const u=CSND.lps||DEF.lps;if(!u||LA.dataset.u===u&&0)return;if(LA.dataset.u!==u){LA.dataset.u=u;LA.src=u}if(mute)return;try{LA.pause();LA.currentTime=0;LA.play().catch(()=>{if(!mute)play('boom')})}catch(e){}}
 function revealLP(){const el=$('#players');if(!el.classList.contains('lphide'))return Promise.resolve();
- return new Promise(ok=>{sh[0]=sh[1]=0;draw();el.classList.add('lpin');el.classList.remove('lphide');lpsSnd();RV={t0:performance.now(),D:RC};go();setTimeout(()=>el.classList.remove('lpin'),1000);setTimeout(ok,RC+RP)})}
+ return new Promise(ok=>{sh[0]=sh[1]=0;draw();el.classList.add('lpin');el.classList.remove('lphide');lpsSnd();RV={t0:performance.now(),D:RC,ls:0};go();setTimeout(()=>el.classList.remove('lpin'),1000);setTimeout(ok,RC+RP)})}
 const dmgU=()=>CSND.dmg||DEF.dmg,dmgRate=d=>1+1.4*(1-Math.min(1,d/6000));
 DA[0].addEventListener('loadedmetadata',()=>{if(isFinite(DA[0].duration)&&DA[0].duration>.2)DT=DA[0].duration});
 function dmgInit(){const u=dmgU();DA.forEach(a=>{if(a.dataset.u!==u){a.dataset.u=u;a.preload='auto';a.src=u;try{a.preservesPitch=true;a.webkitPreservesPitch=true}catch(e){}}})}
 function dmgSnd(p,r){if(mute||!dmgU())return;dmgInit();const a=DA[p];try{a.pause();a.currentTime=0;a.defaultPlaybackRate=r;a.playbackRate=r;a.play().catch(()=>{})}catch(e){}}
 function dmgTest(){const s=mute;mute=false;dmgSnd(0,dmgRate(3000));mute=s}
-function loop(){const now=performance.now();let mv=false;dmgInit();if(RV){const u=Math.min(1,(now-RV.t0)/RV.D),e=1-(1-u)**1.5;for(let p=0;p<2;p++)sh[p]=u>=1?lp[p]:Math.round(lp[p]*e);if(u>=1)RV=null;draw();requestAnimationFrame(loop);return}for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d){AN[p]=null;continue}mv=true;
+function loop(){const now=performance.now();let mv=false;dmgInit();if(RV){const u=Math.min(1,(now-RV.t0)/RV.D),e=1-(1-u)**1.5;for(let p=0;p<2;p++)sh[p]=u>=1?lp[p]:Math.round(lp[p]*e);const st=Math.floor(sh[0]/320);if(st>RV.ls){RV.ls=st;play('lpt',.8+.9*u)}if(u>=1){RV=null;play('lpend')}draw();requestAnimationFrame(loop);return}for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d){AN[p]=null;continue}mv=true;
   if(d<0){let a=AN[p];if(!a||a.to!==lp[p]){const r=dmgRate(-d);a=AN[p]={f:sh[p],to:lp[p],t0:now,D:DT/r*1000};dmgSnd(p,r)}
    const u=Math.min(1,(now-a.t0)/a.D);sh[p]=u>=1?lp[p]:Math.round(a.f+(a.to-a.f)*u);if(u>=1)AN[p]=null;if(!dmgU()&&fr++%3==0)play('tickD')}
   else{AN[p]=null;const s=Math.max(10,Math.ceil(Math.abs(d)/18));sh[p]=Math.abs(d)<=s?lp[p]:sh[p]+Math.sign(d)*s;if(fr++%3==0)play('tickU')}}
