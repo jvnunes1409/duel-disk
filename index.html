@@ -352,7 +352,7 @@ reg('clash',t=>.45*nz()*ex(t,16)+.25*sn(1760,t)*ex(t,7)+.2*sn(2350,t)*ex(t,9)+.3
 // ===== Narrador e áudios próprios =====
 let CFG={voz:1,vs:1,vic:'all',wake:1};try{Object.assign(CFG,JSON.parse(localStorage.getItem('ygo_cfg')||'{}'))}catch(e){}
 const saveCfg=()=>{try{localStorage.setItem('ygo_cfg',JSON.stringify(CFG))}catch(e){}};
-const MOM={start:['Início do duelo','É hora do duelo!'],win:['Vitória','“[nome] vence o duelo!”'],champ:['Campeão do torneio','“[deck] é o campeão do torneio!”']},CSND={},DEF={start:'sons/inicio.mp3'};
+const MOM={start:['Início do duelo','É hora do duelo!'],dmg:['Dano nos LP','efeito sonoro'],win:['Vitória','“[nome] vence o duelo!”'],champ:['Campeão do torneio','“[deck] é o campeão do torneio!”']},CSND={},DEF={start:'sons/inicio.mp3',dmg:'sons/dano.mp3'};
 let VOZ=null;function pickVoz(){try{const v=speechSynthesis.getVoices();VOZ=v.find(x=>/^pt[-_]BR/i.test(x.lang))||v.find(x=>/^pt/i.test(x.lang))||null}catch(e){}}
 try{pickVoz();speechSynthesis.onvoiceschanged=pickVoz}catch(e){}
 function say(t){if(mute||!CFG.voz||!window.speechSynthesis)return;try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='pt-BR';if(VOZ)u.voice=VOZ;u.rate=1.02;u.pitch=.8;speechSynthesis.speak(u)}catch(e){}}
@@ -451,10 +451,21 @@ function sortFirst(){if(bt)return;bt=true;const k=Math.random()<.5;cr=Math.ceil(
 function setFirst(p){if(over)return;duel.first=p;rTurn();fechar();play('click');say(NOMES[p]+' começa!')}
 // ---- LP
 function apply(p,s){if(over)return;const v=parseInt(amt||'0',10);if(!v)return;if(!duel.t0)duel.t0=Date.now();const b=lp[p];lp[p]=Math.max(0,b+s*v);const d=lp[p]-b;if(!d)return;
- duel.log.push({t:Date.now()-duel.t0,p,d,lp:lp[p],tn:duel.tn});amt='';calc();play(d<0?'hit':'heal');const e=$('#P'+p),c=d<0?'hit':'heal';e.classList.remove('hit','heal');void e.offsetWidth;e.classList.add(c);setTimeout(()=>e.classList.remove(c),450);go()}
+ duel.log.push({t:Date.now()-duel.t0,p,d,lp:lp[p],tn:duel.tn});amt='';calc();play(d<0?(dmgU()?'':'hit'):'heal');const e=$('#P'+p),c=d<0?'hit':'heal';e.classList.remove('hit','heal');void e.offsetWidth;e.classList.add(c);setTimeout(()=>e.classList.remove(c),450);go()}
 function half(p){if(over)return;const v=Math.floor(lp[p]/2);if(!v)return;amt=String(v);apply(p,-1)}
 function undoLP(){if(over||!duel.log.length){toast(over?'O duelo já terminou':'Nada para desfazer');return}const e=duel.log.pop();lp[e.p]=e.lp-e.d;play('tickU');go();toast(`Desfeito: ${NOMES[e.p]} ${e.d<0?'−':'+'}${Math.abs(e.d)}`)}
-function loop(){let mv=false;for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d)continue;mv=true;const s=Math.max(10,Math.ceil(Math.abs(d)/18));sh[p]=Math.abs(d)<=s?lp[p]:sh[p]+Math.sign(d)*s;if(fr++%3==0)play(d<0?'tickD':'tickU')}
+// Dano: o áudio toca inteiro e a contagem dos LP dura o mesmo tempo. Dano grande = áudio na velocidade normal (~2,5 s);
+// dano pequeno = áudio acelerado (sem mudar o tom) e contagem curta (~1 s).
+const AN=[null,null],DA=[new Audio(),new Audio()];let DT=2.56;
+const dmgU=()=>CSND.dmg||DEF.dmg,dmgRate=d=>1+1.4*(1-Math.min(1,d/6000));
+DA[0].addEventListener('loadedmetadata',()=>{if(isFinite(DA[0].duration)&&DA[0].duration>.2)DT=DA[0].duration});
+function dmgInit(){const u=dmgU();DA.forEach(a=>{if(a.dataset.u!==u){a.dataset.u=u;a.preload='auto';a.src=u;try{a.preservesPitch=true;a.webkitPreservesPitch=true}catch(e){}}})}
+function dmgSnd(p,r){if(mute||!dmgU())return;dmgInit();const a=DA[p];try{a.pause();a.currentTime=0;a.defaultPlaybackRate=r;a.playbackRate=r;a.play().catch(()=>{})}catch(e){}}
+function dmgTest(){const s=mute;mute=false;dmgSnd(0,dmgRate(3000));mute=s}
+function loop(){const now=performance.now();let mv=false;dmgInit();for(let p=0;p<2;p++){const d=lp[p]-sh[p];if(!d){AN[p]=null;continue}mv=true;
+  if(d<0){let a=AN[p];if(!a||a.to!==lp[p]){const r=dmgRate(-d);a=AN[p]={f:sh[p],to:lp[p],t0:now,D:DT/r*1000};dmgSnd(p,r)}
+   const u=Math.min(1,(now-a.t0)/a.D);sh[p]=u>=1?lp[p]:Math.round(a.f+(a.to-a.f)*u);if(u>=1)AN[p]=null;if(!dmgU()&&fr++%3==0)play('tickD')}
+  else{AN[p]=null;const s=Math.max(10,Math.ceil(Math.abs(d)/18));sh[p]=Math.abs(d)<=s?lp[p]:sh[p]+Math.sign(d)*s;if(fr++%3==0)play('tickU')}}
  draw();if(mv)requestAnimationFrame(loop);else{run=false;for(let p=0;p<2;p++)if(lp[p]===0&&!over)finish(1-p)}}
 function go(){if(!run){run=true;requestAnimationFrame(loop)}}
 // ---- Tela sempre ligada durante o duelo
@@ -802,7 +813,7 @@ function cfgM(){const sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<butto
  <div class="clh">🎵 ÁUDIOS PRÓPRIOS</div><p class="cnote" style="text-align:left;margin-top:0">Escolham um áudio do celular (mp3, m4a…) para tocar no lugar da voz do narrador. Fica salvo neste aparelho.</p>
  ${Object.entries(MOM).map(([k,[l,t]])=>`<div class="slot"><div><b>${l}</b><small>${CSND[k]?'🎵 Áudio próprio':DEF[k]?'🎵 Áudio padrão do app':'Narrador: '+t}</small></div><button onclick="testM('${k}')" aria-label="Testar">▶</button><label aria-label="Escolher áudio">📁<input type="file" accept="audio/*" hidden onchange="setSnd('${k}',this)"></label>${CSND[k]?`<button onclick="delSnd('${k}')" aria-label="Remover">✕</button>`:''}</div>`).join('')}
  <button class="btn" style="border-color:#2c58b8;color:var(--mut)" onclick="menu()">← Voltar</button>`)}
-function testM(k){const s=mute;mute=false;moment(k,k==='start'?'É hora do duelo!':k==='win'?'Douglas vence o duelo!':'Blue-Eyes é o campeão do torneio!');mute=s}
+function testM(k){if(k==='dmg'){dmgTest();return}const s=mute;mute=false;moment(k,k==='start'?'É hora do duelo!':k==='win'?'Douglas vence o duelo!':'Blue-Eyes é o campeão do torneio!');mute=s}
 function setSnd(k,inp){const f=inp.files[0];inp.value='';if(!f)return;if(f.size>4e6){alert('Arquivo grande demais (máximo 4 MB). Usem um trecho curto.');return}
  const r=new FileReader();r.onload=()=>{CSND[k]=r.result;KV.set('snd:'+k,r.result);cfgM();testM(k)};r.readAsDataURL(f)}
 function delSnd(k){delete CSND[k];KV.set('snd:'+k,null);cfgM()}
