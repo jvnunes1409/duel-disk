@@ -776,11 +776,11 @@ async function resultImg(h){const W=1080,H=1350,cv=document.createElement('canva
  const T=[['DURAÇÃO',fmt(h.dur),'#fff']];
  if(h.tn>1)T.push(['TURNOS',String(h.tn),'#fff']);
  if(h.first!=null)T.push(['QUEM COMEÇOU',NOMES[h.first],'#fff']);
- if(big)T.push(['MAIOR GOLPE',String(-big.d),'#f2c14e','tirado por '+NOMES[1-big.p]]);
+ if(big)T.push(['MAIOR DANO CAUSADO EM\nUMA FASE DE BATALHA',String(-big.d),'#f2c14e','tirado por '+NOMES[1-big.p]]);
  T.push(['PLACAR GERAL',`${tot[0]} × ${tot[1]}`,'#f2c14e','Douglas × João']);
  const tw=316,th=138,gx=16,x0=(W-(3*tw+2*gx))/2;
  T.forEach(([lb,val,col,sb],k)=>{const rw=Math.floor(k/3),inRow=Math.min(3,T.length-rw*3),xo=(W-(inRow*tw+(inRow-1)*gx))/2,x=xo+(k%3)*(tw+gx),y=940+rw*(th+gx);rrect(c,x,y,tw,th,20);c.fillStyle='rgba(10,23,64,.9)';c.fill();c.lineWidth=3;c.strokeStyle='#2c58b8';c.stroke();
-  c.fillStyle='#8fb0d8';c.font=SAN.replace('#',22);c.fillText(lb,x+tw/2,y+36);c.fillStyle=col;fitTxt(c,val,tw-24,58,30,IMP);c.fillText(val,x+tw/2,y+92);if(sb){c.fillStyle='#8fb0d8';c.font=SAN.replace('#',20);c.fillText(sb,x+tw/2,y+122)}});
+  const L=lb.split('\n'),two=L.length>1;c.fillStyle='#8fb0d8';c.font=SAN.replace('#',two?19:22);L.forEach((t,j)=>c.fillText(t,x+tw/2,y+(two?30:36)+j*23));c.fillStyle=col;fitTxt(c,val,tw-24,two?54:58,30,IMP);c.fillText(val,x+tw/2,y+(two?102:92));if(sb){c.fillStyle='#8fb0d8';c.font=SAN.replace('#',two?19:20);c.fillText(sb,x+tw/2,y+(two?128:122))}});
  if(h.mvp){const y=1236;rrect(c,x0,y,3*tw+2*gx,66,20);c.fillStyle='rgba(60,40,0,.85)';c.fill();c.lineWidth=3;c.strokeStyle='#f2c14e';c.stroke();c.fillStyle='#f2c14e';const t='⭐ MVP: '+h.mvp.n;fitTxt(c,t,3*tw+2*gx-40,32,20,SAN);c.fillText(t,W/2,y+43)}
  c.fillStyle='#5d7aa8';c.font=SAN.replace('#',24);c.fillText('Duel Disk · Douglas × João',W/2,1326);
  return new Promise(ok=>cv.toBlob(ok,'image/png'))}
@@ -1113,7 +1113,7 @@ function rS(){const el=$('#stx');if(!el)return;
   <div class="mini" style="margin-bottom:6px">${cn>1?`🔥 ${NOMES[cw]} está numa sequência de ${cn} vitórias`:`Última vitória: ${NOMES[cw]}`}</div>
   ${row('Maior sequência de vitórias',P[0].best,P[1].best,id)}${row('Títulos de torneio',P[0].tit,P[1].tit,id)}
   ${row('Vitória mais rápida',P[0].fast,P[1].fast,fmt,1)}${row('LP médio ao vencer',P[0].lpw,P[1].lpw,nf)}
-  ${row('Dano causado',P[0].dmg,P[1].dmg,nf)}${row('Maior golpe único',P[0].big,P[1].big,nf)}${row('LP recuperado',P[0].heal,P[1].heal,nf)}
+  ${row('Dano causado',P[0].dmg,P[1].dmg,nf)}${row('Maior dano em uma fase de batalha',P[0].big,P[1].big,nf)}${row('LP recuperado',P[0].heal,P[1].heal,nf)}
   ${row('Viradas (venceu estando 2000+ LP atrás)',P[0].vir,P[1].vir,id)}${row('Vitórias perfeitas (8000 LP)',P[0].perf,P[1].perf,id)}${row('Vitórias no sufoco (≤1000 LP)',P[0].suf,P[1].suf,id)}
   ${row('Aproveitamento quando começa',P[0].st?Math.round(P[0].sw/P[0].st*100):null,P[1].st?Math.round(P[1].sw/P[1].st*100):null,x=>x+'%')}${row('Vitória em menos turnos',P[0].mt,P[1].mt,x=>x+' turno'+(x>1?'s':''),1)}</div>`;
  // --- Corrida do placar
@@ -1135,7 +1135,7 @@ function rS(){const el=$('#stx');if(!el)return;
  const rb=mx((x,p)=>x.r.big[p]),rh=mx((x,p)=>x.r.bigHeal[p]),rv=mx((x,p)=>x.h.w===p?x.r.gap[p]:0),rs=mx((x,p)=>x.h.w===p&&x.h.lp[p]>0?8001-x.h.lp[p]:0),rm=R.slice().sort((a,b)=>b.r.hits-a.r.hits)[0];
  const dk=(x,p)=>x.h.decks?' com '+esc(x.h.decks[p]):'';
  o+=`<div class="sh">🏅 RECORDES</div><div class="card">
-  ${rb?`<div class="rec"><i>💥</i><div><b>Maior golpe único</b><small>${NOMES[rb.p]}${dk(rb.x,rb.p)} · ${dt(rb.x.h.t)}</small></div><em>${nf(rb.v)}</em></div>`:''}
+  ${rb?`<div class="rec"><i>💥</i><div><b>Maior dano em uma fase de batalha</b><small>${NOMES[rb.p]}${dk(rb.x,rb.p)} · ${dt(rb.x.h.t)}</small></div><em>${nf(rb.v)}</em></div>`:''}
   ${rv?`<div class="rec"><i>🔄</i><div><b>Maior virada</b><small>${NOMES[rv.p]}${dk(rv.x,rv.p)} estava ${nf(rv.v)} LP atrás e venceu · ${dt(rv.x.h.t)}</small></div><em>${nf(rv.v)}</em></div>`:''}
   ${rs?`<div class="rec"><i>😰</i><div><b>Vitória mais no sufoco</b><small>${NOMES[rs.p]}${dk(rs.x,rs.p)} venceu com ${nf(8001-rs.v)} LP · ${dt(rs.x.h.t)}</small></div><em>${nf(8001-rs.v)}</em></div>`:''}
   ${rh?`<div class="rec"><i>💚</i><div><b>Maior cura</b><small>${NOMES[rh.p]}${dk(rh.x,rh.p)} · ${dt(rh.x.h.t)}</small></div><em>+${nf(rh.v)}</em></div>`:''}
