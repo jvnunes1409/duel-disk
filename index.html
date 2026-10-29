@@ -328,6 +328,10 @@ body.lite #tfr{animation:none;box-shadow:none}
 #tbn small{display:block;font-size:1.25rem;letter-spacing:3px;color:#fff;margin-top:2px}
 #tbn.on{animation:tbn 1.5s ease-out forwards}
 @keyframes tbn{0%{opacity:0;transform:scale(.6)}15%{opacity:1;transform:scale(1.08)}28%{transform:scale(1)}75%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
+#tnp{position:fixed;left:10px;right:10px;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:7;display:none;border-radius:16px;padding:12px;background:#140f00f2;border:3px solid var(--tc,#f2c14e);box-shadow:0 0 30px 6px var(--tc,#f2c14e),0 8px 24px #000;text-align:center}
+#tnp.on{display:block;animation:tnpi .35s ease-out}@keyframes tnpi{from{transform:translateY(40px);opacity:0}}
+#tnp b{display:block;font:900 1.05rem Impact,sans-serif;letter-spacing:2px;color:#ffd35a;margin-bottom:8px}
+#tnp .row{gap:8px}#tnp button{padding:14px 8px;border-radius:12px;font:900 1rem Impact,sans-serif;letter-spacing:1px;border:2px solid var(--tc,#f2c14e);background:var(--tc,#f2c14e);color:#111}#tnp button.no{background:#0a1740;color:var(--mut);border-color:#2c58b8;flex:.6}
 </style>
 <link rel="manifest" href="manifest.webmanifest"><link rel="icon" href="icon-192.png"><link rel="apple-touch-icon" href="icon-192.png"><meta name="theme-color" content="#06102f"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes">
 </head>
@@ -355,7 +359,7 @@ body.lite #tfr{animation:none;box-shadow:none}
 <section id="hist"><div id="score"></div><div id="hseg"></div><div id="hl"></div><div class="row hbar" style="margin:10px 0"><button class="btn" id="bTxt">📄 TXT</button><button class="btn" id="bExp">💾 Backup</button><label class="btn" style="text-align:center;cursor:pointer">⬇ Importar<input type="file" id="fImp" accept=".json,application/json" hidden></label></div><details class="hlp"><summary>O que é cada botão?</summary><p><b>TXT</b>: para ler em qualquer aparelho. <b>Backup</b> (.json): para restaurar ou juntar com outro celular; leva duelos, torneio, campeões, áudios próprios, tiers e configurações. <b>Importar</b>: carrega um backup.</p></details><div id="bkban"></div><details class="hlp" id="bkd"><summary>🛡️ Cópias automáticas</summary><div id="bkl"></div></details><button class="lnk" id="bClear">Limpar histórico</button></section>
 </main>
 <nav><button data-t="decks">📚<br>Decks</button><button data-t="sorteio">🎴<br>Sorteio</button><button data-t="torneio">🏟️<br>Torneio</button><button data-t="duelo" class="on">⚔️<br>Duelo</button><button data-t="stats">📊<br>Stats</button><button data-t="hist">🏆<br>Histórico</button></nav>
-<div id="tfr"></div><div id="tbn"></div><div id="modal"><div class="box" id="box"></div></div>
+<div id="tfr"></div><div id="tnp"></div><div id="tbn"></div><div id="modal"><div class="box" id="box"></div></div>
 <div id="fx"></div>
 <div id="sbar"><button class="sb1" onclick="sortear()">🔄 Sortear de novo</button><button class="sb2" onclick="goTab('duelo')">⚔️ Ir para o duelo</button></div>
 <div id="toast" role="status"></div>
@@ -586,11 +590,18 @@ function rTurn(){const b=$('#trb');if(!b)return;const p=turnOf(),c=p==null?'':CO
 // ---- Moldura da cor do turno, aviso na troca e lembrete para passar o turno
 let NAG=0,NAGT=0,TNL=0,LPL=0;
 function tfrUpd(){const f=$('#tfr');if(!f)return;const p=duel&&!over&&duel.first!=null?turnOf():null,on=CFG.tfr&&p!=null&&document.body.dataset.t==='duelo';f.classList.toggle('on',!!on);f.classList.toggle('nag',!!(on&&NAG));if(on)f.style.setProperty('--tc',COR[p]);const b=$('#trb');if(b&&p!=null)b.style.setProperty('--tc',COR[p])}
-function tnReset(){TNL=Date.now();LPL=0;NAG=0;NAGT=0}
+function tnReset(){TNL=Date.now();LPL=0;NAG=0;NAGT=0;const t=$('#tnp');if(t)t.classList.remove('on')}
 function tnFx(){const t=$('#tbn'),p=turnOf();if(!t||p==null)return;t.style.color=COR[p];t.innerHTML=`TURNO ${duel.tn}<small>VEZ DE ${NOMES[p].toUpperCase()}</small>`;t.classList.remove('on');void t.offsetWidth;t.classList.add('on');try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}}
-function nagBuzz(){try{navigator.vibrate&&navigator.vibrate([220,110,220,110,320])}catch(e){}play('lpend')}
-setInterval(()=>{if(typeof duel==='undefined'||!duel||over||duel.first==null||document.hidden||document.body.dataset.t!=='duelo'||$('#modal').classList.contains('on')||$('#fx').classList.contains('on')){tfrUpd();return}
- const n=Date.now();if(CFG.tnag&&!RV){const due=(LPL&&n-LPL>=18000)||n-TNL>=150000;if(due&&!NAG){NAG=1;NAGT=n;rTurn();nagBuzz()}else if(NAG&&n-NAGT>=40000){NAGT=n;nagBuzz()}}tfrUpd()},1000);
+function nagBuzz(){try{navigator.vibrate&&navigator.vibrate([220,110,220,110,320])}catch(e){}try{play('lpend')}catch(e){}}
+function nagUI(){const t=$('#tnp'),p=turnOf();if(!t)return;if(!NAG||p==null||over){t.classList.remove('on');return}
+ t.style.setProperty('--tc',COR[p]);t.innerHTML=`<b>⏭ JÁ PASSOU O TURNO?</b><div class="row"><button onclick="turn(1)">PASSAR · VEZ DE ${NOMES[1-p].toUpperCase()}</button><button class="no" onclick="nagSnooze()">AINDA NÃO</button></div>`;t.classList.add('on')}
+function nagSnooze(){NAG=0;TNL=Date.now();LPL=0;rTurn();nagUI()}
+function nagOn(){NAG=1;NAGT=Date.now();rTurn();nagUI();nagBuzz()}
+function nagCheck(){try{if(typeof duel==='undefined'||!duel||over||duel.first==null||document.hidden||document.body.dataset.t!=='duelo'){tfrUpd();if(NAG&&(over||document.body.dataset.t!=='duelo'))$('#tnp').classList.remove('on');return}
+ if($('#modal').classList.contains('on')){tfrUpd();return}
+ const n=Date.now();if(CFG.tnag&&!RV&&!$('#fx').classList.contains('on')){const due=(LPL&&n-LPL>=12000)||n-TNL>=90000;if(due&&!NAG)nagOn();else if(NAG&&n-NAGT>=30000){NAGT=n;nagBuzz()}}tfrUpd()}catch(e){console.error('nag',e)}}
+setInterval(nagCheck,1000);['touchstart','pointerdown','visibilitychange'].forEach(ev=>document.addEventListener(ev,nagCheck,{passive:true}));
+function nagTest(){fechar();goTab('duelo');if(!duel||duel.first==null){toast('Comece um duelo (escolha quem começa) para testar');return}nagOn()}
 function turn(s){if(over)return;if(duel.first==null){quemComeca();return}if(s<0&&duel.tn===1)return;duel.tn+=s;if(!duel.t0)duel.t0=Date.now();tnReset();rTurn();play(s>0?'tickU':'click');tnFx()}
 const COIN_H=`<div><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 50Q50 12 94 50Q50 88 6 50Z"/><circle cx="50" cy="50" r="14" fill="#5a3d00"/><circle cx="50" cy="50" r="5" fill="#ffe9a0" stroke="none"/><path d="M20 30Q50 8 80 30"/><path d="M54 66Q58 82 74 82Q90 82 90 68"/></svg></div><div class="bk"><svg viewBox="0 0 100 100" fill="none" stroke="#5a3d00" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24H88L50 90Z"/><circle cx="50" cy="13" r="7"/><path d="M33 44Q50 32 67 44Q50 56 33 44Z"/><circle cx="50" cy="44" r="5" fill="#5a3d00"/><path d="M38 28H62"/></svg></div>`;
 function quemComeca(){if(over)return;const pv=duel.prevW;
@@ -1081,7 +1092,7 @@ function cfgM(){const sp=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<butto
  <div class="opt"><b>⚡ Tela “É hora do duelo”</b>${sg('vs',[[1,'Ligada'],[0,'Desligada']])}</div>
  <div class="opt"><b>🏆 Animação de vitória</b>${sg('vic',[['all','Todos'],['final','Só finais'],['off','Desligada']])}</div>
  <div class="opt"><b>🎨 Moldura na cor de quem joga</b>${sg('tfr',[[1,'Ligada'],[0,'Desligada']])}</div>
- <div class="opt"><b>🔔 Lembrete para passar o turno</b>${sg('tnag',[[1,'Ligado'],[0,'Desligado']])}<p class="cnote">Se o LP mudou e o turno não foi passado em 18 s (ou nada acontece por 2,5 min), o botão pisca, a tela vibra e toca um som, repetindo a cada 40 s.</p></div>
+ <div class="opt"><b>🔔 Lembrete para passar o turno</b>${sg('tnag',[[1,'Ligado'],[0,'Desligado']])}<p class="cnote">Se o LP mudou e o turno não foi passado em 12 s (ou nada acontece por 1,5 min), aparece uma caixa grande “Já passou o turno?” com o botão de passar, a borda pisca, a tela vibra e toca um som, repetindo a cada 30 s.</p><button class="btn" style="margin-top:6px" onclick="nagTest()">🔔 Testar lembrete agora</button></div>
  <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake',[[1,'Sim'],[0,'Não']])}${navigator.wakeLock?'':'<p class="cnote">Este navegador não permite manter a tela ligada.</p>'}</div>
  <div class="clh">🚀 DESEMPENHO <small style="font-size:.6rem;color:var(--mut);letter-spacing:0">só neste aparelho</small></div>
  <div class="opt"><b>🌌 Fundo animado (cartas virando)</b>${sp('bg',[[1,'Ligado'],[0,'Desligado']])}</div>
