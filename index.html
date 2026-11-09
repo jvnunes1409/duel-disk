@@ -140,6 +140,9 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
 .orabar{display:flex;height:12px;border-radius:6px;overflow:hidden;margin:8px 0 0}.orabar i{display:block;height:100%}
 .orat{width:100%;border-collapse:collapse;font-size:.85rem}.orat th{color:var(--mut);font-size:.7rem;text-align:right;padding:2px 4px}.orat td{padding:6px 4px;border-top:1px solid #2c58b8;text-align:right}.orat td:first-child{text-align:left}.orat tr.on td{color:var(--gd);font-weight:800}
 .tmb.ora{border-color:#9b7cff;background:#9b7cff1a;color:#c9b8ff}
+#vzb{position:fixed;left:12px;right:12px;top:10px;z-index:7;display:none;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid #9b7cff;background:#140c35f2;color:#fff;font-size:.9rem;box-shadow:0 6px 20px #000a}#vzb.on{display:flex}#vzb button{flex:none;padding:7px 10px;border-radius:8px;border:1px solid #9b7cff;background:none;color:#c9b8ff;font-weight:800}
+.ib.rec{border-color:#ff4d6d;background:#5a0f22;animation:micp 1s infinite}@keyframes micp{50%{box-shadow:0 0 18px #ff4d6d}}
+.vzl{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:8px 0;border-top:1px solid #2c58b8}.vzl small{display:block;color:var(--mut);font-size:.7rem}.vzl button{flex:none;width:36px;height:36px;border-radius:8px;border:1px solid #2c58b8;background:none;color:var(--mut)}
 .tmb{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;margin-bottom:10px;border-radius:10px;border:1px solid var(--gd);background:#f2c14e1a;color:var(--gd);font:900 .8rem Impact,sans-serif;letter-spacing:1.5px;cursor:pointer}
 .tmb small{font:700 .7rem system-ui;color:var(--mut);letter-spacing:0;white-space:nowrap}
 .htl{font-size:.75rem;color:var(--gd);font-weight:800;margin-top:2px}
@@ -352,7 +355,7 @@ body.lite #tfr{animation:none;box-shadow:none}
 <section id="torneio"><div id="tour"></div></section>
 <section id="duelo" class="on">
   <div id="tmb"></div>
-  <div class="tb"><button class="ib" onclick="menu()">☰</button><button class="ib" onclick="escolher()" aria-label="Escolher decks">📚</button><button class="ib" onclick="dado()">🎲</button><button class="ib" onclick="moeda()"><span class="coin-ic"></span></button><button class="ib" id="bMute">🔊</button></div>
+  <div class="tb"><button class="ib" onclick="menu()">☰</button><button class="ib" onclick="escolher()" aria-label="Escolher decks">📚</button><button class="ib" onclick="dado()">🎲</button><button class="ib" onclick="moeda()"><span class="coin-ic"></span></button><button class="ib" id="bMic" onclick="vOuvir()" aria-label="Falar jogada">🎙️</button><button class="ib" id="bMute">🔊</button></div><div id="vzb" role="status"></div>
   <div id="players"></div>
   <div class="calc"><div class="trw"><button class="trb0" onclick="turn(-1)" aria-label="Voltar um turno">‹</button><button class="trb" id="trb" onclick="turn(1)" aria-label="Passar o turno"></button></div><span id="amt" aria-label="Valor">0</span></div>
   <div class="lab"><span style="color:var(--g)">DOUGLAS</span><span style="color:var(--b)">JOÃO</span></div>
@@ -584,7 +587,7 @@ function key(k){amt=k==='C'?'':k==='⌫'?amt.slice(0,-1):(amt+k).replace(/^0+/,'
 function draw(){for(let p=0;p<2;p++){$('#v'+p).textContent=sh[p];const n=Math.ceil(Math.min(1,sh[p]/8000)*8);$('#g'+p).querySelectorAll('i').forEach((e,k)=>e.classList.toggle('off',8-k>n))}}
 function ports(){[0,1].forEach(p=>{const i=duel.decks?duel.decks[p]:null;$('#pt'+p).onclick=()=>{if(!duel.log.length&&!over)escolher()};$('#pt'+p).innerHTML=art(i,'',`<b>${NOMES[p].toUpperCase()}${i!=null?`<small>${DECKS[i][0]}</small>`:''}</b>`)})}
 const mkSr=()=>({id:Date.now(),g:[0,0]});
-function newDuel(decks,tm,sr){duel={t0:decks?Date.now():0,decks:decks||null,log:[],tm:decks&&tm||null,sr:decks&&sr||null,first:null,tn:1};tnReset();lp=[8000,8000];over=false;amt='';$('#players').classList.remove('lpin');$('#players').classList.toggle('lphide',!!decks);calc();ports();if(decks)oraPrever();tBan();rTurn();go()}
+function newDuel(decks,tm,sr){duel={t0:decks?Date.now():0,decks:decks||null,log:[],tm:decks&&tm||null,sr:decks&&sr||null,first:null,tn:1};tnReset();lp=[8000,8000];over=false;amt='';$('#players').classList.remove('lpin');$('#players').classList.toggle('lphide',!!decks);calc();ports();if(decks)oraPrever();VZ.cand=null;if(decks&&micOn())vPrep();tBan();rTurn();go()}
 // ---- Turnos e quem começa
 const turnOf=()=>duel.first==null?null:(duel.tn%2?duel.first:1-duel.first);
 function rTurn(){const b=$('#trb');if(!b)return;const p=turnOf(),c=p==null?'':COR[p];b.classList.toggle('nag',!!NAG);
@@ -643,7 +646,7 @@ function go(){if(!run){run=true;requestAnimationFrame(loop)}}
 // ---- Tela sempre ligada durante o duelo
 let WL=null;async function wake(on){try{if(on&&CFG.wake&&!WL&&navigator.wakeLock&&document.visibilityState==='visible'){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){WL=null}}
 document.addEventListener('visibilitychange',()=>wake(document.visibilityState==='visible'&&$('#duelo').classList.contains('on')));
-function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button><div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="fechar()">Fechar</button>`)}
+function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button>${micOn()&&duel.decks?`<button class="btn" onclick="vLista()">🎙️ Jogadas faladas (${(duel.ev||[]).length})</button>`:''}<div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="fechar()">Fechar</button>`)}
 function endM(){modal(`<h2>ENCERRAR DUELO</h2><button class="btn" onclick="resetDuel()">🔄 Reiniciar<small>mesmos decks, LP volta a 8000</small></button><button class="btn red" onclick="cancelDuel(1)">✖ Cancelar<small>descarta o duelo, nada vai para o histórico</small></button><button class="btn sec" onclick="menu()">Voltar</button>`)}
 function resetDuel(){if(duel.log.length&&!confirm('Reiniciar? Os lances deste duelo serão perdidos.'))return;fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}
 // ---- Escolher os decks manualmente (sem sorteio)
@@ -1088,7 +1091,7 @@ function victoryFX(di,w,fin){const d=di!=null?DECKS[di]:null,vc=fin?'#f2c14e':d?
 function celebrate(di,w,fin){if(CFG.vic==='all'||(CFG.vic==='final'&&fin))return victoryFX(di,w,fin);
  play('win');fin?moment('champ',`${dn(di)} é o campeão do torneio!`):moment('win',`${NOMES[w]} vence o duelo!`);return Promise.resolve()}
 function prevFX(fin){const ok=[...DECKS.keys()].filter(i=>LD[DECKS[i][7]]),i=pick(ok.length?ok:[...DECKS.keys()]);victoryFX(i,Math.random()<.5?0:1,fin)}
-function cfgM(){const sp=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${PERF[k]===v?'on':''}" onclick="PERF.${k}=${v};savePerf();applyPerf();cfgM();play('click')">${l}</button>`).join('')}</div>`,sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${CFG[k]===v?'on':''}" onclick="CFG.${k}=${JSON.stringify(v).replace(/"/g,"'")};saveCfg();cfgM();wake($('#duelo').classList.contains('on'));play('click')">${l}</button>`).join('')}</div>`;
+function cfgM(){vMicBtn();const sp=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${PERF[k]===v?'on':''}" onclick="PERF.${k}=${v};savePerf();applyPerf();cfgM();play('click')">${l}</button>`).join('')}</div>`,sg=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<button class="${CFG[k]===v?'on':''}" onclick="CFG.${k}=${JSON.stringify(v).replace(/"/g,"'")};saveCfg();cfgM();wake($('#duelo').classList.contains('on'));play('click')">${l}</button>`).join('')}</div>`;
  modal(`<h2>SONS E ANIMAÇÕES</h2>
  <div class="opt"><b>🗣 Voz do narrador</b>${sg('voz',[[1,'Ligada'],[0,'Desligada']])}</div>
  <div class="opt"><b>⚡ Tela “É hora do duelo”</b>${sg('vs',[[1,'Ligada'],[0,'Desligada']])}</div>
@@ -1097,6 +1100,7 @@ function cfgM(){const sp=(k,opts)=>`<div class="seg">${opts.map(([v,l])=>`<butto
  <div class="opt"><b>🔔 Lembrete para passar o turno</b>${sg('tnag',[[1,'Ligado'],[0,'Desligado']])}<p class="cnote">Se o LP mudou e o turno não foi passado em 12 s (ou nada acontece por 1,5 min), aparece uma caixa grande “Já passou o turno?” com o botão de passar, a borda pisca, a tela vibra e toca um som, repetindo a cada 30 s.</p><button class="btn" style="margin-top:6px" onclick="nagTest()">🔔 Testar lembrete agora</button></div>
  <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake',[[1,'Sim'],[0,'Não']])}${navigator.wakeLock?'':'<p class="cnote">Este navegador não permite manter a tela ligada.</p>'}</div>
  <div class="clh">🔮 ORÁCULO (IA)</div>
+ <div class="opt"><b>🎙️ Botão de jogadas por voz</b>${SRC?sg('mic',[[1,'Ligado'],[0,'Desligado']]):'<p class="cnote">Este navegador não tem reconhecimento de voz (use o Chrome).</p>'}</div>
  <div class="opt"><b>Previsões e crônicas</b>${sg('oraOn',[[1,'Ligado'],[0,'Desligado']])}</div>
  <label class="dfl"><span>Endereço do Oráculo (Worker)</span><input id="oraU" value="${esc(CFG.ora||'')}" placeholder="https://oraculo.SEU-USUARIO.workers.dev" onchange="CFG.ora=this.value.trim();saveCfg();oraTeste()"></label><div id="oraM" class="cnote" style="text-align:left">${oraUrl()?'':'Sem endereço: o app funciona normal, só sem IA.'}</div>
  <div class="clh">🚀 DESEMPENHO <small style="font-size:.6rem;color:var(--mut);letter-spacing:0">só neste aparelho</small></div>
@@ -1337,7 +1341,7 @@ function oraVer(){const a=duel&&duel.ai;if(!a||a.st!=='ok')return;const b=duel.b
  <button class="btn sec" onclick="fechar()">Fechar</button>`)}
 // Grava no histórico só o essencial (a análise completa fica junto, para rever depois)
 function oraSave(h){const D=duel;if(D.base){h.eloP=+D.base.eloP.toFixed(4);h.tierP=+D.base.tierP.toFixed(4)}
- if(D.ai&&D.ai.st==='ok')h.ai={p:+D.ai.p.toFixed(4),m:D.ai.r.model,r:{resumo:D.ai.r.resumo,chaves_a:D.ai.r.chaves_a,chaves_b:D.ai.r.chaves_b,plano_azarao:D.ai.r.plano_azarao,confianca:D.ai.r.confianca}}}
+ if(D.ev&&D.ev.length)h.ev=D.ev.map(e=>({...e}));if(D.ai&&D.ai.st==='ok')h.ai={p:+D.ai.p.toFixed(4),m:D.ai.r.model,r:{resumo:D.ai.r.resumo,chaves_a:D.ai.r.chaves_a,chaves_b:D.ai.r.chaves_b,plano_azarao:D.ai.r.plano_azarao,confianca:D.ai.r.confianca}}}
 function oraResBtn(h){if(!h.decks)return'';const ok=h.ai?(oraFav(h.ai.p)===h.w?'✅ O Oráculo acertou':'❌ O Oráculo errou'):'';
  return`${ok?`<p style="margin:6px 0 0;font-weight:800">${ok} (${oraPct(h.ai.p)}% ${NOMES[oraFav(h.ai.p)]})</p>`:''}${oraOn()||h.cr?`<button class="mvpb" style="margin-top:6px" onclick="oraCronica(${h.t})">📜 ${h.cr?'Ver':'Gerar'} a crônica do duelo</button>`:''}`}
 async function oraCronica(t){const h=hist.find(x=>x.t===t);if(!h)return;
@@ -1345,7 +1349,7 @@ async function oraCronica(t){const h=hist.find(x=>x.t===t);if(!h)return;
  if(h.cr){show();return}
  modal(`<h2>📜 CRÔNICA</h2><p>O narrador está assistindo ao replay…</p>`);
  try{const r=await oraPost('/cronica',{nomes:NOMES,decks:h.decks,w:h.w,dur:h.dur,turnos:h.tn,lp:h.lp,mvp:h.mvp&&h.mvp.n,
-   previsao:h.ai?{chance_a:h.ai.p,resumo:h.ai.r&&h.ai.r.resumo}:null,log:(h.log||[]).map(e=>({tn:e.tn,s:e.t/1000,p:e.p,d:e.d,lp:e.lp}))},40000);
+   previsao:h.ai?{chance_a:h.ai.p,resumo:h.ai.r&&h.ai.r.resumo}:null,jogadas:await vParaIA(h),log:(h.log||[]).map(e=>({tn:e.tn,s:e.t/1000,p:e.p,d:e.d,lp:e.lp}))},40000);
   h.cr={titulo:r.titulo,cronica:r.cronica,virada:r.virada,oraculo:r.oraculo};save();show()}
  catch(e){modal(`<h2>📜 CRÔNICA</h2><p>Não consegui falar com o Oráculo agora.</p><p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraCronica(${t})">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}}
 // Placar: acerto (quem tinha mais de 50% venceu) e Brier (erro quadrático da chance; menor é melhor, 0,25 = chutar 50%)
@@ -1358,7 +1362,55 @@ function oraPlacar(H){const R=H.filter(h=>h.ai&&h.decks);if(!R.length)return ora
  <table class="orat"><tr><th></th><th>Acerto</th><th>Brier</th></tr>${M.map(m=>`<tr${m.br===best?' class="on"':''}><td>${m.n}</td><td>${pct(m)}</td><td>${m.br==null?'—':m.br.toFixed(3).replace('.',',')}</td></tr>`).join('')}</table>
  ${cal.length?`<div class="clh" style="text-align:left">🎯 CALIBRAGEM</div>${cal.map(c=>`<p class="cnote" style="margin:2px 0;text-align:left">Quando disse ${Math.round(c.cf*100)}% em média: acertou ${c.ac} de ${c.k} (${Math.round(c.ac/c.k*100)}%)</p>`).join('')}`:''}
  ${R.length<15?`<p class="cnote" style="text-align:left">Com menos de 15 duelos a diferença entre os métodos ainda é sorte. Continuem jogando!</p>`:''}</div>`}
-rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
+// ===== Jogadas por voz =====
+// Um toque no 🎙️, fala a jogada ("invoquei Stardust Dragon"), e o app procura a carta só entre as cartas dos dois decks do duelo.
+// O deck onde a carta está diz de quem foi a jogada; se estiver nos dois (ou em nenhum), vale o nome falado ou o dono do turno.
+const SRC=window.SpeechRecognition||window.webkitSpeechRecognition;
+const micOn=()=>!!SRC&&CFG.mic!==0;
+const vNorm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9 ]+/g,' ').replace(/\s+/g,' ').trim();
+const VSTOP=new Set(['de','da','do','das','dos','o','a','os','as','e','the','of','um','uma','no','na','em','com']);
+const vTok=s=>vNorm(s).split(' ').filter(w=>w.length>1&&!VSTOP.has(w));
+function vLev(a,b){if(a===b)return 0;const m=a.length,n=b.length;if(!m||!n)return m||n;let p=[...Array(n+1).keys()];
+ for(let i=1;i<=m;i++){const c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+const vSim=(a,b)=>1-vLev(a,b)/Math.max(a.length,b.length);
+// Quanto do nome da carta aparece na fala: cada palavra do nome procura a palavra mais parecida da fala
+function vScore(fala,nome){const N=vTok(nome),F0=vTok(fala);if(!N.length||!F0.length)return 0;const F=F0.concat(F0.slice(1).map((w,k)=>F0[k]+w));
+ let s=0;N.forEach(w=>{let b=0;F.forEach(f=>{const x=vSim(w,f);if(x>b)b=x});s+=b>=.72?b:0});
+ const cob=s/N.length;return N.length===1&&N[0].length<5?cob*.85:cob}
+let VZ={cand:null,rec:null,ouvindo:false};
+// Monta a lista de candidatas: nomes em inglês e em português (do cache de cartas, quando já carregado)
+async function vPrep(){const D=duel;if(!D||!D.decks)return;const C=[];
+ for(const [p,i] of D.decks.map((i,p)=>[p,i])){const n=DECKS[i][0],L=CARDS[n]||[];let det=null;try{det=await getDeck(n)}catch(e){}
+  L.forEach((x,k)=>{const d=det&&det[k],pt=(d&&d.pt)||x[0]||'',en=x[1];C.push({p,en,pt:pt&&pt!==en?pt:'',fx:d&&d.d?String(d.pe||d.d.e||'').slice(0,400):''})})}
+ if(duel===D)VZ.cand=C}
+function vMatch(alts){const C=VZ.cand||[];let best=null;
+ alts.forEach(fala=>C.forEach(c=>{const s=Math.max(vScore(fala,c.en),c.pt?vScore(fala,c.pt):0);if(!best||s>best.s)best={s,c,fala}}));
+ return best&&best.s>=.62?best:null}
+function vQuem(fala,c){const f=vNorm(fala),dono=[0,1].filter(p=>(VZ.cand||[]).some(x=>x.p===p&&c&&x.en===c.en));
+ const dito=[0,1].find(p=>f.includes(vNorm(NOMES[p])));
+ if(dito!=null)return dito;if(dono.length===1)return dono[0];const t=turnOf();return t==null?null:t}
+function vBar(html,ms){const e=$('#vzb');if(!e)return;clearTimeout(VZ.tb);e.innerHTML=html;e.classList.toggle('on',!!html);if(ms)VZ.tb=setTimeout(()=>e.classList.remove('on'),ms)}
+function vOuvir(){if(!SRC||over||!duel.decks){toast(duel.decks?'Duelo encerrado':'Sorteie os decks primeiro');return}
+ if(VZ.ouvindo){VZ.rec&&VZ.rec.stop();return}
+ if(!VZ.cand)vPrep();
+ const r=new SRC();r.lang='pt-BR';r.interimResults=true;r.maxAlternatives=5;r.continuous=false;VZ.rec=r;VZ.ouvindo=true;
+ const b=$('#bMic');b&&b.classList.add('rec');vBar('🎙️ Pode falar…');let fin=null;
+ r.onresult=ev=>{const res=ev.results[ev.results.length-1];if(res.isFinal)fin=[...res].map(a=>a.transcript);else vBar('🎙️ '+esc(res[0].transcript))};
+ r.onerror=ev=>{fin=null;vBar(ev.error==='not-allowed'?'🎙️ Microfone bloqueado: libere nas permissões do navegador':ev.error==='no-speech'?'🎙️ Não ouvi nada':'🎙️ Erro no microfone ('+esc(ev.error)+')',3500)};
+ r.onend=()=>{VZ.ouvindo=false;b&&b.classList.remove('rec');if(fin&&fin.length)vRegistrar(fin)};
+ try{r.start();play('click')}catch(e){VZ.ouvindo=false;b&&b.classList.remove('rec');vBar('🎙️ Não consegui abrir o microfone',3000)}}
+function vRegistrar(alts){const m=vMatch(alts),fala=m?m.fala:alts[0],c=m&&m.c,p=vQuem(fala,c);
+ const ev={t:duel.t0?Date.now()-duel.t0:0,tn:duel.tn,p,fala:fala.trim()};if(c){ev.en=c.en;if(c.pt)ev.pt=c.pt}
+ (duel.ev=duel.ev||[]).push(ev);const k=duel.ev.length-1;
+ vBar(`<span>${p!=null?`<b style="color:${COR[p]}">${NOMES[p]}</b> · `:''}T${ev.tn} · ${c?'🃏 <b>'+esc(c.pt||c.en)+'</b>':'📝 '+esc(ev.fala)}</span><button onclick="vDesfazer(${k})">Desfazer</button>`,5000);
+ play(c?'heal':'click')}
+function vDesfazer(k){if(!duel.ev||!duel.ev[k])return;duel.ev.splice(k,1);vBar('Jogada removida',1500)}
+function vLista(){const E=duel.ev||[];modal(`<h2>🎙️ JOGADAS FALADAS</h2>${E.length?E.map((e,k)=>`<div class="vzl"><span>T${e.tn} ${e.p!=null?`<b style="color:${COR[e.p]}">${NOMES[e.p]}</b>`:''}<br>${e.en?'🃏 '+esc(e.pt||e.en):'📝 '+esc(e.fala)}<small>“${esc(e.fala)}”</small></span><button onclick="duel.ev.splice(${k},1);vLista()" aria-label="Remover">✖</button></div>`).join(''):'<p>Nenhuma jogada falada neste duelo.<br>Toque no 🎙️ e diga a carta, por exemplo: “ativei Raigeki”.</p>'}<button class="btn sec" onclick="menu()">← Voltar</button>`)}
+// Para a crônica: jogadas com o texto da carta (a IA deduz o efeito usado cruzando com o dano do mesmo turno)
+async function vParaIA(h){const fx={};for(const n of h.decks||[]){let det=null;try{det=await getDeck(n)}catch(e){}(det||[]).forEach(d=>{if(d.d)fx[d.en]=String(d.pe||d.d.e||'').slice(0,400)})}
+ return(h.ev||[]).map(e=>({tn:e.tn,s:Math.round(e.t/1000),p:e.p,carta:e.en||null,nome_pt:e.pt||null,fala:e.fala,efeito:(e.en&&fx[e.en])||''}))}
+function vMicBtn(){const b=$('#bMic');if(b)b.style.display=micOn()?'':'none'}
+vMicBtn();rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
 </script>
 <script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>

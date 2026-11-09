@@ -12,7 +12,7 @@
 
 const DEFAULT_MODEL = 'gemini-2.5-flash';
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
-const MAX_BODY = 60_000;
+const MAX_BODY = 120_000;
 
 const PREVER_SCHEMA = {
   type: 'OBJECT',
@@ -48,8 +48,15 @@ Regras para a chance:
 Cite cartas usando o nome exatamente como aparece na lista.`;
 
 const SYSTEM_CRONICA = `Você é o narrador do Oráculo do Duelo, de um app de Yu-Gi-Oh! usado em duelos casuais em família.
-Responda em português do Brasil, com o tom empolgado de narrador de anime, mas sem inventar jogadas: você só sabe o que está no registro de LP (dano, cura, turno e tempo).
-Não cite cartas específicas como se tivessem sido jogadas, a não ser que o usuário tenha marcado a carta MVP.`;
+Responda em português do Brasil, com o tom empolgado de narrador de anime, mas sem inventar jogadas.
+Você recebe dois registros, ambos com turno e segundos desde o início:
+- LP: cada dano ou cura, exato.
+- Jogadas faladas: o que um jogador disse em voz alta durante o duelo (transcrição automática, pode ter erros), com a carta reconhecida e o texto do efeito dela.
+Como narrar:
+- Cruze os dois registros: se uma carta foi falada e logo depois houve dano ou cura no mesmo turno, use o efeito da carta para deduzir o que aconteceu, mas deixe claro quando é dedução ("tudo indica que", "provavelmente").
+- Se a carta tem vários efeitos, só afirme qual foi usado se a fala ou o LP deixarem claro.
+- Só cite cartas que aparecem nas jogadas faladas ou na MVP. Nunca invente cartas, ataques ou mãos.
+- Sem jogadas faladas, narre a partir do LP e não cite cartas.`;
 
 function cors(origin, env) {
   const allowed = (env.ALLOWED_ORIGIN || DEFAULT_ORIGIN).split(',').map(s => s.trim());
@@ -98,6 +105,9 @@ function promptCronica(b) {
   const nomes = b.nomes || ['Jogador 1', 'Jogador 2'];
   const log = (b.log || []).slice(-60).map(e =>
     `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
+  const jog = (b.jogadas || []).slice(0, 80).map(j =>
+    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 160)}"` +
+    (j.carta ? ` → carta: ${clip(j.carta, 80)}${j.nome_pt ? ' (' + clip(j.nome_pt, 80) + ')' : ''}${j.efeito ? ' | efeito: ' + clip(j.efeito, 400) : ''}` : ' → nenhuma carta reconhecida')).join('\n');
   const prev = b.previsao
     ? `Previsão do Oráculo antes do duelo: ${Math.round(b.previsao.chance_a * 100)}% para ${nomes[0]} (${clip(b.previsao.resumo, 300)})`
     : 'O Oráculo não fez previsão para este duelo.';
@@ -107,7 +117,10 @@ ${b.mvp ? 'Carta MVP marcada pelos jogadores: ' + clip(b.mvp, 80) : ''}
 ${prev}
 
 Registro de LP:
-${log || '(vazio: o vencedor foi declarado sem registrar dano)'}`;
+${log || '(vazio: o vencedor foi declarado sem registrar dano)'}
+
+Jogadas faladas:
+${jog || '(nenhuma)'}`;
 }
 
 async function gemini(env, system, prompt, schema, temperature) {
