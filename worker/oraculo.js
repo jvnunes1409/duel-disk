@@ -54,6 +54,7 @@ Você recebe dois registros, ambos com turno e segundos desde o início:
 - Jogadas faladas: o que um jogador disse em voz alta durante o duelo (transcrição automática, pode ter erros), com a carta reconhecida e o texto do efeito dela.
 Como narrar:
 - Cruze os dois registros: se uma carta foi falada e logo depois houve dano ou cura no mesmo turno, use o efeito da carta para deduzir o que aconteceu, mas deixe claro quando é dedução ("tudo indica que", "provavelmente").
+- Quando a carta é do deck do outro jogador, quem falou provavelmente reagiu a ela (destruiu, negou, sofreu o efeito).
 - Se a carta tem vários efeitos, só afirme qual foi usado se a fala ou o LP deixarem claro.
 - Só cite cartas que aparecem nas jogadas faladas ou na MVP. Nunca invente cartas, ataques ou mãos.
 - Sem jogadas faladas, narre a partir do LP e não cite cartas.`;
@@ -107,7 +108,7 @@ function promptCronica(b) {
     `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
   const jog = (b.jogadas || []).slice(0, 80).map(j =>
     `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 160)}"` +
-    (j.carta ? ` → carta: ${clip(j.carta, 80)}${j.nome_pt ? ' (' + clip(j.nome_pt, 80) + ')' : ''}${j.efeito ? ' | efeito: ' + clip(j.efeito, 400) : ''}` : ' → nenhuma carta reconhecida')).join('\n');
+    (j.carta ? ` → carta: ${clip(j.carta, 80)}${j.nome_pt ? ' (' + clip(j.nome_pt, 80) + ')' : ''}${j.dono != null ? ', do deck de ' + nomes[j.dono] : ''}${j.efeito ? ' | efeito: ' + clip(j.efeito, 400) : ''}` : ' → nenhuma carta reconhecida')).join('\n');
   const prev = b.previsao
     ? `Previsão do Oráculo antes do duelo: ${Math.round(b.previsao.chance_a * 100)}% para ${nomes[0]} (${clip(b.previsao.resumo, 300)})`
     : 'O Oráculo não fez previsão para este duelo.';
