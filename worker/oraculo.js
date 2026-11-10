@@ -10,7 +10,7 @@
 //   POST /prever   → previsão antes do duelo (quem é favorito, chance, cartas-chave, plano do azarão)
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
-const DEFAULT_MODEL = 'gemini-2.5-flash';
+const DEFAULT_MODEL = 'gemini-3.8-flash';
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
 const MAX_BODY = 120_000;
 

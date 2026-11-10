@@ -1309,7 +1309,7 @@ Object.keys(MOM).forEach(k=>KV.get('snd:'+k).then(u=>{if(u)CSND[k]=u}));
 // Antes do duelo: a IA lê as listas de cartas e o histórico e estima a chance de cada lado.
 // A previsão só vale se chegar antes do primeiro lance de LP (senão a IA "veria" o duelo começando).
 // Depois do duelo: crônica a partir do registro de LP. Nas estatísticas: placar da IA contra Elo, tier e moeda.
-const ORA_PAD='';// URL do Worker; também pode ser colada em Menu → Sons e animações → Oráculo
+const ORA_PAD='https://oraculo.coringa1401.workers.dev';// URL do Worker; também pode ser colada em Menu → Sons e animações → Oráculo
 const oraUrl=()=>{let u=String(CFG.ora||ORA_PAD||'').trim().replace(/\s+/g,'').replace(/\/+$/,'');if(u&&!/^https?:\/\//i.test(u))u='https://'+u;return u};
 const oraOn=()=>!!oraUrl()&&CFG.oraOn!==0;
 const pWin=(ra,rb)=>1/(1+10**((rb-ra)/400));
@@ -1323,12 +1323,12 @@ function oraTeste(){const m=$('#oraM');if(!m)return;if(!oraUrl()){m.textContent=
   m.textContent=r.status===404?'✅ Oráculo online e com chave. Sorteie um duelo para testar a IA.':'⚠️ '+(oraMotivo(k.error)||k.error||('Erro '+r.status))})
  .catch(e=>{m.textContent='❌ Não respondeu. '+oraMotivo(e.message)})}
 function oraMotivo(m){m=String(m||'');
- if(/abort/i.test(m))return'A IA demorou mais de 25 segundos para responder. Tente de novo.';
+ if(/abort/i.test(m))return'A IA demorou demais para responder. Tente de novo.';
  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'O celular não conseguiu falar com o Worker. Confira se o endereço está certo e se tem internet. Se o endereço estiver certo, o código do Worker pode ainda ser o Hello World (cole o oraculo.js de novo e dê Deploy).';
  if(/GEMINI_KEY/.test(m))return'O Worker está no ar, mas a chave não foi encontrada. Em Settings → Variables and Secrets, confira se o nome é exatamente GEMINI_KEY, e clique em Deploy depois de salvar.';
  if(/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|403/.test(m))return'A chave do Gemini foi recusada. Crie uma nova no AI Studio, cole em GEMINI_KEY de novo e dê Deploy.';
  if(/429|RESOURCE_EXHAUSTED|quota/i.test(m))return'O limite grátis do Gemini acabou por agora. Espere alguns minutos e tente de novo.';
- if(/404|not found|is not supported/i.test(m)&&/model/i.test(m))return'O modelo da IA não existe mais. Crie a variável MODEL (texto) com gemini-2.5-flash ou outro modelo listado no AI Studio.';
+ if(/404|not found|is not supported/i.test(m)&&/model/i.test(m))return'O modelo da IA não existe mais. Crie a variável MODEL (texto) com gemini-3.8-flash ou outro modelo listado no AI Studio.';
  if(/origem não permitida/.test(m))return'O Worker recusou o endereço do app. Crie a variável ALLOWED_ORIGIN com https://jvnunes1409.github.io';
  if(/location is not supported/i.test(m))return'O Gemini não aceita pedidos da região do Worker.';
  return'';}
@@ -1342,7 +1342,7 @@ function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n=
  return{elo:[ea.e,eb.e],jogos:[ea.g,eb.g],h2h:{a:h2a,b:h2b},eloP:pWin(ea.e,eb.e),tierP:pWin(TE[DECKS[dk[0]][1]]||1500,TE[DECKS[dk[1]][1]]||1500)}}
 function oraPrever(){const D=duel;if(!D.decks||D.decks[0]===D.decks[1])return;
  D.base=oraBase(D.decks);if(!oraOn())return;D.ai={st:'load'};tBan();
- oraPost('/prever',{a:oraDeck(D.decks[0]),b:oraDeck(D.decks[1]),ctx:D.base})
+ oraPost('/prever',{a:oraDeck(D.decks[0]),b:oraDeck(D.decks[1]),ctx:D.base},45000)
   .then(r=>{if(duel!==D)return;if(D.log.length||over){D.ai={st:'tarde'};tBan();return}
    D.ai={st:'ok',p:r.chance_a,r,t:Date.now()};tBan();if(document.body.dataset.t==='sorteio')toast('🔮 O Oráculo fez a previsão')})
   .catch(e=>{if(duel!==D)return;D.ai={st:'erro',e:e.message};tBan()})}
