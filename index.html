@@ -559,7 +559,7 @@ function showR(p,s){$('#resultado').innerHTML=p.map((i,k)=>`<div id="rc${k}"></d
 function sbar(on){const e=$('#sbar');if(e)e.classList.toggle('on',!!on&&document.body.dataset.t==='sorteio')}
 function sortear(){if(busy)return;if(SRT.modo==='draft')return draftStart();
  busy=true;play('sweep');const ix=[...DECKS.keys()];let A=avail();if(A.length<2){USED=[];A=ix}const a=pick(A),near=i=>i!==a&&Math.abs(DECKS[i][1]-DECKS[a][1])<=1;
- let pool=SRT.modo==='justo'?A.filter(near):A.filter(i=>i!==a);if(!pool.length&&SRT.modo==='justo')pool=ix.filter(near);if(!pool.length)pool=ix.filter(i=>i!==a);const b=pick(pool);let n=0;
+ let pool=SRT.modo==='justo'?A.filter(near):A.filter(i=>i!==a);if(!pool.length&&SRT.modo==='justo')pool=ix.filter(near);if(!pool.length)pool=ix.filter(i=>i!==a);const b=pick(pool);let n=0;oraPreAquecer([a,b]);
  spinDraw([a,b],ix,()=>{useDecks([a,b]);newDuel([a,b],null,SRT.md3?mkSr():null);busy=false})}
 // Efeito de roleta: os ícones dos decks se alternam e vão desacelerando; o do Douglas trava primeiro e depois o do João.
 function spinDraw(fin,ix,done){const N=[10,15];let i=0,last=[-1,-1];showR(fin,1);const rs=$('#resultado');if(rs)rs.scrollIntoView({behavior:'smooth',block:'center'});
@@ -1323,7 +1323,7 @@ function oraTeste(){const m=$('#oraM');if(!m)return;if(!oraUrl()){m.textContent=
   m.textContent=r.status===404?'✅ Oráculo online e com chave. Sorteie um duelo para testar a IA.':'⚠️ '+(oraMotivo(k.error)||k.error||('Erro '+r.status))})
  .catch(e=>{m.textContent='❌ Não respondeu. '+oraMotivo(e.message)})}
 function oraMotivo(m){m=String(m||'');
- if(/abort/i.test(m))return'A IA demorou demais para responder. Tente de novo.';
+ if(/abort/i.test(m))return'A IA levou mais de 2 minutos para responder. Cole o oraculo.js novo no Worker (ele pede um raciocínio curto) ou troque MODEL para gemini-3.5-flash-lite.';
  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'O celular não conseguiu falar com o Worker. Confira se o endereço está certo e se tem internet. Se o endereço estiver certo, o código do Worker pode ainda ser o Hello World (cole o oraculo.js de novo e dê Deploy).';
  if(/GEMINI_KEY/.test(m))return'O Worker está no ar, mas a chave não foi encontrada. Em Settings → Variables and Secrets, confira se o nome é exatamente GEMINI_KEY, e clique em Deploy depois de salvar.';
  if(/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|403/.test(m))return'A chave do Gemini foi recusada. Crie uma nova no AI Studio, cole em GEMINI_KEY de novo e dê Deploy.';
@@ -1340,12 +1340,19 @@ function oraDeck(i){const d=DECKS[i];return{nome:d[0],tier:d[1],estrategia:d[4],
 function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n===a),eb=E.find(x=>x.n===b);
  let h2a=0,h2b=0;hist.forEach(h=>{if(!h.decks)return;if(h.decks[0]===a&&h.decks[1]===b){h.w===0?h2a++:h2b++}else if(h.decks[0]===b&&h.decks[1]===a){h.w===1?h2a++:h2b++}});
  return{elo:[ea.e,eb.e],jogos:[ea.g,eb.g],h2h:{a:h2a,b:h2b},eloP:pWin(ea.e,eb.e),tierP:pWin(TE[DECKS[dk[0]][1]]||1500,TE[DECKS[dk[1]][1]]||1500)}}
+// A previsão começa no instante do sorteio (os dois decks já são conhecidos antes da animação)
+// e só é descartada se alguém mexer no LP antes de ela chegar.
+let ORAPRE=null;
+function oraPedir(dk){const k=dk.join('-');if(ORAPRE&&ORAPRE.k===k&&Date.now()-ORAPRE.t<180000)return ORAPRE;
+ const base=oraBase(dk);ORAPRE={k,t:Date.now(),base,p:oraPost('/prever',{a:oraDeck(dk[0]),b:oraDeck(dk[1]),ctx:base},120000)};ORAPRE.p.catch(()=>{});return ORAPRE}
+function oraPreAquecer(dk){if(oraOn()&&dk[0]!==dk[1])oraPedir(dk)}
 function oraPrever(){const D=duel;if(!D.decks||D.decks[0]===D.decks[1])return;
- D.base=oraBase(D.decks);if(!oraOn())return;D.ai={st:'load'};tBan();
- oraPost('/prever',{a:oraDeck(D.decks[0]),b:oraDeck(D.decks[1]),ctx:D.base},45000)
-  .then(r=>{if(duel!==D)return;if(D.log.length||over){D.ai={st:'tarde'};tBan();return}
+ if(!oraOn()){D.base=oraBase(D.decks);return}
+ if(D.ai&&D.ai.st==='erro'&&ORAPRE&&ORAPRE.k===D.decks.join('-'))ORAPRE=null;
+ const R=oraPedir(D.decks);D.base=R.base;D.ai={st:'load'};tBan();
+ R.p.then(r=>{if(duel!==D)return;if(D.log.length||over){D.ai={st:'tarde'};tBan();return}
    D.ai={st:'ok',p:r.chance_a,r,t:Date.now()};tBan();if(document.body.dataset.t==='sorteio')toast('🔮 O Oráculo fez a previsão')})
-  .catch(e=>{if(duel!==D)return;D.ai={st:'erro',e:e.message};tBan()})}
+  .catch(e=>{if(ORAPRE===R)ORAPRE=null;if(duel!==D)return;D.ai={st:'erro',e:e.message};tBan()})}
 const oraFav=p=>p>=.5?0:1,oraPct=p=>Math.round(Math.max(p,1-p)*100);
 function oraChip(){const a=duel&&duel.ai;if(!a||!duel.decks)return'';
  if(a.st==='load')return`<div class="tmb ora" style="cursor:default"><span>🔮 O ORÁCULO ESTÁ ANALISANDO…</span></div>`;
