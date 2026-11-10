@@ -1333,8 +1333,9 @@ function oraMotivo(m){m=String(m||'');
  if(/location is not supported/i.test(m))return'O Gemini não aceita pedidos da região do Worker.';
  return'';}
 function oraErro(){const a=duel&&duel.ai;const m=(a&&a.e)||'?',t=oraMotivo(m);
- modal(`<h2>🔮 ORÁCULO SEM SINAL</h2>${t?`<p style="text-align:left">${esc(t)}</p>`:''}<p class="cnote" style="text-align:left;word-break:break-word">Erro técnico: ${esc(m)}</p><p class="cnote" style="text-align:left">Endereço: ${esc(oraUrl()||'(vazio)')}</p>
- <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}
+ modal(`<h2>🔮 ORÁCULO SEM SINAL</h2>${t?`<p style="text-align:left">${esc(t)}</p>`:''}<p class="cnote" style="text-align:left;word-break:break-word">Erro técnico: ${esc(m)}</p><p class="cnote" style="text-align:left">Endereço: ${esc(oraUrl()||'(vazio)')}</p><p id="oraV" class="cnote" style="text-align:left">Conferindo o Worker…</p>
+ <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`);
+ fetch(oraUrl()).then(r=>r.json()).then(j=>{const v=$('#oraV');if(!v)return;v.innerHTML=(j.versao||1)<3?'⚠️ <b>O Worker está com o código antigo</b> (versão '+(j.versao||1)+'). Cole o oraculo.js novo do GitHub e clique em Deploy.':'✅ Worker atualizado (versão '+j.versao+', modelo '+esc(j.modelo||'?')+').'}).catch(()=>{const v=$('#oraV');if(v)v.textContent='Não consegui conferir o Worker.'})}
 function oraDeck(i){const d=DECKS[i];return{nome:d[0],tier:d[1],estrategia:d[4],fortes:d[5],fracos:d[6],cartas:(CARDS[d[0]]||[]).map(x=>(x[3]>1?x[3]+'x ':'')+x[1])}}
 // Linhas de base guardadas no início do duelo, para comparar com a IA de forma justa
 function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n===a),eb=E.find(x=>x.n===b);
@@ -1364,7 +1365,7 @@ function oraBox(r,dk){const p=r.chance_a,lst=(k,a)=>(a||[]).length?`<p style="ma
  <div class="sbl" style="font-size:.85rem;margin:4px 0 10px"><span style="color:${COR[0]}">${NOMES[0]} ${Math.round(p*100)}%</span><span style="color:${COR[1]}">${100-Math.round(p*100)}% ${NOMES[1]}</span></div>
  <p style="text-align:left">${esc(r.resumo)}</p><div class="clh" style="text-align:left">🗝️ CARTAS-CHAVE</div>${lst(0,r.chaves_a)}${lst(1,r.chaves_b)}
  <div class="clh" style="text-align:left">🃏 COMO O AZARÃO VIRA</div><p style="text-align:left">${esc(r.plano_azarao)}</p>
- <p class="cnote">Confiança ${esc({media:'média'}[r.confianca]||r.confianca||'?')} · ${esc(r.model||'IA')}</p>`}
+ <p class="cnote">Confiança ${esc({media:'média'}[r.confianca]||r.confianca||'?')} · ${esc(r.model||'IA')}${r.ms?' · '+Math.round(r.ms/1000)+' s':''}</p>`}
 function oraVer(){const a=duel&&duel.ai;if(!a||a.st!=='ok')return;const b=duel.base;
  modal(`<h2>🔮 PREVISÃO DO ORÁCULO</h2>${oraBox(a.r,duel.decks)}
  <p class="cnote">Para comparar: Elo diz ${Math.round(b.eloP*100)}% e o tier diz ${Math.round(b.tierP*100)}% para ${NOMES[0]}.</p>

@@ -11,7 +11,9 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 2;
+const VERSAO = 3;
+const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
+const LIMITE_MS = 35_000;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
 const MAX_BODY = 120_000;
 
@@ -133,7 +135,23 @@ function thinking(model) {
 }
 
 async function gemini(env, system, prompt, schema, temperature) {
-  const model = env.MODEL || DEFAULT_MODEL;
+  const principal = env.MODEL || DEFAULT_MODEL;
+  const reserva = env.FALLBACK_MODEL || FALLBACK_MODEL;
+  const t0 = Date.now();
+  try {
+    return await geminiModel(env, principal, system, prompt, schema, temperature, LIMITE_MS, t0);
+  } catch (e) {
+    // Lento demais (ou modelo indisponível): tenta o modelo leve uma vez
+    if (reserva && reserva !== principal && (e.lento || e.status === 502)) {
+      return await geminiModel(env, reserva, system, prompt, schema, temperature, LIMITE_MS, t0);
+    }
+    throw e;
+  }
+}
+
+async function geminiModel(env, model, system, prompt, schema, temperature, limite, t0) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), limite);
   const call = (comThinking) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
@@ -145,11 +163,22 @@ async function gemini(env, system, prompt, schema, temperature) {
         ...(comThinking ? { thinkingConfig: thinking(model) } : {}),
       },
     }),
+    signal: ctrl.signal,
   });
-  let r = await call(true);
+  try {
+  let r;
+  try { r = await call(true); } catch (e) {
+    const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
+    err.lento = true; err.status = 504; throw err;
+  }
   if (r.status === 400) {
     const t = await r.clone().text();
-    if (/thinking/i.test(t)) r = await call(false);
+    if (/thinking/i.test(t)) {
+      try { r = await call(false); } catch (e) {
+        const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
+        err.lento = true; err.status = 504; throw err;
+      }
+    }
   }
   if (!r.ok) {
     const t = await r.text();
@@ -160,12 +189,13 @@ async function gemini(env, system, prompt, schema, temperature) {
   const j = await r.json();
   const text = j.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
   try {
-    return { data: JSON.parse(text), model };
+    return { data: JSON.parse(text), model, ms: Date.now() - t0 };
   } catch {
     const err = new Error('Resposta da IA veio fora do formato JSON');
     err.status = 502;
     throw err;
   }
+  } finally { clearTimeout(timer); }
 }
 
 export default {
@@ -186,9 +216,9 @@ export default {
     try {
       if (path === '/prever') {
         if (!body.a || !body.b) return json({ error: 'faltam os decks' }, 400, headers);
-        const { data, model } = await gemini(env, SYSTEM_PREVER, promptPrever(body), PREVER_SCHEMA, 0.3);
+        const { data, model, ms } = await gemini(env, SYSTEM_PREVER, promptPrever(body), PREVER_SCHEMA, 0.3);
         const chance = Math.min(0.95, Math.max(0.05, Number(data.chance_a) || 0.5));
-        return json({ ...data, chance_a: chance, model }, 200, headers);
+        return json({ ...data, chance_a: chance, model, ms }, 200, headers);
       }
       if (path === '/cronica') {
         const { data, model } = await gemini(env, SYSTEM_CRONICA, promptCronica(body), CRONICA_SCHEMA, 0.8);
