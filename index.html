@@ -1317,7 +1317,24 @@ function oraPost(rota,body,ms){const c=new AbortController(),tm=setTimeout(()=>c
  return fetch(oraUrl()+rota,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:c.signal})
   .then(async r=>{const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j}).finally(()=>clearTimeout(tm))}
 function oraTeste(){const m=$('#oraM');if(!m)return;if(!oraUrl()){m.textContent='Sem endereço: o app funciona normal, só sem IA.';return}m.textContent='Testando…';
- fetch(oraUrl()).then(r=>r.json()).then(j=>{m.textContent=j.oraculo==='online'?'✅ Oráculo online':'⚠️ Respondeu, mas não parece o Oráculo'}).catch(()=>{m.textContent='❌ Não respondeu. Confira o endereço.'})}
+ fetch(oraUrl()).then(r=>r.text()).then(async t=>{let j={};try{j=JSON.parse(t)}catch(e){}
+  if(j.oraculo!=='online'){m.textContent='⚠️ O endereço responde, mas não é o Oráculo. O código do Worker ainda é o Hello World? Cole o oraculo.js e clique em Deploy.';return}
+  const r=await fetch(oraUrl()+'/teste',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'}),k=await r.json().catch(()=>({}));
+  m.textContent=r.status===404?'✅ Oráculo online e com chave. Sorteie um duelo para testar a IA.':'⚠️ '+(oraMotivo(k.error)||k.error||('Erro '+r.status))})
+ .catch(e=>{m.textContent='❌ Não respondeu. '+oraMotivo(e.message)})}
+function oraMotivo(m){m=String(m||'');
+ if(/abort/i.test(m))return'A IA demorou mais de 25 segundos para responder. Tente de novo.';
+ if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'O celular não conseguiu falar com o Worker. Confira se o endereço está certo e se tem internet. Se o endereço estiver certo, o código do Worker pode ainda ser o Hello World (cole o oraculo.js de novo e dê Deploy).';
+ if(/GEMINI_KEY/.test(m))return'O Worker está no ar, mas a chave não foi encontrada. Em Settings → Variables and Secrets, confira se o nome é exatamente GEMINI_KEY, e clique em Deploy depois de salvar.';
+ if(/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|403/.test(m))return'A chave do Gemini foi recusada. Crie uma nova no AI Studio, cole em GEMINI_KEY de novo e dê Deploy.';
+ if(/429|RESOURCE_EXHAUSTED|quota/i.test(m))return'O limite grátis do Gemini acabou por agora. Espere alguns minutos e tente de novo.';
+ if(/404|not found|is not supported/i.test(m)&&/model/i.test(m))return'O modelo da IA não existe mais. Crie a variável MODEL (texto) com gemini-2.5-flash ou outro modelo listado no AI Studio.';
+ if(/origem não permitida/.test(m))return'O Worker recusou o endereço do app. Crie a variável ALLOWED_ORIGIN com https://jvnunes1409.github.io';
+ if(/location is not supported/i.test(m))return'O Gemini não aceita pedidos da região do Worker.';
+ return'';}
+function oraErro(){const a=duel&&duel.ai;const m=(a&&a.e)||'?',t=oraMotivo(m);
+ modal(`<h2>🔮 ORÁCULO SEM SINAL</h2>${t?`<p style="text-align:left">${esc(t)}</p>`:''}<p class="cnote" style="text-align:left;word-break:break-word">Erro técnico: ${esc(m)}</p><p class="cnote" style="text-align:left">Endereço: ${esc(oraUrl()||'(vazio)')}</p>
+ <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}
 function oraDeck(i){const d=DECKS[i];return{nome:d[0],tier:d[1],estrategia:d[4],fortes:d[5],fracos:d[6],cartas:(CARDS[d[0]]||[]).map(x=>(x[3]>1?x[3]+'x ':'')+x[1])}}
 // Linhas de base guardadas no início do duelo, para comparar com a IA de forma justa
 function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n===a),eb=E.find(x=>x.n===b);
@@ -1332,7 +1349,7 @@ function oraPrever(){const D=duel;if(!D.decks||D.decks[0]===D.decks[1])return;
 const oraFav=p=>p>=.5?0:1,oraPct=p=>Math.round(Math.max(p,1-p)*100);
 function oraChip(){const a=duel&&duel.ai;if(!a||!duel.decks)return'';
  if(a.st==='load')return`<div class="tmb ora" style="cursor:default"><span>🔮 O ORÁCULO ESTÁ ANALISANDO…</span></div>`;
- if(a.st==='erro')return`<div class="tmb ora" onclick="oraPrever()"><span>🔮 ORÁCULO SEM SINAL</span><small>tentar de novo ›</small></div>`;
+ if(a.st==='erro')return`<div class="tmb ora" onclick="oraErro()"><span>🔮 ORÁCULO SEM SINAL</span><small>ver motivo ›</small></div>`;
  if(a.st==='tarde')return'';
  const f=oraFav(a.p);return`<div class="tmb ora" onclick="oraVer()"><span>🔮 ORÁCULO: <b style="color:${COR[f]}">${oraPct(a.p)}% ${NOMES[f].toUpperCase()}</b></span><small>ver análise ›</small></div>`}
 function oraBox(r,dk){const p=r.chance_a,lst=(k,a)=>(a||[]).length?`<p style="margin:4px 0;text-align:left"><b style="color:${COR[k]}">${esc(dn(dk[k]))}:</b> ${a.slice(0,3).map(esc).join(' · ')}</p>`:'';
