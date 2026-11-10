@@ -11,6 +11,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
+const VERSAO = 2;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
 const MAX_BODY = 120_000;
 
@@ -124,17 +125,32 @@ Jogadas faladas:
 ${jog || '(nenhuma)'}`;
 }
 
+// Pensamento curto: o Oráculo precisa responder em segundos, não em minutos.
+// Modelos 2.x usam thinkingBudget, os 3.x usam thinkingLevel; se o modelo recusar, tenta sem.
+function thinking(model) {
+  if (/^gemini-2\./.test(model)) return { thinkingBudget: 0 };
+  return { thinkingLevel: 'low' };
+}
+
 async function gemini(env, system, prompt, schema, temperature) {
   const model = env.MODEL || DEFAULT_MODEL;
-  const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+  const call = (comThinking) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
     body: JSON.stringify({
       systemInstruction: { parts: [{ text: system }] },
       contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: { temperature, responseMimeType: 'application/json', responseSchema: schema },
+      generationConfig: {
+        temperature, responseMimeType: 'application/json', responseSchema: schema,
+        ...(comThinking ? { thinkingConfig: thinking(model) } : {}),
+      },
     }),
   });
+  let r = await call(true);
+  if (r.status === 400) {
+    const t = await r.clone().text();
+    if (/thinking/i.test(t)) r = await call(false);
+  }
   if (!r.ok) {
     const t = await r.text();
     const err = new Error(`Gemini ${r.status}: ${t.slice(0, 300)}`);
@@ -157,7 +173,7 @@ export default {
     const origin = req.headers.get('Origin') || '';
     const { ok, headers } = cors(origin, env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
-    if (req.method !== 'POST') return json({ ok: true, oraculo: 'online' }, 200, headers);
+    if (req.method !== 'POST') return json({ ok: true, oraculo: 'online', versao: VERSAO, modelo: env.MODEL || DEFAULT_MODEL }, 200, headers);
     if (!ok) return json({ error: 'origem não permitida' }, 403, headers);
     if (!env.GEMINI_KEY) return json({ error: 'GEMINI_KEY não configurada no Worker' }, 500, headers);
 
