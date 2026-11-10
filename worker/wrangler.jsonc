@@ -1,0 +1,10 @@
+// Configuração do Worker do Oráculo para o deploy automático da Cloudflare (Workers Builds).
+// Cada push na branch main que mexer nesta pasta publica o Worker de novo.
+{
+  "name": "oraculo",
+  "main": "oraculo.js",
+  "compatibility_date": "2025-06-01",
+  "workers_dev": true,
+  // Mantém as variáveis criadas no painel (MODEL, ALLOWED_ORIGIN). A GEMINI_KEY é Secret e nunca é apagada pelo deploy.
+  "keep_vars": true
+}
