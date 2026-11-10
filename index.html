@@ -1310,7 +1310,7 @@ Object.keys(MOM).forEach(k=>KV.get('snd:'+k).then(u=>{if(u)CSND[k]=u}));
 // A previsão só vale se chegar antes do primeiro lance de LP (senão a IA "veria" o duelo começando).
 // Depois do duelo: crônica a partir do registro de LP. Nas estatísticas: placar da IA contra Elo, tier e moeda.
 const ORA_PAD='';// URL do Worker; também pode ser colada em Menu → Sons e animações → Oráculo
-const oraUrl=()=>String(CFG.ora||ORA_PAD||'').trim().replace(/\/+$/,'');
+const oraUrl=()=>{let u=String(CFG.ora||ORA_PAD||'').trim().replace(/\s+/g,'').replace(/\/+$/,'');if(u&&!/^https?:\/\//i.test(u))u='https://'+u;return u};
 const oraOn=()=>!!oraUrl()&&CFG.oraOn!==0;
 const pWin=(ra,rb)=>1/(1+10**((rb-ra)/400));
 function oraPost(rota,body,ms){const c=new AbortController(),tm=setTimeout(()=>c.abort(),ms||25000);
