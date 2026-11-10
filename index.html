@@ -1335,8 +1335,15 @@ function oraMotivo(m){m=String(m||'');
 function oraErro(){const a=duel&&duel.ai;const m=(a&&a.e)||'?',t=oraMotivo(m);
  modal(`<h2>🔮 ORÁCULO SEM SINAL</h2>${t?`<p style="text-align:left">${esc(t)}</p>`:''}<p class="cnote" style="text-align:left;word-break:break-word">Erro técnico: ${esc(m)}</p><p class="cnote" style="text-align:left">Endereço: ${esc(oraUrl()||'(vazio)')}</p><p id="oraV" class="cnote" style="text-align:left">Conferindo o Worker…</p>
  <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`);
- fetch(oraUrl()).then(r=>r.json()).then(j=>{const v=$('#oraV');if(!v)return;v.innerHTML=(j.versao||1)<3?'⚠️ <b>O Worker está com o código antigo</b> (versão '+(j.versao||1)+'). Cole o oraculo.js novo do GitHub e clique em Deploy.':'✅ Worker atualizado (versão '+j.versao+', modelo '+esc(j.modelo||'?')+').'}).catch(()=>{const v=$('#oraV');if(v)v.textContent='Não consegui conferir o Worker.'})}
-function oraDeck(i){const d=DECKS[i];return{nome:d[0],tier:d[1],estrategia:d[4],fortes:d[5],fracos:d[6],cartas:(CARDS[d[0]]||[]).map(x=>(x[3]>1?x[3]+'x ':'')+x[1])}}
+ fetch(oraUrl()).then(r=>r.json()).then(j=>{const v=$('#oraV');if(!v)return;v.innerHTML=(j.versao||1)<4?'⚠️ <b>O Worker está com o código antigo</b> (versão '+(j.versao||1)+'). Cole o oraculo.js novo do GitHub e clique em Deploy.':'✅ Worker atualizado (versão '+j.versao+', modelo '+esc(j.modelo||'?')+').'}).catch(()=>{const v=$('#oraV');if(v)v.textContent='Não consegui conferir o Worker.'})}
+// Lista para a IA: nome em português (o que vocês têm na mão), nome em inglês entre parênteses, tipo/status e o efeito resumido
+const oraTO=(p,ms)=>Promise.race([p,new Promise(r=>setTimeout(()=>r(null),ms))]);
+async function oraDeck(i){const d=DECKS[i],L=CARDS[d[0]]||[];let det=null;try{det=await oraTO(getDeck(d[0]),5000)}catch(e){}
+ const cartas=L.map((x,k)=>{const c=det&&det[k],pt=(typeof x[0]==='string'&&x[0])||(c&&c.pt)||'',en=x[1],nm=pt&&pt!==en?`${pt} (${en})`:en;
+  let info='';if(c&&c.d){const g=cat(c.d);info=g==='M'||g==='A'?ctype(c.d):`${g==='E'?'Extra Deck, ':''}${lvl(c.d)}, ATK ${stat(c.d.k)}/DEF ${stat(c.d.f)}`;
+   const fx=String(c.pe||c.d.e||'').replace(/\s+/g,' ').slice(0,260);if(fx)info+=': '+fx}
+  return(x[3]>1?x[3]+'x ':'')+nm+(info?' ['+info+']':'')});
+ return{nome:d[0],tier:d[1],estrategia:d[4],fortes:d[5],fracos:d[6],cartas}}
 // Linhas de base guardadas no início do duelo, para comparar com a IA de forma justa
 function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n===a),eb=E.find(x=>x.n===b);
  let h2a=0,h2b=0;hist.forEach(h=>{if(!h.decks)return;if(h.decks[0]===a&&h.decks[1]===b){h.w===0?h2a++:h2b++}else if(h.decks[0]===b&&h.decks[1]===a){h.w===1?h2a++:h2b++}});
@@ -1345,7 +1352,7 @@ function oraBase(dk){const[a,b]=dk.map(i=>DECKS[i][0]),E=elo(),ea=E.find(x=>x.n=
 // e só é descartada se alguém mexer no LP antes de ela chegar.
 let ORAPRE=null;
 function oraPedir(dk){const k=dk.join('-');if(ORAPRE&&ORAPRE.k===k&&Date.now()-ORAPRE.t<180000)return ORAPRE;
- const base=oraBase(dk);ORAPRE={k,t:Date.now(),base,p:oraPost('/prever',{a:oraDeck(dk[0]),b:oraDeck(dk[1]),ctx:base},120000)};ORAPRE.p.catch(()=>{});return ORAPRE}
+ const base=oraBase(dk);ORAPRE={k,t:Date.now(),base,p:Promise.all([oraDeck(dk[0]),oraDeck(dk[1])]).then(([a,b])=>oraPost('/prever',{a,b,ctx:base},120000))};ORAPRE.p.catch(()=>{});return ORAPRE}
 function oraPreAquecer(dk){if(oraOn()&&dk[0]!==dk[1])oraPedir(dk)}
 function oraPrever(){const D=duel;if(!D.decks||D.decks[0]===D.decks[1])return;
  if(!oraOn()){D.base=oraBase(D.decks);return}
@@ -1360,11 +1367,16 @@ function oraChip(){const a=duel&&duel.ai;if(!a||!duel.decks)return'';
  if(a.st==='erro')return`<div class="tmb ora" onclick="oraErro()"><span>🔮 ORÁCULO SEM SINAL</span><small>ver motivo ›</small></div>`;
  if(a.st==='tarde')return'';
  const f=oraFav(a.p);return`<div class="tmb ora" onclick="oraVer()"><span>🔮 ORÁCULO: <b style="color:${COR[f]}">${oraPct(a.p)}% ${NOMES[f].toUpperCase()}</b></span><small>ver análise ›</small></div>`}
-function oraBox(r,dk){const p=r.chance_a,lst=(k,a)=>(a||[]).length?`<p style="margin:4px 0;text-align:left"><b style="color:${COR[k]}">${esc(dn(dk[k]))}:</b> ${a.slice(0,3).map(esc).join(' · ')}</p>`:'';
+function oraBox(r,dk){const p=r.chance_a,nm=c=>typeof c==='string'?{carta:c,motivo:''}:c||{};
+ const lst=(k,a)=>(a||[]).length?`<div class="clh" style="text-align:left;color:${COR[k]}">🗝️ CARTAS-CHAVE · ${esc(dn(dk[k]))}</div>${a.slice(0,4).map(nm).map(c=>`<p style="margin:4px 0;text-align:left"><b>${esc(c.carta)}</b>${c.motivo?' — '+esc(c.motivo):''}</p>`).join('')}`:'';
+ const par=t=>String(t||'').split(/\n+/).filter(Boolean).map(x=>`<p style="text-align:left">${esc(x)}</p>`).join('');
+ const pl=(k,t)=>t?`<div class="clh" style="text-align:left;color:${COR[k]}">🧭 PLANO DE JOGO · ${esc(dn(dk[k]))}</div>${par(t)}`:'';
  return`<div class="orabar"><i style="width:${Math.round(p*100)}%;background:${COR[0]}"></i><i style="width:${100-Math.round(p*100)}%;background:${COR[1]}"></i></div>
  <div class="sbl" style="font-size:.85rem;margin:4px 0 10px"><span style="color:${COR[0]}">${NOMES[0]} ${Math.round(p*100)}%</span><span style="color:${COR[1]}">${100-Math.round(p*100)}% ${NOMES[1]}</span></div>
- <p style="text-align:left">${esc(r.resumo)}</p><div class="clh" style="text-align:left">🗝️ CARTAS-CHAVE</div>${lst(0,r.chaves_a)}${lst(1,r.chaves_b)}
- <div class="clh" style="text-align:left">🃏 COMO O AZARÃO VIRA</div><p style="text-align:left">${esc(r.plano_azarao)}</p>
+ <p style="text-align:left;font-weight:800">${esc(r.resumo)}</p>
+ ${r.analise?`<div class="clh" style="text-align:left">⚔️ O CONFRONTO</div>${par(r.analise)}`:''}
+ ${pl(0,r.plano_a)}${lst(0,r.chaves_a)}${pl(1,r.plano_b)}${lst(1,r.chaves_b)}
+ <div class="clh" style="text-align:left">🃏 COMO O AZARÃO VIRA</div>${par(r.plano_azarao)}
  <p class="cnote">Confiança ${esc({media:'média'}[r.confianca]||r.confianca||'?')} · ${esc(r.model||'IA')}${r.ms?' · '+Math.round(r.ms/1000)+' s':''}</p>`}
 function oraVer(){const a=duel&&duel.ai;if(!a||a.st!=='ok')return;const b=duel.base;
  modal(`<h2>🔮 PREVISÃO DO ORÁCULO</h2>${oraBox(a.r,duel.decks)}
@@ -1372,7 +1384,7 @@ function oraVer(){const a=duel&&duel.ai;if(!a||a.st!=='ok')return;const b=duel.b
  <button class="btn sec" onclick="fechar()">Fechar</button>`)}
 // Grava no histórico só o essencial (a análise completa fica junto, para rever depois)
 function oraSave(h){const D=duel;if(D.base){h.eloP=+D.base.eloP.toFixed(4);h.tierP=+D.base.tierP.toFixed(4)}
- if(D.ev&&D.ev.length)h.ev=D.ev.map(e=>({...e}));if(D.ai&&D.ai.st==='ok')h.ai={p:+D.ai.p.toFixed(4),m:D.ai.r.model,r:{resumo:D.ai.r.resumo,chaves_a:D.ai.r.chaves_a,chaves_b:D.ai.r.chaves_b,plano_azarao:D.ai.r.plano_azarao,confianca:D.ai.r.confianca}}}
+ if(D.ev&&D.ev.length)h.ev=D.ev.map(e=>({...e}));if(D.ai&&D.ai.st==='ok')h.ai={p:+D.ai.p.toFixed(4),m:D.ai.r.model,r:{resumo:D.ai.r.resumo,analise:D.ai.r.analise,plano_a:D.ai.r.plano_a,plano_b:D.ai.r.plano_b,chaves_a:D.ai.r.chaves_a,chaves_b:D.ai.r.chaves_b,plano_azarao:D.ai.r.plano_azarao,confianca:D.ai.r.confianca,model:D.ai.r.model,ms:D.ai.r.ms}}}
 function oraResBtn(h){if(!h.decks)return'';const ok=h.ai?(oraFav(h.ai.p)===h.w?'✅ O Oráculo acertou':'❌ O Oráculo errou'):'';
  return`${ok?`<p style="margin:6px 0 0;font-weight:800">${ok} (${oraPct(h.ai.p)}% ${NOMES[oraFav(h.ai.p)]})</p>`:''}${oraOn()||h.cr?`<button class="mvpb" style="margin-top:6px" onclick="oraCronica(${h.t})">📜 ${h.cr?'Ver':'Gerar'} a crônica do duelo</button>`:''}`}
 async function oraCronica(t){const h=hist.find(x=>x.t===t);if(!h)return;

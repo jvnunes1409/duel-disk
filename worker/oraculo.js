@@ -11,23 +11,35 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 3;
+const VERSAO = 4;
 const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
-const LIMITE_MS = 35_000;
+const LIMITE_MS = 45_000;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
-const MAX_BODY = 120_000;
+const MAX_BODY = 200_000;
+
+const CHAVE = {
+  type: 'OBJECT',
+  properties: {
+    carta: { type: 'STRING', description: 'Nome da carta em português, como na lista' },
+    motivo: { type: 'STRING', description: 'Por que essa carta decide este confronto (1 a 2 frases)' },
+  },
+  required: ['carta', 'motivo'],
+};
 
 const PREVER_SCHEMA = {
   type: 'OBJECT',
   properties: {
     chance_a: { type: 'NUMBER', description: 'Probabilidade de 0 a 1 de o deck A vencer' },
-    resumo: { type: 'STRING', description: 'Uma frase dizendo quem é favorito e por quê' },
-    chaves_a: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Até 3 cartas do deck A que decidem o confronto' },
-    chaves_b: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Até 3 cartas do deck B que decidem o confronto' },
-    plano_azarao: { type: 'STRING', description: 'Como o deck menos favorito pode vencer (sorte, blefe, tempo)' },
+    resumo: { type: 'STRING', description: 'Uma ou duas frases: quem é favorito e o motivo principal' },
+    analise: { type: 'STRING', description: 'Análise do confronto em 3 parágrafos separados por linha em branco: (1) ritmo e estilo de cada deck, (2) as interações diretas entre cartas dos dois decks que mais pesam, (3) o que costuma decidir o duelo' },
+    plano_a: { type: 'STRING', description: 'Plano de jogo do deck A contra este oponente: o que buscar na mão inicial, como abrir, o que guardar para responder (4 a 6 frases)' },
+    plano_b: { type: 'STRING', description: 'Plano de jogo do deck B contra este oponente (4 a 6 frases)' },
+    chaves_a: { type: 'ARRAY', items: CHAVE, description: '3 ou 4 cartas do deck A que decidem o confronto' },
+    chaves_b: { type: 'ARRAY', items: CHAVE, description: '3 ou 4 cartas do deck B que decidem o confronto' },
+    plano_azarao: { type: 'STRING', description: 'Como o deck menos favorito pode vencer: mãos ideais, blefe, tempo, cartas que viram o jogo (3 a 5 frases)' },
     confianca: { type: 'STRING', enum: ['baixa', 'media', 'alta'] },
   },
-  required: ['chance_a', 'resumo', 'chaves_a', 'chaves_b', 'plano_azarao', 'confianca'],
+  required: ['chance_a', 'resumo', 'analise', 'plano_a', 'plano_b', 'chaves_a', 'chaves_b', 'plano_azarao', 'confianca'],
 };
 
 const CRONICA_SCHEMA = {
@@ -48,7 +60,9 @@ Regras para a chance:
 - Use os dados do histórico (Elo e confronto direto) como evidência, mas com amostra pequena dê pouco peso a eles.
 - Yu-Gi-Oh! tem muita variância de mão inicial: evite chances acima de 0.85 ou abaixo de 0.15, a não ser com diferença enorme de poder.
 - Seja calibrado: 0.6 deve significar que o deck A vence cerca de 6 em cada 10 duelos.
-Cite cartas usando o nome exatamente como aparece na lista.`;
+Sobre a lista de cartas: cada linha traz o nome em português, o nome em inglês entre parênteses e, entre colchetes, tipo, status e o efeito resumido (quando disponível).
+Os jogadores usam cartas físicas em português: cite SEMPRE o nome em português, exatamente como está antes dos parênteses. Use o nome em inglês só quando a carta não tiver nome em português na lista. Nunca escreva os dois nomes juntos.
+Seja concreto: cite cartas pelo nome, explique interações específicas (qual carta responde a qual) e use os efeitos da lista em vez de suposições.`;
 
 const SYSTEM_CRONICA = `Você é o narrador do Oráculo do Duelo, de um app de Yu-Gi-Oh! usado em duelos casuais em família.
 Responda em português do Brasil, com o tom empolgado de narrador de anime, mas sem inventar jogadas.
@@ -60,7 +74,8 @@ Como narrar:
 - Quando a carta é do deck do outro jogador, quem falou provavelmente reagiu a ela (destruiu, negou, sofreu o efeito).
 - Se a carta tem vários efeitos, só afirme qual foi usado se a fala ou o LP deixarem claro.
 - Só cite cartas que aparecem nas jogadas faladas ou na MVP. Nunca invente cartas, ataques ou mãos.
-- Sem jogadas faladas, narre a partir do LP e não cite cartas.`;
+- Sem jogadas faladas, narre a partir do LP e não cite cartas.
+- Cite cartas pelo nome em português quando houver (as cartas físicas são em português).`;
 
 function cors(origin, env) {
   const allowed = (env.ALLOWED_ORIGIN || DEFAULT_ORIGIN).split(',').map(s => s.trim());
@@ -83,12 +98,13 @@ const json = (obj, status, headers) =>
 const clip = (s, n) => String(s ?? '').slice(0, n);
 
 function deckTxt(rotulo, d) {
-  const cartas = (d.cartas || []).slice(0, 80).map(c => clip(c, 80)).join('; ');
+  const cartas = (d.cartas || []).slice(0, 80).map(c => '- ' + clip(c, 420)).join('\n');
   return `${rotulo}: ${clip(d.nome, 60)} (Tier ${d.tier} de 1 a 5, 1 = mais forte, segundo os jogadores)
 Estratégia: ${clip(d.estrategia, 400)}
 Pontos fortes: ${clip(d.fortes, 300)}
 Pontos fracos: ${clip(d.fracos, 300)}
-Lista: ${cartas || 'não informada'}`;
+Lista:
+${cartas || 'não informada'}`;
 }
 
 function promptPrever(b) {
