@@ -11,7 +11,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 4;
+const VERSAO = 5;
 const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
 const LIMITE_MS = 45_000;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
@@ -62,6 +62,7 @@ Regras para a chance:
 - Seja calibrado: 0.6 deve significar que o deck A vence cerca de 6 em cada 10 duelos.
 Sobre a lista de cartas: cada linha traz o nome em português, o nome em inglês entre parênteses e, entre colchetes, tipo, status e o efeito resumido (quando disponível).
 Os jogadores usam cartas físicas em português: cite SEMPRE o nome em português, exatamente como está antes dos parênteses. Use o nome em inglês só quando a carta não tiver nome em português na lista. Nunca escreva os dois nomes juntos.
+Nos textos, chame os decks pelo nome (ex.: "Reis de Fogo"), nunca de "Deck A" ou "Deck B"; A e B servem só para os campos chance_a, plano_a, chaves_a etc.
 Seja concreto: cite cartas pelo nome, explique interações específicas (qual carta responde a qual) e use os efeitos da lista em vez de suposições.`;
 
 const SYSTEM_CRONICA = `Você é o narrador do Oráculo do Duelo, de um app de Yu-Gi-Oh! usado em duelos casuais em família.
