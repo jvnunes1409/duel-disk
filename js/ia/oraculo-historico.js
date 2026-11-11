@@ -22,7 +22,10 @@ function oraHist(t) {
   const prev = h.ai
     ? `<div class="clh" style="text-align:left">🔮 ANTES DO DUELO</div><p style="text-align:left">O Oráculo deu <b style="color:${COR[oraFav(h.ai.p)]}">${oraPct(h.ai.p)}% para ${NOMES[oraFav(h.ai.p)]}</b> (${esc(h.decks[oraFav(h.ai.p)])}). ${oraFav(h.ai.p) === h.w ? '✅ Acertou.' : '❌ Errou.'}</p>
   ${h.ai.r ? `<details class="orad"><summary>Ver a previsão completa</summary>${oraBox({ ...h.ai.r, chance_a: h.ai.p, model: h.ai.r.model || h.ai.m }, dk)}</details>` : ''}`
-    : `<p class="cnote" style="text-align:left">Este duelo foi jogado sem previsão do Oráculo.</p>`;
+    : h.rt
+      ? `<div class="clh" style="text-align:left">🔁 PREVISÃO RETROATIVA</div><p style="text-align:left">Feita depois, às cegas (sem saber o resultado): <b style="color:${COR[oraFav(h.rt.p)]}">${oraPct(h.rt.p)}% para ${NOMES[oraFav(h.rt.p)]}</b> (${esc(h.decks[oraFav(h.rt.p)])}). ${oraFav(h.rt.p) === h.w ? '✅ Acertou.' : '❌ Errou.'}</p>
+  ${h.rt.r ? `<details class="orad"><summary>Ver a previsão completa</summary>${oraBox({ ...h.rt.r, chance_a: h.rt.p, model: h.rt.r.model || h.rt.m }, dk)}</details>` : ''}`
+      : `<p class="cnote" style="text-align:left">Este duelo foi jogado sem previsão do Oráculo.</p>`;
   const v = h.vd,
     vl = v && (VDL[v.deu_logica] || VDL.equilibrado);
   const ver = v

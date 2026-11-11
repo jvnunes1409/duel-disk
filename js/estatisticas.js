@@ -172,15 +172,15 @@ function newAch(a, b) {
 }
 // ---- Força real (Elo): cada deck começa pelo tier original e ganha/perde pontos a cada duelo
 const TE = { 1: 1700, 2: 1600, 3: 1500, 4: 1400, 5: 1300 };
-function elo() {
+// H: histórico usado na conta (o teste retroativo passa só os duelos anteriores a cada duelo)
+function elo(H = hist) {
   const E = {},
     G = {};
   DECKS.forEach((d, i) => {
     E[d[0]] = TE[BT[i]] || 1500;
     G[d[0]] = 0;
   });
-  hist
-    .slice()
+  H.slice()
     .sort((a, b) => a.t - b.t)
     .forEach(h => {
       if (!h.decks) return;

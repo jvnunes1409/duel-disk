@@ -385,15 +385,36 @@ async function oraCronica(t) {
   }
 }
 // Placar: acerto (quem tinha mais de 50% venceu) e Brier (erro quadrático da chance; menor é melhor, 0,25 = chutar 50%)
+// Placar: cada previsão vira uma linha {p, eloP, tierP, w}. "Ao vivo" = feita antes do primeiro dano;
+// "retroativo" = feita depois, para duelos antigos, sem saber o resultado e com o Elo de antes daquele duelo.
+let PLV = 'tudo';
+function oraLinhas(H, fonte) {
+  const L = [];
+  H.forEach(h => {
+    if (!h.decks) return;
+    if (h.ai && fonte !== 'retro') L.push({ p: h.ai.p, eloP: h.eloP, tierP: h.tierP, w: h.w });
+    if (h.rt && fonte !== 'vivo') L.push({ p: h.rt.p, eloP: h.rt.eloP, tierP: h.rt.tierP, w: h.w });
+  });
+  return L;
+}
 function oraPlacar(H) {
-  const R = H.filter(h => h.ai && h.decks);
-  if (!R.length)
-    return oraOn()
-      ? `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card mini">Ainda não há duelos com previsão. Cada duelo sorteado com internet ganha uma previsão antes de começar, e ela é conferida aqui no fim.</div>`
+  const nV = oraLinhas(H, 'vivo').length,
+    nR = oraLinhas(H, 'retro').length,
+    cand = typeof retroCands === 'function' ? retroCands().length : 0;
+  const btnRetro =
+    oraOn() && cand
+      ? `<button class="btn" style="margin-top:8px" onclick="retroInicio()">🔁 Teste retroativo<small>prever às cegas ${cand} duelo${cand > 1 ? 's' : ''} antigo${cand > 1 ? 's' : ''}</small></button>`
       : '';
+  if (!nV && !nR)
+    return oraOn()
+      ? `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card mini">Ainda não há duelos com previsão. Cada duelo sorteado com internet ganha uma previsão antes de começar, e ela é conferida aqui no fim.${btnRetro}</div>`
+      : '';
+  if (PLV === 'vivo' && !nV) PLV = 'tudo';
+  if (PLV === 'retro' && !nR) PLV = 'tudo';
+  const R = oraLinhas(H, PLV);
   const y = h => (h.w === 0 ? 1 : 0),
     M = [
-      ['🔮 Oráculo (IA)', h => h.ai.p],
+      ['🔮 Oráculo (IA)', h => h.p],
       ['📈 Elo', h => h.eloP],
       ['🏷️ Tier', h => h.tierP],
       ['🪙 Moeda', () => 0.5],
@@ -407,7 +428,7 @@ function oraPlacar(H) {
       };
     });
   const best = Math.min(...M.filter(m => m.br != null).map(m => m.br)),
-    pct = m => (m.n.includes('Moeda') ? '—' : Math.round((m.ac / m.k) * 100) + '%');
+    pct = m => (m.n.includes('Moeda') || !m.k ? '—' : Math.round((m.ac / m.k) * 100) + '%');
   const cal = [
     [0, 0.6],
     [0.6, 0.75],
@@ -415,22 +436,40 @@ function oraPlacar(H) {
   ]
     .map(([lo, hi]) => {
       const v = R.filter(h => {
-        const c = Math.max(h.ai.p, 1 - h.ai.p);
+        const c = Math.max(h.p, 1 - h.p);
         return c >= lo && c < hi;
       });
       return v.length
         ? {
-            lo,
-            hi,
             k: v.length,
-            ac: v.filter(h => oraFav(h.ai.p) === h.w).length,
-            cf: v.reduce((s, h) => s + Math.max(h.ai.p, 1 - h.ai.p), 0) / v.length,
+            ac: v.filter(h => oraFav(h.p) === h.w).length,
+            cf: v.reduce((s, h) => s + Math.max(h.p, 1 - h.p), 0) / v.length,
           }
         : null;
     })
     .filter(Boolean);
-  return `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card"><p class="cnote" style="margin:0 0 8px;text-align:left">${R.length} duelo${R.length > 1 ? 's' : ''} com previsão feita antes do primeiro lance. Brier: erro da chance (menor é melhor; 0,25 = chutar 50%).</p>
+  const seg =
+    nV && nR
+      ? `<div class="seg" style="margin:0 0 8px">${[
+          ['tudo', `Tudo (${nV + nR})`],
+          ['vivo', `Ao vivo (${nV})`],
+          ['retro', `Retroativo (${nR})`],
+        ]
+          .map(([k, t]) => `<button class="${PLV === k ? 'on' : ''}" onclick="PLV='${k}';rS()">${t}</button>`)
+          .join('')}</div>`
+      : '';
+  const desc = {
+    vivo: 'previsões feitas antes do primeiro dano',
+    retro: 'previsões feitas depois, às cegas, para duelos antigos (com o Elo de antes de cada duelo)',
+    tudo:
+      nR && nV
+        ? 'ao vivo + retroativas'
+        : nR
+          ? 'previsões retroativas, feitas às cegas para duelos antigos'
+          : 'previsões feitas antes do primeiro dano',
+  }[PLV];
+  return `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card">${seg}<p class="cnote" style="margin:0 0 8px;text-align:left">${R.length} duelo${R.length > 1 ? 's' : ''}: ${desc}. Brier: erro da chance (menor é melhor; 0,25 = chutar 50%).</p>
  <table class="orat"><tr><th></th><th>Acerto</th><th>Brier</th></tr>${M.map(m => `<tr${m.br === best ? ' class="on"' : ''}><td>${m.n}</td><td>${pct(m)}</td><td>${m.br == null ? '—' : m.br.toFixed(3).replace('.', ',')}</td></tr>`).join('')}</table>
  ${cal.length ? `<div class="clh" style="text-align:left">🎯 CALIBRAGEM</div>${cal.map(c => `<p class="cnote" style="margin:2px 0;text-align:left">Quando disse ${Math.round(c.cf * 100)}% em média: acertou ${c.ac} de ${c.k} (${Math.round((c.ac / c.k) * 100)}%)</p>`).join('')}` : ''}
- ${R.length < 15 ? `<p class="cnote" style="text-align:left">Com menos de 15 duelos a diferença entre os métodos ainda é sorte. Continuem jogando!</p>` : ''}</div>`;
+ ${R.length < 15 ? `<p class="cnote" style="text-align:left">Com menos de 15 duelos a diferença entre os métodos ainda é sorte. Continuem jogando!</p>` : ''}${btnRetro}</div>`;
 }

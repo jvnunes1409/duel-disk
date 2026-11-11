@@ -11,11 +11,11 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 10;
+const VERSAO = 11;
 
 // Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
 // Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
-const LIMITE_PEDIDOS = 30, JANELA_MS = 10 * 60_000;
+const LIMITE_PEDIDOS = 120, JANELA_MS = 10 * 60_000;
 const VISTOS = new Map();
 function freio(ip) {
   const agora = Date.now();
