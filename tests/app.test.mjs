@@ -10,11 +10,16 @@ test('o app abre sem erros e com os 28 decks e suas listas de cartas', async () 
   const r = await pg.evaluate(() => ({
     decks: DECKS.length,
     semCartas: DECKS.filter(d => !(CARDS[d[0]] || []).length).map(d => d[0]),
+    // nenhuma lista pode ter menos de 40 cartas contando as cópias (já aconteceu de faltar carta repetida)
+    curtos: DECKS.map(d => [d[0], (CARDS[d[0]] || []).reduce((t, x) => t + (+x[3] || 1), 0)]).filter(
+      ([, n]) => n < 40
+    ),
     torneio: TORN,
   }));
   assert.equal(r.decks, 28);
   assert.deepEqual(r.semCartas, []);
-  assert.equal(r.torneio, 24, 'o torneio usa só os 24 decks originais');
+  assert.deepEqual(r.curtos, [], 'deck com menos de 40 cartas na lista');
+  assert.equal(r.torneio, 24, 'a chave do torneio tem 24 vagas');
   assert.deepEqual(erros, []);
   await fechar();
 });
