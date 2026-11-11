@@ -22,7 +22,11 @@ jobs:
           node-version: 22
       - name: Instalar dependências
         run: npm install --no-audit --no-fund
-      - name: Instalar o Chromium
-        run: npx playwright install --with-deps chromium
+      # A máquina do GitHub já vem com o Google Chrome: usá-lo evita baixar navegador e pacotes do
+      # Ubuntu a cada execução (quando os servidores do Ubuntu ficam fora, os testes não travam).
+      - name: Escolher o navegador
+        run: |
+          if [ -x /usr/bin/google-chrome ]; then echo "CHROME_PATH=/usr/bin/google-chrome" >> "$GITHUB_ENV"; google-chrome --version
+          else npx playwright install --with-deps chromium; fi
       - name: Rodar os testes
         run: npm test
