@@ -3522,7 +3522,8 @@ body.lite #bgart {
   left: 0;
   right: 0;
   top: 0;
-  bottom: calc(66px + env(safe-area-inset-bottom, 0px));
+  /* termina exatamente onde começa a barra de baixo (altura medida no aparelho, ver js/inicio.js) */
+  bottom: var(--navh, calc(66px + env(safe-area-inset-bottom, 0px)));
   z-index: 5;
   pointer-events: none;
   display: none;
