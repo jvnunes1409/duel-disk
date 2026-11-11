@@ -11,7 +11,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 8;
+const VERSAO = 9;
 
 // Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
 // Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
@@ -231,8 +231,13 @@ async function gemini(env, system, prompt, schema, temperature) {
     return await geminiModel(env, principal, system, prompt, schema, temperature, LIMITE_MS, t0);
   } catch (e) {
     // Lento demais (ou modelo indisponível): tenta o modelo leve uma vez
-    if (reserva && reserva !== principal && (e.lento || e.status === 502)) {
-      return await geminiModel(env, reserva, system, prompt, schema, temperature, LIMITE_MS, t0);
+    if (reserva && reserva !== principal && (e.lento || e.status === 502 || e.sobrecarga)) {
+      try {
+        return await geminiModel(env, reserva, system, prompt, schema, temperature, LIMITE_MS, Date.now());
+      } catch (e2) {
+        if (e.sobrecarga || e2.sobrecarga) { e2.message = 'Gemini sobrecarregado (503) nos dois modelos: ' + e2.message; e2.status = 503; }
+        throw e2;
+      }
     }
     throw e;
   }
@@ -256,7 +261,16 @@ async function geminiModel(env, model, system, prompt, schema, temperature, limi
   });
   try {
   let r;
-  try { r = await call(true); } catch (e) {
+  const sobrecarga = st => st === 503 || st === 500 || st === 429;
+  try {
+    r = await call(true);
+    // Servidor do Gemini sobrecarregado: espera um pouco e tenta de novo (até 2 vezes) antes de desistir deste modelo
+    for (const espera of [1500, 4000]) {
+      if (!sobrecarga(r.status) || Date.now() - t0 + espera > limite) break;
+      await new Promise(ok => setTimeout(ok, espera));
+      r = await call(true);
+    }
+  } catch (e) {
     const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
     err.lento = true; err.status = 504; throw err;
   }
@@ -273,6 +287,7 @@ async function geminiModel(env, model, system, prompt, schema, temperature, limi
     const t = await r.text();
     const err = new Error(`Gemini ${r.status}: ${t.slice(0, 300)}`);
     err.status = r.status === 429 ? 429 : 502;
+    err.sobrecarga = sobrecarga(r.status);
     throw err;
   }
   const j = await r.json();

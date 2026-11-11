@@ -1348,6 +1348,7 @@ function oraMotivo(m){m=String(m||'');
  if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'O celular não conseguiu falar com o Worker. Confira se o endereço está certo e se tem internet. Se o endereço estiver certo, o código do Worker pode ainda ser o Hello World (cole o oraculo.js de novo e dê Deploy).';
  if(/GEMINI_KEY/.test(m))return'O Worker está no ar, mas a chave não foi encontrada. Em Settings → Variables and Secrets, confira se o nome é exatamente GEMINI_KEY, e clique em Deploy depois de salvar.';
  if(/API_KEY_INVALID|API key not valid|PERMISSION_DENIED|403/.test(m))return'A chave do Gemini foi recusada. Crie uma nova no AI Studio, cole em GEMINI_KEY de novo e dê Deploy.';
+ if(/503|UNAVAILABLE|high demand|overloaded|sobrecarregado/i.test(m))return'Os servidores do Google (Gemini) estão sobrecarregados agora. Não é problema do app: o Oráculo já tentou de novo sozinho e com o modelo reserva. Espere alguns minutos e toque em Tentar de novo.';
  if(/429|RESOURCE_EXHAUSTED|quota/i.test(m))return'O limite grátis do Gemini acabou por agora. Espere alguns minutos e tente de novo.';
  if(/404|not found|is not supported/i.test(m)&&/model/i.test(m))return'O modelo da IA não existe mais. Crie a variável MODEL (texto) com gemini-3.8-flash ou outro modelo listado no AI Studio.';
  if(/origem não permitida/.test(m))return'O Worker recusou o endereço do app. Crie a variável ALLOWED_ORIGIN com https://jvnunes1409.github.io';
@@ -1415,7 +1416,7 @@ async function oraCronica(t){const h=hist.find(x=>x.t===t);if(!h)return;
  try{const r=await oraPost('/cronica',{nomes:NOMES,decks:h.decks,w:h.w,dur:h.dur,turnos:h.tn,lp:h.lp,mvp:h.mvp&&h.mvp.n,
    previsao:h.ai?{chance_a:h.ai.p,resumo:h.ai.r&&h.ai.r.resumo}:null,jogadas:await vParaIA(h),log:(h.log||[]).map(e=>({tn:e.tn,s:e.t/1000,p:e.p,d:e.d,lp:e.lp}))},40000);
   h.cr={titulo:r.titulo,cronica:r.cronica,virada:r.virada,oraculo:r.oraculo};save();show()}
- catch(e){modal(`<h2>📜 CRÔNICA</h2><p>Não consegui falar com o Oráculo agora.</p><p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraCronica(${t})">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}}
+ catch(e){const mo=oraMotivo(e.message);modal(`<h2>📜 CRÔNICA</h2><p>Não consegui falar com o Oráculo agora.</p>${mo?`<p style="text-align:left">${esc(mo)}</p>`:''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraCronica(${t})">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}}
 // Placar: acerto (quem tinha mais de 50% venceu) e Brier (erro quadrático da chance; menor é melhor, 0,25 = chutar 50%)
 function oraPlacar(H){const R=H.filter(h=>h.ai&&h.decks);if(!R.length)return oraOn()?`<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card mini">Ainda não há duelos com previsão. Cada duelo sorteado com internet ganha uma previsão antes de começar, e ela é conferida aqui no fim.</div>`:'';
  const y=h=>h.w===0?1:0,M=[['🔮 Oráculo (IA)',h=>h.ai.p],['📈 Elo',h=>h.eloP],['🏷️ Tier',h=>h.tierP],['🪙 Moeda',()=>.5]].map(([n,f])=>{const v=R.filter(h=>typeof f(h)==='number');
