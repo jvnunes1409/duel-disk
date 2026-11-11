@@ -4,15 +4,26 @@
 
 **[▶️ Abrir a demonstração](https://jvnunes1409.github.io/duel-disk/?demo)** (com o histórico real dos nossos duelos; nada é salvo no seu navegador) · **[Abrir o app](https://jvnunes1409.github.io/duel-disk/)** · funciona no navegador do celular e pode ser instalado como app (PWA)
 
-Eu e meu sobrinho jogamos Yu-Gi-Oh! com cartas físicas e uma coleção de 28 decks. O DuelDisk começou como um contador de pontos de vida e virou o companheiro de mesa dos nossos duelos. Ele sorteia os decks de forma justa, conta o LP, organiza torneios e guarda o histórico. Tem também um **Oráculo de IA** que prevê cada duelo, ouve as jogadas faladas e, no fim, explica se o resultado "deu a lógica".
+Eu e meu sobrinho Douglas jogamos Yu-Gi-Oh! com cartas físicas e uma coleção de 28 decks. O DuelDisk começou como um contador de pontos de vida com sorteio e virou o companheiro de mesa dos nossos duelos: sorteia os decks de forma justa, conta o LP, organiza ligas e torneios, guarda o histórico e explica a estratégia de cada deck. Tem também um **Oráculo de IA** que prevê cada duelo, ouve as jogadas faladas e, no fim, explica se o resultado "deu a lógica".
 
 <!-- Prints: docs/duelo.png, docs/previsao.png, docs/placar.png, docs/chaveamento.png -->
 
 ---
 
-## O problema
+## Como nasceu
 
-Num duelo casual de cartas físicas, nada fica registrado. Não dá para saber quais decks são mais fortes de verdade, se a nossa divisão em tiers faz sentido, nem aprender com os erros de um duelo. A pergunta que guiou o projeto foi:
+Com mais de 20 decks na coleção, o sorteio do duelo era um ritual improvisado: alguém de casa escolhia dois números de 1 a 24, contávamos os decks na estante e jogávamos com os que saíam. O processo era lento e, pior, injusto. Muitas vezes caía um deck muito forte contra um já ultrapassado, e o duelo estava decidido antes de começar.
+
+Os outros problemas vinham depois do sorteio:
+- **Controle:** os apps de contador de LP disponíveis eram genéricos e pouco atraentes, e não existia um lugar para guardar o histórico dos duelos.
+- **Conhecer os decks:** a cada deck novo comprado, faltava tempo para abrir as cartas físicas e estudar a estratégia. Um app que mostra a lista de cartas, a estratégia principal e as cartas-chave resolve isso na hora.
+- **Motivação:** ligas, torneios e estatísticas dão um objetivo para cada duelo e deixam o jogo mais divertido.
+
+Precisávamos de algo feito para a nossa necessidade específica. Pegamos um problema nosso e resolvemos com a ajuda da IA, tanto no desenvolvimento quanto dentro do próprio app. O resultado foi além de um contador com sorteio: virou uma combinação de recursos que não encontramos em nenhum outro app, e que continua melhorando a cada duelo. O próximo passo é registrar cada jogada da partida.
+
+## O problema que a IA resolve
+
+Num duelo casual de cartas físicas, nada fica registrado. Não dá para saber quais decks são mais fortes de verdade, se a nossa divisão em tiers faz sentido, nem aprender com os erros de um duelo. A pergunta que guiou a parte de IA do projeto foi:
 
 > **Uma IA consegue prever e explicar duelos melhor do que a nossa própria intuição sobre os decks? E como provar isso?**
 
