@@ -1344,23 +1344,23 @@ summary {
   margin: 6px -6px 0;
   padding: 0 6px 6px;
 }
-.bk {
+.chave {
   position: relative;
 }
-.bk * {
+.chave * {
   box-sizing: border-box;
 }
-.bk svg {
+.chave svg {
   position: absolute;
   left: 0;
   top: 0;
 }
-.bk path {
+.chave path {
   fill: none;
   stroke: #2c58b8;
   stroke-width: 2;
 }
-.bk path.on {
+.chave path.on {
   stroke: var(--gd);
 }
 .bk-h {
@@ -1414,32 +1414,32 @@ summary {
 .bk-r b {
   margin-left: auto;
 }
-.bk .bk-art {
+.chave .bk-art {
   width: 20px;
   height: 20px;
   flex: none;
   border-width: 1px;
   border-radius: 4px;
 }
-.bk .bk-art > *:not(span) {
+.chave .bk-art > *:not(span) {
   display: none;
 }
-.bk .bk-art span {
+.chave .bk-art span {
   font-size: 0.55rem;
 }
-.bk .bk-vz {
+.chave .bk-vz {
   display: block;
   background: #1b3474;
   border: 1px dashed #2c58b8;
 }
-.bk .bk-big {
+.chave .bk-big {
   width: 54px;
   height: 54px;
   border-width: 2px;
   border-radius: 8px;
   margin-bottom: 2px;
 }
-.bk .bk-big span {
+.chave .bk-big span {
   font-size: 1.4rem;
 }
 .bk-g {

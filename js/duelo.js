@@ -115,10 +115,17 @@ function rTurn() {
   tfrUpd();
 }
 // ---- Moldura da cor do turno, aviso na troca e lembrete para passar o turno
+// Lembrete: aparece 2 minutos depois do início do turno. Cada "Ainda não" adia mais
+// (2, 3 e depois 4 minutos), para dar tempo de ler os efeitos das cartas sem o celular tocar toda hora.
+const NAG_ESPERA = 120000,
+  NAG_ADIA = [120000, 180000, 240000],
+  NAG_REPETE = 60000;
 let NAG = 0,
   NAGT = 0,
   TNL = 0,
-  LPL = 0;
+  LPL = 0,
+  NAGW = NAG_ESPERA,
+  NAGS = 0;
 function tfrUpd() {
   const f = $('#tfr');
   if (!f) return;
@@ -135,6 +142,8 @@ function tnReset() {
   LPL = 0;
   NAG = 0;
   NAGT = 0;
+  NAGW = NAG_ESPERA;
+  NAGS = 0;
   const t = $('#tnp');
   if (t) t.classList.remove('on');
 }
@@ -175,6 +184,9 @@ function nagSnooze() {
   NAG = 0;
   TNL = Date.now();
   LPL = 0;
+  NAGW = NAG_ADIA[Math.min(NAGS, NAG_ADIA.length - 1)];
+  NAGS++;
+  toast(`⏳ Lembro de novo em ${NAGW / 60000} minutos`);
   rTurn();
   nagUI();
 }
@@ -205,9 +217,9 @@ function nagCheck() {
     }
     const n = Date.now();
     if (CFG.tnag && !RV && !$('#fx').classList.contains('on')) {
-      const due = (LPL && n - LPL >= 12000) || n - TNL >= 90000;
+      const due = n - TNL >= NAGW;
       if (due && !NAG) nagOn();
-      else if (NAG && n - NAGT >= 30000) {
+      else if (NAG && n - NAGT >= NAG_REPETE) {
         NAGT = n;
         nagBuzz();
       }

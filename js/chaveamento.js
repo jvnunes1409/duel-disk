@@ -91,6 +91,6 @@ function chaveHTML(S) {
     const hd = ['1ª RODADA', '2ª RODADA', 'GRUPOS', 'SEMIFINAIS', 'FINAL', 'CAMPEÃO']
       .map((t, c) => `<div class="bk-h" style="left:${X(c)}px;width:${BW}px">${t}</div>`)
       .join('');
-    return `<div class="bk-wrap"><div class="bk" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${ln}</svg>${hd}${bx}</div></div><p class="cnote" style="margin:4px 0 8px">Arraste para o lado para ver até a final. Toque num duelo jogado para ver a análise do Oráculo.</p>`;
+    return `<div class="bk-wrap"><div class="chave" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${ln}</svg>${hd}${bx}</div></div><p class="cnote" style="margin:4px 0 8px">Arraste para o lado para ver até a final. Toque num duelo jogado para ver a análise do Oráculo.</p>`;
   });
 }

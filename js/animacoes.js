@@ -145,7 +145,7 @@ function cfgM() {
  <div class="opt"><b>🔔 Lembrete para passar o turno</b>${sg('tnag', [
    [1, 'Ligado'],
    [0, 'Desligado'],
- ])}<p class="cnote">Se o LP mudou e o turno não foi passado em 12 s (ou nada acontece por 1,5 min), aparece uma caixa grande “Já passou o turno?” com o botão de passar, a borda pisca, a tela vibra e toca um som, repetindo a cada 30 s.</p><button class="btn" style="margin-top:6px" onclick="nagTest()">🔔 Testar lembrete agora</button></div>
+ ])}<p class="cnote">Depois de 2 minutos no mesmo turno aparece uma caixa grande “Já passou o turno?” com o botão de passar, a borda pisca e o celular vibra. “Ainda não” adia: 2 minutos, depois 3, depois 4.</p><button class="btn" style="margin-top:6px" onclick="nagTest()">🔔 Testar lembrete agora</button></div>
  <div class="opt"><b>☀️ Manter a tela ligada no duelo</b>${sg('wake', [
    [1, 'Sim'],
    [0, 'Não'],
