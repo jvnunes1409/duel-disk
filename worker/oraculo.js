@@ -12,7 +12,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 14;
+const VERSAO = 15;
 
 // O que os jogadores informaram depois do duelo: a carta MVP (com efeito e dono) e um relato curto.
 // Aceita o formato antigo (MVP só com o nome) e o novo (objeto).
@@ -163,12 +163,38 @@ const VEREDITO_SCHEMA = {
   required: ['deu_logica', 'titulo', 'veredito', 'fator_decisivo', 'licao_a', 'licao_b'],
 };
 
+// Consistência: a IA só CLASSIFICA as cartas (o que ela faz bem, lendo os efeitos);
+// a probabilidade de abrir bem é calculada pelo app com a fórmula hipergeométrica (conta exata).
+const PARTIDA_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    partida: {
+      type: 'ARRAY',
+      items: { type: 'INTEGER' },
+      description: 'Números das cartas de partida (ver as instruções)',
+    },
+    tijolos: {
+      type: 'ARRAY',
+      items: { type: 'INTEGER' },
+      description: 'Números das cartas que travam a mão inicial (ver as instruções)',
+    },
+    resumo: { type: 'STRING', description: 'Uma frase: o que este deck precisa ter na mão para começar a jogar' },
+  },
+  required: ['partida', 'tijolos', 'resumo'],
+};
+const SYSTEM_PARTIDA = `Você é um analista de Yu-Gi-Oh! TCG. Recebe o Deck Principal de um deck casual (Structure Deck ou deck de personagem), com as cartas numeradas e o efeito de cada uma.
+Responda em português do Brasil e classifique as cartas pelo número:
+- partida: cartas que, sozinhas na mão inicial, já colocam a estratégia do deck para andar no primeiro ou segundo turno. Exemplos: buscadores do arquétipo, monstros de Invocação-Normal que geram vantagem ou invocam outros, magias que buscam ou invocam peças-chave. NÃO inclua cartas genéricas de resposta (armadilhas de negação, remoção, Effect Veiler) nem cartas que só funcionam com outras já em campo.
+- tijolos: cartas que ficam "mortas" se vierem na mão inicial sem preparo. Exemplos: monstros de nível 7 ou mais sem forma fácil de invocar, cartas que só servem no cemitério ou depois de combos, peças de vitória alternativa. Uma carta não pode ser partida e tijolo ao mesmo tempo.
+Use apenas os números da lista. Seja criterioso: um deck casual costuma ter de 4 a 14 cartas de partida (contando as cópias).`;
+
 const SYSTEM_PREVER = `Você é o Oráculo do Duelo, analista de Yu-Gi-Oh! TCG para duelos casuais entre dois jogadores com decks físicos (Structure Decks e decks de personagem, sem side deck).
 Responda em português do Brasil.
 Regras para a chance:
 - Baseie-se nas listas de cartas: consistência, poder das cartas, interação com o deck adversário e matchups ruins (ex.: remoção em massa contra deck que enche o campo).
 - Use os dados do histórico (Elo e confronto direto) como evidência, mas com amostra pequena dê pouco peso a eles.
 - Yu-Gi-Oh! tem muita variância de mão inicial: evite chances acima de 0.85 ou abaixo de 0.15, a não ser com diferença enorme de poder.
+- Quando vier a CONSISTÊNCIA de um deck, ela é um cálculo exato (probabilidade de a mão inicial ter pelo menos uma carta de partida e de vir com tijolos). Use-a: um deck mais forte mas pouco consistente perde vários duelos só pela mão; um deck mais fraco e muito consistente ganha chances. Mencione isso na análise quando a diferença entre os dois for relevante.
 - Seja calibrado: 0.6 deve significar que o deck A vence cerca de 6 em cada 10 duelos.
 Sobre a lista de cartas: cada linha traz o nome em português, o nome em inglês entre parênteses e, entre colchetes, tipo, status e o efeito resumido (quando disponível).
 Os jogadores usam cartas físicas em português: cite SEMPRE o nome em português, exatamente como está antes dos parênteses. Use o nome em inglês só quando a carta não tiver nome em português na lista. Nunca escreva os dois nomes juntos.
@@ -270,6 +296,23 @@ const json = (obj, status, headers) =>
 
 const clip = (s, n) => String(s ?? '').slice(0, n);
 
+const pctN = x => (Number.isFinite(+x) ? Math.round(Math.min(1, Math.max(0, +x)) * 100) + '%' : '?');
+function consistenciaTxt(c) {
+  if (!c || !Number.isFinite(+c.abre5)) return '';
+  const n = k => Math.max(0, Math.min(99, Math.round(+c[k] || 0)));
+  return `
+Consistência (cálculo exato, Deck Principal de ${n('cartas')} cartas, ${n('partida')} cartas de partida e ${n('tijolos')} tijolos contando as cópias): abre com pelo menos uma carta de partida ${pctN(c.abre5)} das vezes com 5 cartas na mão (quem começa) e ${pctN(c.abre6)} com 6; chance de 2 ou mais tijolos na mão inicial: ${pctN(c.tijolo2)}.`;
+}
+function promptPartida(b) {
+  const cartas = (b.cartas || [])
+    .slice(0, 60)
+    .map((c, i) => `${i + 1}. ${clip(c, 420)}`)
+    .join('\n');
+  return `Deck: ${clip(b.nome, 60)}
+Estratégia: ${clip(b.estrategia, 400)}
+Deck Principal (o número antes do ponto identifica a carta; "3x" = três cópias):
+${cartas}`;
+}
 function deckTxt(rotulo, d) {
   const cartas = (d.cartas || [])
     .slice(0, 80)
@@ -278,7 +321,7 @@ function deckTxt(rotulo, d) {
   return `${rotulo}: ${clip(d.nome, 60)} (Tier ${d.tier} de 1 a 5, 1 = mais forte, segundo os jogadores)
 Estratégia: ${clip(d.estrategia, 400)}
 Pontos fortes: ${clip(d.fortes, 300)}
-Pontos fracos: ${clip(d.fracos, 300)}
+Pontos fracos: ${clip(d.fracos, 300)}${consistenciaTxt(d.consistencia)}
 Lista:
 ${cartas || 'não informada'}`;
 }
@@ -461,6 +504,16 @@ export default {
         const { data, model, ms } = await gemini(env, SYSTEM_PREVER, promptPrever(body), PREVER_SCHEMA, 0.3);
         const chance = Math.min(0.95, Math.max(0.05, Number(data.chance_a) || 0.5));
         return json({ ...data, chance_a: chance, model, ms }, 200, headers);
+      }
+      if (path === '/partida') {
+        const n = Array.isArray(body.cartas) ? Math.min(60, body.cartas.length) : 0;
+        if (!n) return json({ error: 'faltam as cartas' }, 400, headers);
+        const { data, model } = await gemini(env, SYSTEM_PARTIDA, promptPartida(body), PARTIDA_SCHEMA, 0.1);
+        // só números válidos, sem repetir, e nunca a mesma carta nas duas listas (números de 1 a n viram 0 a n-1)
+        const limpa = a => [...new Set((Array.isArray(a) ? a : []).map(Number))].filter(x => Number.isInteger(x) && x >= 1 && x <= n).map(x => x - 1);
+        const partida = limpa(data.partida),
+          tijolos = limpa(data.tijolos).filter(x => !partida.includes(x));
+        return json({ partida, tijolos, resumo: clip(data.resumo, 300), model }, 200, headers);
       }
       if (path === '/diagnostico') {
         // Testa cada modelo com um pedido mínimo e mede o tempo: mostra no app o que está funcionando agora

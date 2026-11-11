@@ -176,3 +176,20 @@ test('segurança: respostas do Worker têm cabeçalhos de proteção e nunca exp
   const txt = await r.text();
   assert.ok(!txt.includes('chave-teste'), 'a chave não aparece na resposta');
 });
+
+test('consistência: /partida só devolve números válidos e a previsão leva o cálculo como fato', async () => {
+  globalThis.fetch = async () => respostaGemini({ partida: [1, 2, 2, 99, -1, 1.5], tijolos: [2, 3], resumo: 'r' });
+  const r = await pedir('/partida', { nome: 'A', estrategia: 'e', cartas: ['3x Carta 1', 'Carta 2', 'Carta 3'] });
+  assert.equal(r.status, 200);
+  const j = await r.json();
+  assert.deepEqual(j.partida, [0, 1], 'sem repetidos e só cartas que existem (1 a 3 viram 0 a 2)');
+  assert.deepEqual(j.tijolos, [2], 'uma carta não é partida e tijolo ao mesmo tempo');
+  let txt;
+  globalThis.fetch = async (url, op) => {
+    txt = JSON.parse(op.body).contents[0].parts[0].text;
+    return respostaGemini(PREVISAO);
+  };
+  const a = { ...deck('A'), consistencia: { cartas: 40, partida: 8, tijolos: 3, abre5: 0.694, abre6: 0.764, tijolo2: 0.03 } };
+  await pedir('/prever', { a, b: deck('B') });
+  assert.match(txt, /Consistência \(cálculo exato.*69% das vezes com 5 cartas.*76% com 6/);
+});

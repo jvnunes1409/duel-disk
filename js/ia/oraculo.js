@@ -111,6 +111,25 @@ function oraErro() {
 }
 // Lista para a IA: nome em português (o que vocês têm na mão), nome em inglês entre parênteses, tipo/status e o efeito resumido
 const oraTO = (p, ms) => Promise.race([p, new Promise(r => setTimeout(() => r(null), ms))]);
+// Uma linha da lista: "3x Nome PT (Nome EN) [tipo, status: efeito]"
+function oraLinha(x, c) {
+  const pt = (typeof x[0] === 'string' && x[0]) || (c && c.pt) || '',
+    en = x[1],
+    nm = pt && pt !== en ? `${pt} (${en})` : en;
+  let info = '';
+  if (c && c.d) {
+    const g = cat(c.d);
+    info =
+      g === 'M' || g === 'A'
+        ? ctype(c.d)
+        : `${g === 'E' ? 'Extra Deck, ' : ''}${lvl(c.d)}, ATK ${stat(c.d.k)}/DEF ${stat(c.d.f)}`;
+    const fx = String(c.pe || c.d.e || '')
+      .replace(/\s+/g, ' ')
+      .slice(0, 260);
+    if (fx) info += ': ' + fx;
+  }
+  return (x[3] > 1 ? x[3] + 'x ' : '') + nm + (info ? ' [' + info + ']' : '');
+}
 async function oraDeck(i) {
   const d = DECKS[i],
     L = CARDS[d[0]] || [];
@@ -118,26 +137,20 @@ async function oraDeck(i) {
   try {
     det = await oraTO(getDeck(d[0]), 5000);
   } catch (e) {}
-  const cartas = L.map((x, k) => {
-    const c = det && det[k],
-      pt = (typeof x[0] === 'string' && x[0]) || (c && c.pt) || '',
-      en = x[1],
-      nm = pt && pt !== en ? `${pt} (${en})` : en;
-    let info = '';
-    if (c && c.d) {
-      const g = cat(c.d);
-      info =
-        g === 'M' || g === 'A'
-          ? ctype(c.d)
-          : `${g === 'E' ? 'Extra Deck, ' : ''}${lvl(c.d)}, ATK ${stat(c.d.k)}/DEF ${stat(c.d.f)}`;
-      const fx = String(c.pe || c.d.e || '')
-        .replace(/\s+/g, ' ')
-        .slice(0, 260);
-      if (fx) info += ': ' + fx;
-    }
-    return (x[3] > 1 ? x[3] + 'x ' : '') + nm + (info ? ' [' + info + ']' : '');
-  });
-  return { nome: d[0], tier: d[1], estrategia: d[4], fortes: d[5], fracos: d[6], cartas };
+  const cartas = L.map((x, k) => oraLinha(x, det && det[k]));
+  // Consistência (conta exata da mão inicial). Se a IA ainda não classificou este deck, classifica agora;
+  // se não der em 30 s, a previsão segue sem ela.
+  let consist = null;
+  if (det && typeof consistencia === 'function') {
+    const main = L.map((x, k) => ({ x, c: det[k] }))
+      .filter(({ c }) => !(c && c.d && cat(c.d) === 'E'))
+      .map(({ x, c }) => ({ en: x[1], q: x[3] || 1, txt: oraLinha(x, c) }));
+    try {
+      const r = await oraTO(consistencia(d[0], d[4], main), 30000);
+      if (r) consist = { cartas: r.cartas, partida: r.partida, tijolos: r.tijolos, abre5: r.abre5, abre6: r.abre6, tijolo2: r.tijolo2 };
+    } catch (e) {}
+  }
+  return { nome: d[0], tier: d[1], estrategia: d[4], fortes: d[5], fracos: d[6], cartas, consistencia: consist };
 }
 // Linhas de base guardadas no início do duelo, para comparar com a IA de forma justa
 function oraBase(dk) {

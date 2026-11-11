@@ -4027,3 +4027,29 @@ body.demo .stabs {
   font-size: 0.85rem;
   color: var(--mut);
 }
+
+/* ---- Consistência do deck (detalhes do deck) */
+.cons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+  margin: 4px 0 6px;
+}
+.cons > div {
+  padding: 8px 4px;
+  border-radius: 12px;
+  background: #0a1740;
+  border: 1px solid #1d3b80;
+  text-align: center;
+}
+.cons b {
+  display: block;
+  color: var(--gd);
+  font-size: 1.25rem;
+}
+.cons small {
+  display: block;
+  color: var(--mut);
+  font-size: 0.68rem;
+  line-height: 1.25;
+}

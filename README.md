@@ -35,6 +35,8 @@ No instante do sorteio, o app manda para a IA os dois decks com **todas as carta
 - o plano de jogo de cada deck e as cartas-chave, com o motivo de cada uma;
 - como o deck menos favorito pode virar.
 
+**Consistência calculada, não "achada":** Yu-Gi-Oh! depende muito da mão inicial. A IA lê os efeitos e marca, uma vez por deck, as **cartas de partida** (as que sozinhas já colocam a estratégia para andar) e os **tijolos** (as que travam a mão). Com isso, o app faz a **conta exata** (distribuição hipergeométrica): a chance de abrir com pelo menos uma carta de partida com 5 e com 6 cartas na mão, e a chance de vir com 2 ou mais tijolos. Esses números vão para a previsão como fatos. Cada um faz o que faz melhor: o modelo entende texto, o código faz conta.
+
 **Regra anti-trapaça:** a previsão só vale se chegar **antes do primeiro dano**. Se alguém mexer no LP antes, ela é descartada, para a IA nunca "ver" o duelo começando.
 
 ### 2. Jogadas por voz, sem modelo de linguagem
@@ -75,10 +77,10 @@ Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **24 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **26 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
-- **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
+- **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça); a consistência usa a fórmula exata e a classificação de cada deck é feita uma vez só.
 - **Teste retroativo:** **nunca envia o resultado** para a IA e usa só os duelos anteriores no Elo.
 - **Worker:** saída em JSON estruturado, nova tentativa e modelo reserva quando o Gemini fica sobrecarregado, bloqueio de outros sites e limite de pedidos.
 - **Segurança:** a política de conteúdo (CSP) bloqueia scripts de outros sites, as respostas do Worker nunca expõem a chave, e um arquivo de backup malicioso não consegue injetar código no app, e o Worker recusa pedidos de outros sites (inclusive `localhost`, a menos que seja liberado).
@@ -146,6 +148,7 @@ js/
   torneio.js, liga.js       torneio com preliminar e liga de pontos corridos
   chaveamento.js            chave visual do torneio
   ia/oraculo.js             previsão, crônica e placar da IA contra Elo, tier e moeda
+  ia/consistencia.js        chance de a mão inicial abrir jogando (IA classifica, o app calcula)
   ia/oraculo-historico.js   veredito depois do duelo
   ia/voz.js                 reconhecimento de cartas faladas (algoritmo próprio, sem IA externa)
   ...                       sons, artes, animações, dado e moeda, lista de cartas

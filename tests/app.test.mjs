@@ -162,8 +162,9 @@ test('Oráculo: a previsão sai no sorteio e é descartada se o LP mudar antes d
     goTab('duelo');
   });
   await esperar(pg, () => duel.ai && duel.ai.st === 'ok');
-  assert.equal(pedidos[0].rota, '/prever');
-  assert.ok(pedidos[0].corpo.a.cartas.length > 20, 'a IA recebe a lista de cartas');
+  const prev = pedidos.find(p => p.rota === '/prever');
+  assert.ok(prev, 'a previsão foi pedida');
+  assert.ok(prev.corpo.a.cartas.length > 20, 'a IA recebe a lista de cartas');
   assert.match(await pg.textContent('#tmb'), /62% DOUGLAS/);
   atraso = 1500;
   await pg.evaluate(() => {
@@ -176,6 +177,43 @@ test('Oráculo: a previsão sai no sorteio e é descartada se o LP mudar antes d
     'tarde',
     'previsão que chega depois do primeiro dano não vale'
   );
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
+test('consistência: a IA marca as cartas de partida, o app faz a conta exata e a previsão recebe os números', async () => {
+  const { pg, erros, pedidos, fechar } = await abrirApp({
+    cartas: nomes =>
+      nomes.map((n, k) => ({ id: k + 1, name: n, type: 'Effect Monster', atk: 1000, def: 1000, level: 4, desc: 'x', card_images: [{}] })),
+    oraculo: (rota, corpo) =>
+      rota === '/partida'
+        ? { partida: [0, 1, 2], tijolos: [3], resumo: 'Precisa de um buscador.' }
+        : rota === '/prever'
+          ? PREVISAO
+          : { status: 404, json: { error: 'rota não encontrada' } },
+  });
+  const r = await pg.evaluate(async () => {
+    const conta = [hiper(40, 8, 5), hiper(40, 8, 6), hiper(40, 4, 5)].map(x => Math.round(x * 1000) / 1000);
+    newDuel([0, 1]);
+    goTab('duelo');
+    return conta;
+  });
+  assert.deepEqual(r, [0.694, 0.764, 0.427], 'fórmula hipergeométrica');
+  await esperar(pg, () => duel.ai && duel.ai.st === 'ok', { timeout: 20000 });
+  const prev = pedidos.find(p => p.rota === '/prever').corpo;
+  const c = prev.a.consistencia;
+  assert.ok(c && c.abre5 > 0 && c.abre5 < 1 && c.abre6 > c.abre5, 'a previsão recebe a consistência calculada');
+  assert.equal(pedidos.filter(p => p.rota === '/partida').length, 2, 'uma classificação por deck');
+  // a classificação fica guardada: a próxima previsão com os mesmos decks não pergunta de novo
+  await pg.evaluate(() => {
+    ORAPRE = null;
+    newDuel([0, 1]);
+  });
+  await esperar(pg, () => duel.ai && duel.ai.st === 'ok', { timeout: 20000 });
+  assert.equal(pedidos.filter(p => p.rota === '/partida').length, 2);
+  // detalhes do deck mostram os números
+  await pg.evaluate(() => info(0));
+  assert.match(await pg.textContent('#consD'), /abre jogando/);
   assert.deepEqual(erros, []);
   await fechar();
 });
@@ -200,13 +238,15 @@ test('teste retroativo: nunca envia o resultado e usa só os duelos anteriores n
     window.setTimeout = (f, ms, ...a) => st(f, ms === 2500 ? 0 : ms, ...a);
   });
   await pg.evaluate(() => retroRodar());
-  assert.equal(pedidos.length, 5);
+  // além das previsões, cada deck pode ter um pedido de classificação de cartas (consistência)
+  const prevs = pedidos.filter(p => p.rota !== '/partida');
+  assert.equal(prevs.length, 5);
   for (const p of pedidos) {
     const txt = JSON.stringify(p.corpo);
     assert.ok(!/"w":|"lp":|venc/.test(txt), 'o resultado não pode ir para a IA');
   }
   assert.deepEqual(
-    pedidos.map(p => p.corpo.ctx.jogos[0]),
+    prevs.map(p => p.corpo.ctx.jogos[0]),
     [0, 1, 2, 3, 4],
     'cada previsão só conhece os duelos anteriores'
   );
