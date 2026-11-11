@@ -84,7 +84,34 @@ As métricas, em *Stats → 🔮 Oráculo*:
 
 Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode ser sorte.
 
-<!-- Resultados: preencher com os números do Placar do Oráculo antes da apresentação -->
+### Resultados até agora
+
+Placar de 11/11/2026, com **14 duelos**: 4 com previsão ao vivo (feita antes do primeiro dano) e 10 retroativos (duelos antigos previstos às cegas, sem a IA saber o resultado e com o Elo calculado só com os duelos anteriores).
+
+| Método | Acertou o vencedor | Nota (0 a 100) |
+|---|---|---|
+| 🔮 Oráculo (IA) | 10 de 14 (71%) | 20 |
+| 📈 Elo | 10 de 14 (71%) | 25 |
+| 🏷️ Tier (nossa lista) | 10 de 14 (71%) | 26 |
+| 🪙 Moeda | cerca de 50% | 0 |
+
+*A nota converte o Brier score: 0 equivale a chutar 50% sempre e 100 a acertar tudo com 100% de certeza.*
+
+**Leitura honesta:**
+- **Todos os métodos ficam bem acima do acaso**, mas **a IA ainda não supera a nossa própria lista de tiers**. Acerta o mesmo tanto, porém com menos convicção nos acertos.
+- **A confiança da IA aponta na direção certa:** quando ela diz "em dúvida" (50% a 59%), acerta 57%; quando diz "confiante" (75% ou mais), acerta 80%.
+- **Ela contrariou a nossa lista de tiers em 3 duelos** e acertou 1. Essa é a métrica que mais interessa: quando a IA discorda de quem conhece os decks, quem tem razão?
+- Com 14 duelos, as diferenças ainda podem ser sorte. A consistência calculada da mão inicial entrou nas previsões depois desses duelos: se ela melhora a nota, é a próxima coisa que os dados vão responder.
+
+## O que aprendi
+
+- **IA convincente não é IA que acerta.** As análises do Oráculo são detalhadas e soam muito seguras, mas no placar ele empata com uma lista de tiers feita à mão. Sem medir, eu teria concluído que a IA era melhor.
+- **Saber quando não usar IA.** O reconhecimento de cartas por voz ficou melhor como algoritmo próprio (instantâneo, sem internet e sem custo) do que seria com um modelo de linguagem.
+- **Cada um faz o que faz melhor.** Modelo de linguagem é bom para ler e interpretar efeitos de cartas, mas ruim de conta. Por isso a IA só classifica as cartas e a probabilidade da mão inicial é calculada no código.
+- **Modelos mudam e caem.** O modelo que eu usava foi fechado para novos usuários no meio do projeto, e o Gemini às vezes fica sobrecarregado. A resposta foi deixar o modelo numa configuração, ter nova tentativa automática e um modelo reserva, e mostrar o erro real em vez de um genérico "sem sinal".
+- **Latência é experiência do usuário.** A primeira versão da previsão chegava depois do duelo começar. Começar o pedido no toque do Sortear, antes da animação, resolveu sem trocar de modelo.
+- **A integridade dos dados vem antes do modelo.** A regra anti-trapaça, o teste retroativo às cegas e não misturar duelos de teste com duelos reais são o que torna o placar confiável. Uma lista de cartas sem as cópias repetidas já bastava para distorcer a consistência, e por isso virou teste automático.
+- **Testes automáticos pegam o que o olho não pega.** Um estilo do chaveamento "vazou" para a moeda, e a proteção de segurança quebrou uma ferramenta dos testes. Os dois viraram testes para não voltar.
 
 ## Testes automáticos
 
