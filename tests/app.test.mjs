@@ -293,3 +293,64 @@ test('segurança: um arquivo de backup malicioso não injeta HTML no app', async
   assert.deepEqual(erros, []);
   await fechar();
 });
+
+test('modo demonstração: mostra os dados da demonstração e não toca nos dados de quem visita', async () => {
+  const fs = await import('node:fs');
+  const arq = new URL('../js/dados/demo-dados.js', import.meta.url);
+  const antes = fs.existsSync(arq) ? fs.readFileSync(arq, 'utf8') : null;
+  const H = Array.from({ length: 5 }, (_, k) => ({
+    t: 1790000000000 + k * 864e5,
+    w: k % 2,
+    dur: 1,
+    decks: ['Yusei Fudo', 'Crow Hogan'],
+    lp: [1, 0],
+    log: [],
+  }));
+  fs.writeFileSync(arq, `demoCarregar(${JSON.stringify({ hist: H, cfg: {} })});\n`);
+  try {
+    const { pg, erros, fechar } = await abrirApp();
+    await pg.evaluate(() => {
+      hist = [{ t: 1700000000000, w: 0, dur: 1, decks: [DECKS[0][0], DECKS[1][0]], lp: [1, 0], log: [] }];
+      save();
+    });
+    await pg.goto(pg.url() + '?demo');
+    await pg.waitForTimeout(1200);
+    assert.equal(await pg.evaluate(() => hist.length), 5, 'a demonstração usa os seus próprios dados');
+    assert.ok(await pg.evaluate(() => !!document.querySelector('#demob')));
+    await pg.evaluate(() => {
+      hist = [];
+      save();
+    });
+    await pg.goto(pg.url().replace('?demo', ''));
+    await pg.waitForTimeout(1000);
+    assert.equal(
+      await pg.evaluate(() => hist.length + ':' + hist[0].t),
+      '1:1700000000000',
+      'dados reais intactos'
+    );
+    assert.deepEqual(erros, []);
+    await fechar();
+  } finally {
+    if (antes == null) fs.unlinkSync(arq);
+    else fs.writeFileSync(arq, antes);
+  }
+});
+
+test('no PC, o teclado controla o contador de LP', async () => {
+  const { pg, erros, fechar } = await abrirApp({ viewport: { width: 1440, height: 860 } });
+  await pg.evaluate(() => {
+    newDuel([0, 1]);
+    goTab('duelo');
+    duel.ann = 1;
+    duel.first = 0;
+  });
+  for (const k of ['1', '5', '0', '0', 'j']) await pg.keyboard.press(k);
+  for (const k of ['3', '0', '0', 'Shift+D']) await pg.keyboard.press(k);
+  assert.deepEqual(
+    await pg.evaluate(() => lp),
+    [8300, 6500]
+  );
+  assert.equal(await pg.evaluate(() => getComputedStyle(document.querySelector('#pcp')).display), 'block');
+  assert.deepEqual(erros, []);
+  await fechar();
+});

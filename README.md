@@ -75,13 +75,14 @@ Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **16 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **18 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
 - **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
 - **Teste retroativo:** **nunca envia o resultado** para a IA e usa só os duelos anteriores no Elo.
 - **Worker:** saída em JSON estruturado, nova tentativa e modelo reserva quando o Gemini fica sobrecarregado, bloqueio de outros sites e limite de pedidos.
 - **Segurança:** um arquivo de backup malicioso não consegue injetar código no app, e o Worker recusa pedidos de outros sites (inclusive `localhost`, a menos que seja liberado).
+- **Vitrine:** o modo demonstração não mistura com os dados de quem visita, e no PC o teclado controla o contador.
 - **App:** duelo retomado após recarregar, lembrete de turno, contagem de cartas, chaveamento do torneio e regressões visuais que já aconteceram (como o estilo da chave "vazando" para a moeda).
 
 Para rodar localmente: `npm install && npx playwright install chromium && npm test`.
@@ -109,6 +110,7 @@ flowchart LR
 - **Modelos mudam:** quando o modelo antigo foi descontinuado, bastou trocar uma variável no Worker; o app mostra o erro real em vez de um genérico "sem sinal".
 - **Texto de fora nunca vira código:** tudo o que vem de arquivo de backup ou de deck cadastrado é limpo na entrada e escapado na hora de mostrar (defesa em duas camadas).
 - **Contexto em português:** as cartas físicas são em português, então a IA recebe e cita os nomes oficiais em português.
+- **Feito para o celular, apresentável no PC:** em telas largas o app vira uma coluna e ganha um painel com o roteiro "teste em 1 minuto"; o contador aceita o teclado.
 - **Resiliência:** o duelo em andamento é salvo a cada 2 segundos, e se o navegador recarregar a aba, ele volta de onde parou. Sem internet, o app funciona normalmente, só sem o Oráculo.
 
 ## Limitações conhecidas

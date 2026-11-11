@@ -27,6 +27,12 @@ export async function abrirApp({ cartas, oraculo, antes, viewport = { width: 410
   const pg = await ctx.newPage();
   const erros = [];
   pg.on('pageerror', e => erros.push(String(e)));
+  // sem a tela de boas-vindas da primeira visita (ela abriria por cima do que o teste estiver fazendo)
+  await pg.addInitScript(() => {
+    try {
+      localStorage.setItem('ygo_bemvindo', '1');
+    } catch (e) {}
+  });
   if (antes) await pg.addInitScript(antes);
   await pg.route('https://db.ygoprodeck.com/**', async r => {
     const u = decodeURIComponent(r.request().url());

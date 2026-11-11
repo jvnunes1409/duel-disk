@@ -5,7 +5,7 @@ const KV = {
   open() {
     return new Promise(ok => {
       try {
-        const q = indexedDB.open('ygo', 1);
+        const q = indexedDB.open(DEMO ? 'ygo-demo' : 'ygo', 1);
         q.onupgradeneeded = () => q.result.createObjectStore('kv');
         q.onsuccess = () => ok(q.result);
         q.onerror = () => ok(null);
