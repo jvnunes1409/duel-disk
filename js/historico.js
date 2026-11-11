@@ -55,6 +55,7 @@ function backupTxt(lite) {
     used: USED,
     snd: lite ? {} : CSND,
     custom: CUS,
+    part: typeof PART === 'object' ? PART : undefined,
   });
 }
 function pad2(n) {
@@ -253,6 +254,13 @@ async function importText(txt) {
     let rl = false;
     const n = mergeH(Array.isArray(j) ? j : j.hist || []);
     let ex = '';
+    // Consistência dos decks já calculada pela IA: entra direto (não é configuração, é resultado de cálculo)
+    if (j.part && typeof j.part === 'object' && typeof PART === 'object') {
+      Object.entries(j.part).forEach(([k, c]) => {
+        if (c && typeof c.sig === 'string' && Array.isArray(c.p) && Array.isArray(c.t) && !PART[k]) PART[k] = c;
+      });
+      savePart();
+    }
     if (Array.isArray(j.custom)) {
       let k = 0;
       j.custom.forEach(c => {

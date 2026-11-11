@@ -43,6 +43,7 @@ function demoCarregar(b) {
   put('ygo_tarq', b.tarq);
   put('ygo_tiers', b.tiers);
   put('ygo_custom', b.custom);
+  put('ygo_part', b.part);
   // Visitante não vê a tela de VS a cada sorteio e começa com o fundo animado leve
   put('ygo_cfg', { ...(b.cfg || {}), vs: 0 });
 }

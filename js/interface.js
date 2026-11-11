@@ -23,7 +23,8 @@ document.querySelectorAll('nav button').forEach(
     })
 );
 function modal(h) {
-  $('#box').innerHTML = h;
+  // ✕ fixo no canto: fecha sem precisar rolar até o fim (listas de cartas, análises longas)
+  $('#box').innerHTML = '<button class="mx" onclick="fechar()" aria-label="Fechar">✕</button>' + h;
   $('#modal').classList.add('on');
 }
 function fechar() {
