@@ -76,3 +76,14 @@ export const PREVISAO = {
   model: 'modelo-teste',
   ms: 900,
 };
+
+// Espera uma condição dentro da página. Não usa page.waitForFunction porque ela depende de eval,
+// que a política de conteúdo (CSP) do app bloqueia de propósito; aqui os testes rodam com a CSP real ligada.
+export async function esperar(pg, fn, { timeout = 10000 } = {}) {
+  const fim = Date.now() + timeout;
+  for (;;) {
+    if (await pg.evaluate(fn).catch(() => false)) return;
+    if (Date.now() > fim) throw new Error('tempo esgotado esperando: ' + fn);
+    await new Promise(r => setTimeout(r, 100));
+  }
+}

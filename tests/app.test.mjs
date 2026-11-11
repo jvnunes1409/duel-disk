@@ -1,7 +1,7 @@
 // Testes do app no navegador (Chromium invisível). Rodam a cada push no GitHub Actions.
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { abrirApp, fecharNavegador, PREVISAO } from './ajuda.mjs';
+import { abrirApp, fecharNavegador, esperar, PREVISAO } from './ajuda.mjs';
 
 after(fecharNavegador);
 
@@ -49,7 +49,7 @@ test('a lista de cartas conta as cópias e separa o Extra Deck (Cavaleiros Fanta
   await pg.evaluate(i => info(i), i);
   await pg.waitForTimeout(300);
   await pg.evaluate(i => document.querySelector('#clN') || cardList(i), i);
-  await pg.waitForFunction(() => document.querySelectorAll('.cg').length >= 4, null, { timeout: 10000 });
+  await esperar(pg, () => document.querySelectorAll('.cg').length >= 4);
   assert.equal(await pg.textContent('#clN'), '(40 + 10 no Extra)');
   const grupos = await pg.evaluate(() => [...document.querySelectorAll('.cg')].map(e => e.textContent));
   assert.deepEqual(grupos, ['MONSTROS · 17', 'EXTRA DECK · 10', 'MAGIAS · 9', 'ARMADILHAS · 14']);
@@ -113,13 +113,7 @@ test('o duelo em andamento volta depois de recarregar a página', async () => {
   await pg.waitForTimeout(500); // deixa o navegador terminar de gravar antes de recarregar
   await pg.reload();
   // espera o app retomar o duelo (em vez de um tempo fixo)
-  await pg.waitForFunction(
-    () => typeof duel !== 'undefined' && duel && duel.log && duel.log.length === 1,
-    null,
-    {
-      timeout: 10000,
-    }
-  );
+  await esperar(pg, () => typeof duel !== 'undefined' && duel && duel.log && duel.log.length === 1);
   const r = await pg.evaluate(() => ({
     decks: duel.decks,
     lp,
@@ -167,7 +161,7 @@ test('Oráculo: a previsão sai no sorteio e é descartada se o LP mudar antes d
     newDuel([0, 1]);
     goTab('duelo');
   });
-  await pg.waitForFunction(() => duel.ai && duel.ai.st === 'ok', null, { timeout: 10000 });
+  await esperar(pg, () => duel.ai && duel.ai.st === 'ok');
   assert.equal(pedidos[0].rota, '/prever');
   assert.ok(pedidos[0].corpo.a.cartas.length > 20, 'a IA recebe a lista de cartas');
   assert.match(await pg.textContent('#tmb'), /62% DOUGLAS/);
@@ -176,7 +170,7 @@ test('Oráculo: a previsão sai no sorteio e é descartada se o LP mudar antes d
     newDuel([2, 3]);
     duel.log.push({ t: 1, p: 0, d: -100, lp: 7900, tn: 1 });
   });
-  await pg.waitForFunction(() => duel.ai && duel.ai.st !== 'load', null, { timeout: 10000 });
+  await esperar(pg, () => duel.ai && duel.ai.st !== 'load');
   assert.equal(
     await pg.evaluate(() => duel.ai.st),
     'tarde',
@@ -393,7 +387,7 @@ test('veredito no histórico envia a MVP com o efeito e o relato escrito pelos j
   });
   await pg.fill('#oraRel', 'Douglas roubou meu monstro de 4200 de ATK.');
   await pg.evaluate(t => (oraRelSalvar(t, $('#oraRel').value), oraVeredito(t)), t);
-  await pg.waitForFunction(() => hist[0].vd);
+  await esperar(pg, () => hist[0].vd);
   const c = pedidos.find(p => p.rota === '/veredito').corpo;
   assert.equal(c.mvp.nome, 'Roubo Precipitado');
   assert.equal(c.mvp.jogador, 'Douglas');
@@ -409,15 +403,16 @@ test('segurança: a política de conteúdo (CSP) bloqueia scripts de outros site
   const r = await pg.evaluate(
     () =>
       new Promise(ok => {
+        // prova que quem barrou foi a CSP (e não só um endereço inexistente)
+        document.addEventListener('securitypolicyviolation', e => ok('bloqueado pela CSP: ' + e.violatedDirective));
         const s = document.createElement('script');
         s.src = 'https://site-malicioso.example/roubo.js';
-        s.onerror = () => ok('bloqueado');
         s.onload = () => ok('carregou');
         document.head.appendChild(s);
         setTimeout(() => ok('sem resposta'), 4000);
       })
   );
-  assert.equal(r, 'bloqueado');
+  assert.match(r, /^bloqueado pela CSP: script-src/);
   const csp = await pg.getAttribute('meta[http-equiv="Content-Security-Policy"]', 'content');
   assert.match(csp, /object-src 'none'/);
   assert.deepEqual(erros, []);
