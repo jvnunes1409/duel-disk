@@ -1,0 +1,24 @@
+# Roda todos os testes (app no navegador + Worker do Oráculo) a cada push e pull request.
+name: Testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Instalar dependências
+        run: npm install --no-audit --no-fund
+      - name: Instalar o Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Rodar os testes
+        run: npm test

@@ -1,5 +1,7 @@
 # 🔮 DuelDisk: companheiro de mesa com IA para Yu-Gi-Oh!
 
+[![Testes](https://github.com/jvnunes1409/duel-disk/actions/workflows/testes.yml/badge.svg)](https://github.com/jvnunes1409/duel-disk/actions/workflows/testes.yml)
+
 **[Abrir o app](https://jvnunes1409.github.io/duel-disk/)** · funciona no navegador do celular e pode ser instalado como app (PWA)
 
 Eu e meu sobrinho jogamos Yu-Gi-Oh! com cartas físicas e uma coleção de 28 decks. O DuelDisk começou como um contador de pontos de vida e virou o companheiro de mesa dos nossos duelos. Ele sorteia os decks de forma justa, conta o LP, organiza torneios e guarda o histórico. Tem também um **Oráculo de IA** que prevê cada duelo, ouve as jogadas faladas e, no fim, explica se o resultado "deu a lógica".
@@ -70,6 +72,18 @@ As métricas, em *Stats → Placar do Oráculo*:
 Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode ser sorte.
 
 <!-- Resultados: preencher com os números do Placar do Oráculo antes da apresentação -->
+
+## Testes automáticos
+
+Cada mudança enviada ao GitHub dispara **14 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+
+- **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
+- **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
+- **Teste retroativo:** **nunca envia o resultado** para a IA e usa só os duelos anteriores no Elo.
+- **Worker:** saída em JSON estruturado, nova tentativa e modelo reserva quando o Gemini fica sobrecarregado, bloqueio de outros sites e limite de pedidos.
+- **App:** duelo retomado após recarregar, lembrete de turno, contagem de cartas, chaveamento do torneio e regressões visuais que já aconteceram (como o estilo da chave "vazando" para a moeda).
+
+Para rodar localmente: `npm install && npx playwright install chromium && npm test`.
 
 ## Arquitetura
 

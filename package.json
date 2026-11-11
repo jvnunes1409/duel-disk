@@ -1,0 +1,13 @@
+{
+  "name": "duel-disk",
+  "private": true,
+  "description": "DuelDisk: companheiro de mesa com IA para duelos de Yu-Gi-Oh! com cartas físicas",
+  "type": "module",
+  "scripts": {
+    "test": "node --test --test-concurrency=1 tests/*.test.mjs",
+    "format": "prettier --write \"js/**/*.js\" \"css/*.css\" \"tests/*.mjs\""
+  },
+  "devDependencies": {
+    "playwright": "1.48.2"
+  }
+}
