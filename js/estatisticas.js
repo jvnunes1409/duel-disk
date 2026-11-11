@@ -635,11 +635,14 @@ function dStat(nm) {
   $('#box').scrollTop = 0;
 }
 
-// Desempenho (guardado só neste aparelho, não vai no backup): fundo animado e modo leve
+// Desempenho (guardado só neste aparelho, não vai no backup): um único "modo leve" que desliga
+// o fundo animado, os brilhos e as sombras. (Antes eram duas opções; quem tinha desligado o fundo
+// ou ligado o modo leve continua no modo leve.)
 const PERF = { bg: 1, lite: 0 };
 try {
   Object.assign(PERF, JSON.parse(localStorage.getItem('ygo_perf') || '{}'));
 } catch (e) {}
+PERF.lite = PERF.lite || PERF.bg === 0 ? 1 : 0;
 const savePerf = () => {
   try {
     localStorage.setItem('ygo_perf', JSON.stringify(PERF));
@@ -648,6 +651,7 @@ const savePerf = () => {
 let BGT = null,
   BGL = false;
 function applyPerf() {
+  PERF.bg = PERF.lite ? 0 : 1;
   document.body.classList.toggle('lite', !!PERF.lite);
   const w = $('#bgart');
   if (PERF.bg) {
@@ -683,10 +687,10 @@ setTimeout(() => {
         fps < 20 &&
         document.visibilityState === 'visible' &&
         confirm(
-          'O app parece estar pesado neste celular. Desligar o fundo animado (as cartas virando) para ele ficar mais leve?\n\nDá para religar depois em ☰ → Sons e animações.'
+          'O app parece estar pesado neste celular. Ligar o modo leve (sem o fundo animado, brilhos e sombras)?\n\nDá para mudar depois em ☰ → Sons e animações.'
         )
       ) {
-        PERF.bg = 0;
+        PERF.lite = 1;
         applyPerf();
       }
       savePerf();

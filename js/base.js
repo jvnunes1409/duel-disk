@@ -1,6 +1,6 @@
 // Configuração básica: decks do torneio, decks cadastrados no aparelho, tiers, atributos, jogadores e utilitários.
 // Versão do app (a mesma do cache do service worker): aparece no menu para saber qual versão o celular está rodando
-const APPV = 'v57';
+const APPV = 'v58';
 const TORN = 24,
   TORNNAMES = DECKS.slice(0, TORN).map(d => d[0]),
   BASEN = DECKS.length,

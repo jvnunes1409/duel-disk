@@ -165,14 +165,10 @@ function cfgM() {
  ])}</div>
  <label class="dfl"><span>Endereço do Oráculo (Worker)</span><input id="oraU" value="${esc(CFG.ora || '')}" placeholder="https://oraculo.SEU-USUARIO.workers.dev" onchange="CFG.ora=this.value.trim();saveCfg();oraTeste()"></label><div id="oraM" class="cnote" style="text-align:left">${oraUrl() ? '' : 'Sem endereço: o app funciona normal, só sem IA.'}</div><button class="btn" style="padding:10px;font-size:.75rem" onclick="oraDiag()">🩺 Testar a IA agora</button>
  <div class="clh">🚀 DESEMPENHO <small style="font-size:.6rem;color:var(--mut);letter-spacing:0">só neste aparelho</small></div>
- <div class="opt"><b>🌌 Fundo animado (cartas virando)</b>${sp('bg', [
-   [1, 'Ligado'],
-   [0, 'Desligado'],
- ])}</div>
- <div class="opt"><b>⚡ Modo leve (sem brilhos e sombras)</b>${sp('lite', [
+ <div class="opt"><b>⚡ Modo leve</b>${sp('lite', [
    [0, 'Desligado'],
    [1, 'Ligado'],
- ])}<p class="cnote" style="text-align:left">Se o app estiver travando, desligue o fundo e ligue o modo leve.</p></div>
+ ])}<p class="cnote" style="text-align:left">Tira o fundo animado (as cartas virando), os brilhos e as sombras. Ligue se o app estiver travando.</p></div>
  <div class="row" style="margin:6px 0 4px"><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(0)">▶ Ver vitória</button><button class="btn" style="padding:11px;font-size:.78rem" onclick="fechar();prevFX(1)">▶ Ver final</button></div>
  <div class="clh">🎵 ÁUDIOS PRÓPRIOS</div><p class="cnote" style="text-align:left;margin-top:0">Escolham um áudio do celular (mp3, m4a…) para tocar no lugar da voz do narrador. Fica salvo neste aparelho.</p>
  ${Object.entries(MOM)
