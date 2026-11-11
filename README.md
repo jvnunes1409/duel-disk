@@ -125,6 +125,7 @@ flowchart LR
 - **IA rival jogando de verdade:** usar o motor de regras aberto da comunidade (ygopro-core) e deixar a IA só tomar decisões, num duelo digital com cartas escondidas.
 - **Sincronizar o histórico** entre os celulares por um servidor próprio.
 - **Mais dados:** com mais duelos, testar se a IA supera o Elo e ajustar os prompts com base nos erros dela.
+- **Hospedagem no Cloudflare Pages com domínio próprio:** permite mandar a política de segurança (CSP) e outros cabeçalhos pelo servidor, o que o GitHub Pages não permite, e servir o app e o Oráculo no mesmo endereço. Fica para depois porque mudar de endereço exige levar o histórico salvo em cada celular.
 
 ## Estrutura do repositório
 
