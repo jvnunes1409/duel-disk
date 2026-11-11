@@ -351,7 +351,7 @@ async function vParaIA(h) {
   for (const n of h.decks || []) {
     let det = null;
     try {
-      det = await getDeck(n);
+      det = await oraTO(getDeck(n), 5000);
     } catch (e) {}
     (det || []).forEach(d => {
       if (d.d) fx[d.en] = String(d.pe || d.d.e || '').slice(0, 400);

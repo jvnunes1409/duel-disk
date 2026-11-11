@@ -40,7 +40,8 @@ async function oraVeredito(t) {
   const h = hist.find(x => x.t === t);
   if (!h) return;
   const dk = h.decks.map(DI);
-  modal(`<h2>⚖️ VEREDITO</h2><p>O Oráculo está revendo o duelo…</p>`);
+  modal(`<h2>⚖️ VEREDITO</h2><p>O Oráculo está revendo o duelo… <b id="oraT"></b></p>`);
+  oraRelogioModal(Date.now());
   try {
     const [a, b] = await Promise.all(dk.map(oraDeck));
     const r = await oraPost(
@@ -79,7 +80,7 @@ async function oraVeredito(t) {
       ? 'O Worker ainda não tem o veredito. A atualização automática leva 1 a 2 minutos depois de cada mudança; tente de novo daqui a pouco.'
       : oraMotivo(e.message);
     modal(
-      `<h2>⚖️ VEREDITO</h2><p>Não consegui falar com o Oráculo agora.</p>${m ? `<p style="text-align:left">${esc(m)}</p>` : ''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraVeredito(${t})">Tentar de novo</button><button class="btn sec" onclick="oraHist(${t})">Voltar</button>`
+      `<h2>⚖️ VEREDITO</h2><p>Não consegui falar com o Oráculo agora.</p>${m ? `<p style="text-align:left">${esc(m)}</p>` : ''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraVeredito(${t})">Tentar de novo</button><button class="btn sec" onclick="oraDiag()">🩺 Testar a IA agora</button><button class="btn sec" onclick="oraHist(${t})">Voltar</button>`
     );
   }
 }

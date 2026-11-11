@@ -164,7 +164,7 @@ function cfgM() {
    [1, 'Ligado'],
    [0, 'Desligado'],
  ])}</div>
- <label class="dfl"><span>Endereço do Oráculo (Worker)</span><input id="oraU" value="${esc(CFG.ora || '')}" placeholder="https://oraculo.SEU-USUARIO.workers.dev" onchange="CFG.ora=this.value.trim();saveCfg();oraTeste()"></label><div id="oraM" class="cnote" style="text-align:left">${oraUrl() ? '' : 'Sem endereço: o app funciona normal, só sem IA.'}</div>
+ <label class="dfl"><span>Endereço do Oráculo (Worker)</span><input id="oraU" value="${esc(CFG.ora || '')}" placeholder="https://oraculo.SEU-USUARIO.workers.dev" onchange="CFG.ora=this.value.trim();saveCfg();oraTeste()"></label><div id="oraM" class="cnote" style="text-align:left">${oraUrl() ? '' : 'Sem endereço: o app funciona normal, só sem IA.'}</div><button class="btn" style="padding:10px;font-size:.75rem" onclick="oraDiag()">🩺 Testar a IA agora</button>
  <div class="clh">🚀 DESEMPENHO <small style="font-size:.6rem;color:var(--mut);letter-spacing:0">só neste aparelho</small></div>
  <div class="opt"><b>🌌 Fundo animado (cartas virando)</b>${sp('bg', [
    [1, 'Ligado'],

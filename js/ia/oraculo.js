@@ -91,7 +91,7 @@ function oraErro() {
   const m = (a && a.e) || '?',
     t = oraMotivo(m);
   modal(`<h2>🔮 ORÁCULO SEM SINAL</h2>${t ? `<p style="text-align:left">${esc(t)}</p>` : ''}<p class="cnote" style="text-align:left;word-break:break-word">Erro técnico: ${esc(m)}</p><p class="cnote" style="text-align:left">Endereço: ${esc(oraUrl() || '(vazio)')}</p><p id="oraV" class="cnote" style="text-align:left">Conferindo o Worker…</p>
- <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`);
+ <button class="btn" onclick="fechar();oraPrever()">Tentar de novo</button><button class="btn sec" onclick="oraDiag()">🩺 Testar a IA agora</button><button class="btn sec" onclick="fechar()">Fechar</button>`);
   fetch(oraUrl())
     .then(r => r.json())
     .then(j => {
@@ -194,8 +194,9 @@ function oraPrever() {
   if (D.ai && D.ai.st === 'erro' && ORAPRE && ORAPRE.k === D.decks.join('-')) ORAPRE = null;
   const R = oraPedir(D.decks);
   D.base = R.base;
-  D.ai = { st: 'load' };
+  D.ai = { st: 'load', t0: R.t };
   tBan();
+  oraRelogio();
   R.p
     .then(r => {
       if (duel !== D) return;
@@ -215,13 +216,57 @@ function oraPrever() {
       tBan();
     });
 }
+// Contador de segundos enquanto a IA pensa: mostra que o pedido está andando
+const oraSeg = t0 => (t0 ? Math.round((Date.now() - t0) / 1000) + ' s' : '');
+let ORAREL = null;
+function oraRelogio() {
+  clearInterval(ORAREL);
+  ORAREL = setInterval(() => {
+    if (!duel || !duel.ai || duel.ai.st !== 'load') return clearInterval(ORAREL);
+    tBan();
+  }, 1000);
+}
+// Contador dentro de um modal (veredito e crônica): para sozinho quando o modal muda
+function oraRelogioModal(t0) {
+  const iv = setInterval(() => {
+    const e = $('#oraT');
+    if (!e) return clearInterval(iv);
+    e.textContent =
+      oraSeg(t0) + (Date.now() - t0 > 25000 ? ' · a IA está lenta agora, mas continua tentando' : '');
+  }, 1000);
+}
+// Diagnóstico: o Worker testa cada modelo com um pedido mínimo e devolve o tempo e o erro de cada um
+async function oraDiag() {
+  modal(`<h2>🩺 TESTE DA IA</h2><p>Testando os modelos do Oráculo… <b id="oraT"></b></p>`);
+  oraRelogioModal(Date.now());
+  try {
+    const r = await oraPost('/diagnostico', {}, 30000);
+    const lin = (r.modelos || [])
+      .map(
+        m =>
+          `<div class="vzl"><span>${m.ok ? '✅' : '❌'} <b>${esc(m.modelo)}</b><small>${m.ok ? 'respondeu em ' + (m.ms / 1000).toFixed(1) + ' s' : esc(({ 503: 'servidor do Google sobrecarregado agora (503)', 500: 'erro interno do Google (500)', 429: 'limite grátis atingido por agora (429)', 404: 'modelo não disponível para esta conta (404)', 400: 'pedido recusado (400): ' + m.erro, 403: 'chave recusada (403)', 0: m.erro }[m.status] || 'erro ' + m.status + ': ' + m.erro).slice(0, 220))}</small></span></div>`
+      )
+      .join('');
+    const algum = (r.modelos || []).some(m => m.ok);
+    modal(
+      `<h2>🩺 TESTE DA IA</h2><p style="text-align:left">${algum ? 'Pelo menos um modelo está respondendo: o Oráculo deve funcionar.' : 'Nenhum modelo respondeu agora. O problema está do lado do Google (Gemini) ou da chave.'}</p>${lin}<p class="cnote">Worker versão ${esc(r.versao || '?')}</p><button class="btn sec" onclick="fechar()">Fechar</button>`
+    );
+  } catch (e) {
+    const m = /rota não encontrada|404/.test(e.message)
+      ? 'O Worker ainda não tem o teste. A atualização automática leva 1 a 2 minutos depois de cada mudança.'
+      : oraMotivo(e.message);
+    modal(
+      `<h2>🩺 TESTE DA IA</h2><p>O teste não conseguiu falar com o Worker.</p>${m ? `<p style="text-align:left">${esc(m)}</p>` : ''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraDiag()">Testar de novo</button><button class="btn sec" onclick="fechar()">Fechar</button>`
+    );
+  }
+}
 const oraFav = p => (p >= 0.5 ? 0 : 1),
   oraPct = p => Math.round(Math.max(p, 1 - p) * 100);
 function oraChip() {
   const a = duel && duel.ai;
   if (!a || !duel.decks) return '';
   if (a.st === 'load')
-    return `<div class="tmb ora" style="cursor:default"><span>🔮 O ORÁCULO ESTÁ ANALISANDO…</span></div>`;
+    return `<div class="tmb ora" style="cursor:default"><span>🔮 O ORÁCULO ESTÁ ANALISANDO… ${oraSeg(a.t0)}</span>${Date.now() - a.t0 > 25000 ? '<small>a IA está lenta agora</small>' : ''}</div>`;
   if (a.st === 'erro')
     return `<div class="tmb ora" onclick="oraErro()"><span>🔮 ORÁCULO SEM SINAL</span><small>ver motivo ›</small></div>`;
   if (a.st === 'tarde') return '';
@@ -310,7 +355,8 @@ async function oraCronica(t) {
     show();
     return;
   }
-  modal(`<h2>📜 CRÔNICA</h2><p>O narrador está assistindo ao replay…</p>`);
+  modal(`<h2>📜 CRÔNICA</h2><p>O narrador está assistindo ao replay… <b id="oraT"></b></p>`);
+  oraRelogioModal(Date.now());
   try {
     const r = await oraPost(
       '/cronica',

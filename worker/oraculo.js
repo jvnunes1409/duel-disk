@@ -11,7 +11,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 9;
+const VERSAO = 10;
 
 // Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
 // Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
@@ -311,7 +311,7 @@ export default {
     if (!ok) return json({ error: 'origem não permitida' }, 403, headers);
     if (!env.GEMINI_KEY) return json({ error: 'GEMINI_KEY não configurada no Worker' }, 500, headers);
 
-    if (freio(req.headers.get('CF-Connecting-IP') || 'x')) return json({ error: 'muitos pedidos seguidos (429); espere alguns minutos' }, 429, headers);
+    if (new URL(req.url).pathname !== '/diagnostico' && freio(req.headers.get('CF-Connecting-IP') || 'x')) return json({ error: 'muitos pedidos seguidos (429); espere alguns minutos' }, 429, headers);
     const raw = await req.text();
     if (raw.length > MAX_BODY) return json({ error: 'pedido grande demais' }, 413, headers);
     let body;
@@ -324,6 +324,25 @@ export default {
         const { data, model, ms } = await gemini(env, SYSTEM_PREVER, promptPrever(body), PREVER_SCHEMA, 0.3);
         const chance = Math.min(0.95, Math.max(0.05, Number(data.chance_a) || 0.5));
         return json({ ...data, chance_a: chance, model, ms }, 200, headers);
+      }
+      if (path === '/diagnostico') {
+        // Testa cada modelo com um pedido mínimo e mede o tempo: mostra no app o que está funcionando agora
+        const modelos = [...new Set([env.MODEL || DEFAULT_MODEL, env.FALLBACK_MODEL || FALLBACK_MODEL])];
+        const res = await Promise.all(modelos.map(async m => {
+          const t = Date.now(), c = new AbortController(), tm = setTimeout(() => c.abort(), 20_000);
+          try {
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
+              method: 'POST', signal: c.signal,
+              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
+              body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responda só: ok' }] }], generationConfig: { thinkingConfig: thinking(m) } }),
+            });
+            const txt = await r.text();
+            return { modelo: m, ok: r.ok, status: r.status, ms: Date.now() - t, erro: r.ok ? '' : txt.slice(0, 200) };
+          } catch (e) {
+            return { modelo: m, ok: false, status: 0, ms: Date.now() - t, erro: e.name === 'AbortError' ? 'sem resposta em 20 s' : String(e.message || e) };
+          } finally { clearTimeout(tm); }
+        }));
+        return json({ versao: VERSAO, modelos: res }, 200, headers);
       }
       if (path === '/veredito') {
         if (!body.a || !body.b) return json({ error: 'faltam os decks' }, 400, headers);
