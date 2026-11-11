@@ -126,5 +126,5 @@ function art(i, c = '', x = '') {
   const d = DECKS[i];
   if (!d) return `<div class="art ${c}"><span>👤</span>${x}</div>`;
   const u = LD[d[7]];
-  return `<div class="art ${c}" data-i="${i}" style="--c:${ATTR[d[2]]};${u ? `background-image:url('${u}')` : ''}">${u ? '' : `<span>${d[3]}</span>`}${atr(d[2])}${x}</div>`;
+  return `<div class="art ${c}" data-i="${i}" style="--c:${ATTR[d[2]]};${u ? `background-image:url('${u}')` : ''}">${u ? '' : `<span>${d[3]}</span>`}${x}</div>`;
 }

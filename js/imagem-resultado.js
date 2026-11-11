@@ -177,7 +177,6 @@ async function resultImg(h) {
     c.lineWidth = 4;
     c.strokeStyle = '#cfe7ff';
     c.stroke();
-    if (ATI[p]) c.drawImage(ATI[p], ax + as - 96, ay + 10, 86, 86);
     c.fillStyle = CH[p];
     c.font = IMP.replace('#', 34);
     c.fillText(NOMES[p].toUpperCase(), x + cw / 2, cy + as + 70);
