@@ -54,7 +54,7 @@ function painelPC() {
  <h2>Teclado do PC</h2>
  <p class="pcp-sub"><kbd>0</kbd>–<kbd>9</kbd> digitam o valor · <kbd>D</kbd> / <kbd>J</kbd> tiram do Douglas / João · <kbd>Shift</kbd>+<kbd>D</kbd> / <kbd>J</kbd> somam · <kbd>⌫</kbd> apaga · <kbd>Esc</kbd> limpa</p>
  <h2>Por dentro</h2>
- <p class="pcp-sub">App em HTML/JS puro (PWA) no GitHub Pages · IA via Cloudflare Worker + Google Gemini com saída em JSON estruturado · reconhecimento de cartas por voz com algoritmo próprio · 18 testes automáticos a cada mudança.</p>
+ <p class="pcp-sub">App em HTML/JS puro (PWA) no GitHub Pages · IA via Cloudflare Worker + Google Gemini com saída em JSON estruturado · reconhecimento de cartas por voz com algoritmo próprio · 20 testes automáticos a cada mudança.</p>
  <div class="pcp-links"><a href="https://github.com/jvnunes1409/duel-disk" target="_blank" rel="noopener">💻 Código e README</a><a href="https://github.com/jvnunes1409/duel-disk/actions" target="_blank" rel="noopener">✅ Testes automáticos</a></div>
  <p class="pcp-sub" style="margin-top:14px">📱 No celular: <b>jvnunes1409.github.io/duel-disk</b></p>
  </div>`;

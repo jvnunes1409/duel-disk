@@ -12,29 +12,64 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 12;
+const VERSAO = 13;
+
+// O que os jogadores informaram depois do duelo: a carta MVP (com efeito e dono) e um relato curto.
+// Aceita o formato antigo (MVP só com o nome) e o novo (objeto).
+function contextoJogadores(b, nomes) {
+  const m = b.mvp,
+    L = [];
+  if (m && typeof m === 'object')
+    L.push(
+      `CARTA MVP (escolhida pelos jogadores como a carta que decidiu o duelo): ${clip(m.nome, 80)}${m.en && m.en !== m.nome ? ' (' + clip(m.en, 80) + ')' : ''}, do deck ${clip(m.deck, 60)}, usada por ${clip(m.jogador, 30)}${m.efeito ? '. Efeito: ' + clip(m.efeito, 400) : ''}`
+    );
+  else if (m)
+    L.push('CARTA MVP (escolhida pelos jogadores como a carta que decidiu o duelo): ' + clip(m, 80));
+  if (b.relato)
+    L.push('RELATO DOS JOGADORES (o que aconteceu, contado por quem jogou): "' + clip(b.relato, 400) + '"');
+  return L.join('\n');
+}
 
 // Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
 // Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
-const LIMITE_PEDIDOS = 120, JANELA_MS = 10 * 60_000;
+const LIMITE_PEDIDOS = 120,
+  JANELA_MS = 10 * 60_000;
 const VISTOS = new Map();
 function freio(ip) {
   const agora = Date.now();
   const lista = (VISTOS.get(ip) || []).filter(t => agora - t < JANELA_MS);
-  if (lista.length >= LIMITE_PEDIDOS) { VISTOS.set(ip, lista); return true; }
-  lista.push(agora); VISTOS.set(ip, lista);
+  if (lista.length >= LIMITE_PEDIDOS) {
+    VISTOS.set(ip, lista);
+    return true;
+  }
+  lista.push(agora);
+  VISTOS.set(ip, lista);
   if (VISTOS.size > 5000) VISTOS.clear();
   return false;
 }
 
 // Cartas de uma jogada falada (formato novo: várias por fala; antigo: uma só)
 function cartasJ(j, nomes, comEfeito) {
-  const cs = Array.isArray(j.cartas) && j.cartas.length ? j.cartas : (j.carta ? [{ carta: j.carta, nome_pt: j.nome_pt, dono: j.dono, efeito: j.efeito }] : []);
+  const cs =
+    Array.isArray(j.cartas) && j.cartas.length
+      ? j.cartas
+      : j.carta
+        ? [{ carta: j.carta, nome_pt: j.nome_pt, dono: j.dono, efeito: j.efeito }]
+        : [];
   if (!cs.length) return ' → nenhuma carta reconhecida';
-  return ' → cartas: ' + cs.slice(0, 4).map(c =>
-    clip(c.nome_pt || c.carta, 80) + (c.nome_pt ? ' (' + clip(c.carta, 80) + ')' : '') +
-    (c.dono != null ? ', do deck de ' + nomes[c.dono] : '') +
-    (comEfeito && c.efeito ? ' | efeito: ' + clip(c.efeito, 300) : '')).join(' ; ');
+  return (
+    ' → cartas: ' +
+    cs
+      .slice(0, 4)
+      .map(
+        c =>
+          clip(c.nome_pt || c.carta, 80) +
+          (c.nome_pt ? ' (' + clip(c.carta, 80) + ')' : '') +
+          (c.dono != null ? ', do deck de ' + nomes[c.dono] : '') +
+          (comEfeito && c.efeito ? ' | efeito: ' + clip(c.efeito, 300) : '')
+      )
+      .join(' ; ')
+  );
 }
 const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
 const LIMITE_MS = 45_000;
@@ -55,15 +90,37 @@ const PREVER_SCHEMA = {
   properties: {
     chance_a: { type: 'NUMBER', description: 'Probabilidade de 0 a 1 de o deck A vencer' },
     resumo: { type: 'STRING', description: 'Uma ou duas frases: quem é favorito e o motivo principal' },
-    analise: { type: 'STRING', description: 'Análise do confronto em 3 parágrafos separados por linha em branco: (1) ritmo e estilo de cada deck, (2) as interações diretas entre cartas dos dois decks que mais pesam, (3) o que costuma decidir o duelo' },
-    plano_a: { type: 'STRING', description: 'Plano de jogo do deck A contra este oponente: o que buscar na mão inicial, como abrir, o que guardar para responder (4 a 6 frases)' },
+    analise: {
+      type: 'STRING',
+      description:
+        'Análise do confronto em 3 parágrafos separados por linha em branco: (1) ritmo e estilo de cada deck, (2) as interações diretas entre cartas dos dois decks que mais pesam, (3) o que costuma decidir o duelo',
+    },
+    plano_a: {
+      type: 'STRING',
+      description:
+        'Plano de jogo do deck A contra este oponente: o que buscar na mão inicial, como abrir, o que guardar para responder (4 a 6 frases)',
+    },
     plano_b: { type: 'STRING', description: 'Plano de jogo do deck B contra este oponente (4 a 6 frases)' },
     chaves_a: { type: 'ARRAY', items: CHAVE, description: '3 ou 4 cartas do deck A que decidem o confronto' },
     chaves_b: { type: 'ARRAY', items: CHAVE, description: '3 ou 4 cartas do deck B que decidem o confronto' },
-    plano_azarao: { type: 'STRING', description: 'Como o deck menos favorito pode vencer: mãos ideais, blefe, tempo, cartas que viram o jogo (3 a 5 frases)' },
+    plano_azarao: {
+      type: 'STRING',
+      description:
+        'Como o deck menos favorito pode vencer: mãos ideais, blefe, tempo, cartas que viram o jogo (3 a 5 frases)',
+    },
     confianca: { type: 'STRING', enum: ['baixa', 'media', 'alta'] },
   },
-  required: ['chance_a', 'resumo', 'analise', 'plano_a', 'plano_b', 'chaves_a', 'chaves_b', 'plano_azarao', 'confianca'],
+  required: [
+    'chance_a',
+    'resumo',
+    'analise',
+    'plano_a',
+    'plano_b',
+    'chaves_a',
+    'chaves_b',
+    'plano_azarao',
+    'confianca',
+  ],
 };
 
 const CRONICA_SCHEMA = {
@@ -80,11 +137,27 @@ const CRONICA_SCHEMA = {
 const VEREDITO_SCHEMA = {
   type: 'OBJECT',
   properties: {
-    deu_logica: { type: 'STRING', enum: ['sim', 'zebra', 'equilibrado'], description: 'sim = venceu quem era favorito pelas cartas; zebra = venceu o azarão; equilibrado = não havia favorito claro' },
+    deu_logica: {
+      type: 'STRING',
+      enum: ['sim', 'zebra', 'equilibrado'],
+      description:
+        'sim = venceu quem era favorito pelas cartas; zebra = venceu o azarão; equilibrado = não havia favorito claro',
+    },
     titulo: { type: 'STRING', description: 'Uma frase de veredito, direta' },
-    veredito: { type: 'STRING', description: '2 ou 3 parágrafos separados por linha em branco: o resultado era esperado pelas listas? Que estratégia de um deck atrapalha a do outro? O que o registro do duelo mostra?' },
-    fator_decisivo: { type: 'STRING', description: 'O que provavelmente decidiu o duelo (2 a 3 frases), separando o que é certeza do registro do que é dedução' },
-    licao_a: { type: 'STRING', description: 'O que o jogador do deck A pode fazer diferente ou repetir neste confronto (2 a 3 frases)' },
+    veredito: {
+      type: 'STRING',
+      description:
+        '2 ou 3 parágrafos separados por linha em branco: o resultado era esperado pelas listas? Que estratégia de um deck atrapalha a do outro? O que o registro do duelo mostra?',
+    },
+    fator_decisivo: {
+      type: 'STRING',
+      description:
+        'O que provavelmente decidiu o duelo (2 a 3 frases), separando o que é certeza do registro do que é dedução',
+    },
+    licao_a: {
+      type: 'STRING',
+      description: 'O que o jogador do deck A pode fazer diferente ou repetir neste confronto (2 a 3 frases)',
+    },
     licao_b: { type: 'STRING', description: 'O mesmo para o deck B (2 a 3 frases)' },
   },
   required: ['deu_logica', 'titulo', 'veredito', 'fator_decisivo', 'licao_a', 'licao_b'],
@@ -113,7 +186,8 @@ Como narrar:
 - Quando a carta é do deck do outro jogador, quem falou provavelmente reagiu a ela (destruiu, negou, sofreu o efeito).
 - Se a carta tem vários efeitos, só afirme qual foi usado se a fala ou o LP deixarem claro.
 - Só cite cartas que aparecem nas jogadas faladas ou na MVP. Nunca invente cartas, ataques ou mãos.
-- Sem jogadas faladas, narre a partir do LP e não cite cartas.
+- A CARTA MVP e o RELATO DOS JOGADORES são fatos: use-os como momento central da narração.
+- Sem jogadas faladas, narre a partir do LP, da MVP e do relato, sem citar outras cartas.
 - Cite cartas pelo nome em português quando houver (as cartas físicas são em português).`;
 
 const SYSTEM_VEREDITO = `Você é o Oráculo do Duelo, analista de Yu-Gi-Oh! TCG, revendo um duelo casual que já terminou, entre dois jogadores com decks físicos.
@@ -124,23 +198,35 @@ Sua tarefa: dizer se o resultado "deu a lógica" e explicar por quê, olhando as
 - Se houve previsão antes do duelo, diga se ela fazia sentido e o que ela não considerou.
 - Quando houver jogadas faladas, use-as nas lições: aponte jogadas que funcionaram e as que provavelmente foram erros (ex.: usou uma carta cedo demais, gastou uma resposta num alvo fraco, deixou de usar uma carta-chave), sempre citando o turno.
 - Uma jogada pode citar cartas dos dois decks (uma ação e a resposta do oponente); "do deck de X" indica de quem é a carta.
-- Nunca invente jogadas, cartas ou mãos que não estejam no registro.
+- A CARTA MVP e o RELATO DOS JOGADORES são fatos contados por quem jogou: têm prioridade sobre qualquer dedução. Quando existirem, o veredito precisa explicar como essa carta (pelo efeito dela) e esse momento decidiram o duelo, ligando ao registro de LP, e as lições devem dizer como o outro jogador poderia ter evitado ou respondido.
+- Nunca invente jogadas, cartas ou mãos que não estejam no registro, na MVP ou no relato.
 - Cite cartas SEMPRE pelo nome em português (o que vem antes dos parênteses na lista); inglês só se não houver nome em português.
 - Chame os decks pelo nome, nunca de "Deck A" ou "Deck B".`;
 
 function promptVeredito(b) {
   const nomes = b.nomes || ['Jogador 1', 'Jogador 2'];
-  const log = (b.log || []).slice(-60).map(e =>
-    `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
-  const jog = (b.jogadas || []).slice(0, 80).map(j =>
-    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` + cartasJ(j, nomes, false)).join('\n');
-  const pct = x => typeof x === 'number' ? Math.round(x * 100) + '%' : 'sem dado';
+  const log = (b.log || [])
+    .slice(-60)
+    .map(
+      e =>
+        `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`
+    )
+    .join('\n');
+  const jog = (b.jogadas || [])
+    .slice(0, 80)
+    .map(
+      j =>
+        `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` +
+        cartasJ(j, nomes, false)
+    )
+    .join('\n');
+  const pct = x => (typeof x === 'number' ? Math.round(x * 100) + '%' : 'sem dado');
   return `${deckTxt('DECK A (' + nomes[0] + ')', b.a)}
 
 ${deckTxt('DECK B (' + nomes[1] + ')', b.b)}
 
 RESULTADO: venceu ${nomes[b.w]} com ${b.w === 0 ? b.a?.nome : b.b?.nome}. LP final ${b.lp?.[0]} x ${b.lp?.[1]}. Duração ${Math.round((b.dur || 0) / 60000)} min, ${b.turnos || '?'} turnos.
-${b.mvp ? 'Carta MVP marcada pelos jogadores: ' + clip(b.mvp, 80) : ''}
+${contextoJogadores(b, nomes)}
 Chance de ${nomes[0]} antes do duelo: Oráculo ${b.previsao ? pct(b.previsao.chance_a) + ' (' + clip(b.previsao.resumo, 300) + ')' : 'não fez previsão'}; Elo ${pct(b.eloP)}; tier ${pct(b.tierP)}.
 
 Registro de LP:
@@ -165,18 +251,24 @@ function cors(origin, env) {
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type',
       'Access-Control-Max-Age': '86400',
-      'Vary': 'Origin',
+      Vary: 'Origin',
     },
   };
 }
 
 const json = (obj, status, headers) =>
-  new Response(JSON.stringify(obj), { status, headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' } });
+  new Response(JSON.stringify(obj), {
+    status,
+    headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' },
+  });
 
 const clip = (s, n) => String(s ?? '').slice(0, n);
 
 function deckTxt(rotulo, d) {
-  const cartas = (d.cartas || []).slice(0, 80).map(c => '- ' + clip(c, 420)).join('\n');
+  const cartas = (d.cartas || [])
+    .slice(0, 80)
+    .map(c => '- ' + clip(c, 420))
+    .join('\n');
   return `${rotulo}: ${clip(d.nome, 60)} (Tier ${d.tier} de 1 a 5, 1 = mais forte, segundo os jogadores)
 Estratégia: ${clip(d.estrategia, 400)}
 Pontos fortes: ${clip(d.fortes, 300)}
@@ -201,16 +293,27 @@ Qual a chance de o DECK A vencer este duelo?`;
 
 function promptCronica(b) {
   const nomes = b.nomes || ['Jogador 1', 'Jogador 2'];
-  const log = (b.log || []).slice(-60).map(e =>
-    `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
-  const jog = (b.jogadas || []).slice(0, 80).map(j =>
-    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` + cartasJ(j, nomes, true)).join('\n');
+  const log = (b.log || [])
+    .slice(-60)
+    .map(
+      e =>
+        `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`
+    )
+    .join('\n');
+  const jog = (b.jogadas || [])
+    .slice(0, 80)
+    .map(
+      j =>
+        `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` +
+        cartasJ(j, nomes, true)
+    )
+    .join('\n');
   const prev = b.previsao
     ? `Previsão do Oráculo antes do duelo: ${Math.round(b.previsao.chance_a * 100)}% para ${nomes[0]} (${clip(b.previsao.resumo, 300)})`
     : 'O Oráculo não fez previsão para este duelo.';
   return `${nomes[0]} jogou com ${clip(b.decks?.[0], 60)} e ${nomes[1]} com ${clip(b.decks?.[1], 60)}.
 Vencedor: ${nomes[b.w]}. Duração: ${Math.round((b.dur || 0) / 60000)} min, ${b.turnos || '?'} turnos. LP final: ${b.lp?.[0]} x ${b.lp?.[1]}.
-${b.mvp ? 'Carta MVP marcada pelos jogadores: ' + clip(b.mvp, 80) : ''}
+${contextoJogadores(b, nomes)}
 ${prev}
 
 Registro de LP:
@@ -239,7 +342,10 @@ async function gemini(env, system, prompt, schema, temperature) {
       try {
         return await geminiModel(env, reserva, system, prompt, schema, temperature, LIMITE_MS, Date.now());
       } catch (e2) {
-        if (e.sobrecarga || e2.sobrecarga) { e2.message = 'Gemini sobrecarregado (503) nos dois modelos: ' + e2.message; e2.status = 503; }
+        if (e.sobrecarga || e2.sobrecarga) {
+          e2.message = 'Gemini sobrecarregado (503) nos dois modelos: ' + e2.message;
+          e2.status = 503;
+        }
         throw e2;
       }
     }
@@ -250,60 +356,71 @@ async function gemini(env, system, prompt, schema, temperature) {
 async function geminiModel(env, model, system, prompt, schema, temperature, limite, t0) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), limite);
-  const call = (comThinking) => fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: system }] },
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature, responseMimeType: 'application/json', responseSchema: schema,
-        ...(comThinking ? { thinkingConfig: thinking(model) } : {}),
-      },
-    }),
-    signal: ctrl.signal,
-  });
+  const call = comThinking =>
+    fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
+      body: JSON.stringify({
+        systemInstruction: { parts: [{ text: system }] },
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature,
+          responseMimeType: 'application/json',
+          responseSchema: schema,
+          ...(comThinking ? { thinkingConfig: thinking(model) } : {}),
+        },
+      }),
+      signal: ctrl.signal,
+    });
   try {
-  let r;
-  const sobrecarga = st => st === 503 || st === 500 || st === 429;
-  try {
-    r = await call(true);
-    // Servidor do Gemini sobrecarregado: espera um pouco e tenta de novo (até 2 vezes) antes de desistir deste modelo
-    for (const espera of [1500, 4000]) {
-      if (!sobrecarga(r.status) || Date.now() - t0 + espera > limite) break;
-      await new Promise(ok => setTimeout(ok, espera));
+    let r;
+    const sobrecarga = st => st === 503 || st === 500 || st === 429;
+    try {
       r = await call(true);
+      // Servidor do Gemini sobrecarregado: espera um pouco e tenta de novo (até 2 vezes) antes de desistir deste modelo
+      for (const espera of [1500, 4000]) {
+        if (!sobrecarga(r.status) || Date.now() - t0 + espera > limite) break;
+        await new Promise(ok => setTimeout(ok, espera));
+        r = await call(true);
+      }
+    } catch (e) {
+      const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
+      err.lento = true;
+      err.status = 504;
+      throw err;
     }
-  } catch (e) {
-    const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
-    err.lento = true; err.status = 504; throw err;
-  }
-  if (r.status === 400) {
-    const t = await r.clone().text();
-    if (/thinking/i.test(t)) {
-      try { r = await call(false); } catch (e) {
-        const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
-        err.lento = true; err.status = 504; throw err;
+    if (r.status === 400) {
+      const t = await r.clone().text();
+      if (/thinking/i.test(t)) {
+        try {
+          r = await call(false);
+        } catch (e) {
+          const err = new Error(`${model} passou de ${Math.round(limite / 1000)}s sem responder`);
+          err.lento = true;
+          err.status = 504;
+          throw err;
+        }
       }
     }
+    if (!r.ok) {
+      const t = await r.text();
+      const err = new Error(`Gemini ${r.status}: ${t.slice(0, 300)}`);
+      err.status = r.status === 429 ? 429 : 502;
+      err.sobrecarga = sobrecarga(r.status);
+      throw err;
+    }
+    const j = await r.json();
+    const text = j.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
+    try {
+      return { data: JSON.parse(text), model, ms: Date.now() - t0 };
+    } catch {
+      const err = new Error('Resposta da IA veio fora do formato JSON');
+      err.status = 502;
+      throw err;
+    }
+  } finally {
+    clearTimeout(timer);
   }
-  if (!r.ok) {
-    const t = await r.text();
-    const err = new Error(`Gemini ${r.status}: ${t.slice(0, 300)}`);
-    err.status = r.status === 429 ? 429 : 502;
-    err.sobrecarga = sobrecarga(r.status);
-    throw err;
-  }
-  const j = await r.json();
-  const text = j.candidates?.[0]?.content?.parts?.map(p => p.text || '').join('') || '';
-  try {
-    return { data: JSON.parse(text), model, ms: Date.now() - t0 };
-  } catch {
-    const err = new Error('Resposta da IA veio fora do formato JSON');
-    err.status = 502;
-    throw err;
-  }
-  } finally { clearTimeout(timer); }
 }
 
 export default {
@@ -311,15 +428,25 @@ export default {
     const origin = req.headers.get('Origin') || '';
     const { ok, headers } = cors(origin, env);
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers });
-    if (req.method !== 'POST') return json({ ok: true, oraculo: 'online', versao: VERSAO, modelo: env.MODEL || DEFAULT_MODEL }, 200, headers);
+    if (req.method !== 'POST')
+      return json(
+        { ok: true, oraculo: 'online', versao: VERSAO, modelo: env.MODEL || DEFAULT_MODEL },
+        200,
+        headers
+      );
     if (!ok) return json({ error: 'origem não permitida' }, 403, headers);
     if (!env.GEMINI_KEY) return json({ error: 'GEMINI_KEY não configurada no Worker' }, 500, headers);
 
-    if (new URL(req.url).pathname !== '/diagnostico' && freio(req.headers.get('CF-Connecting-IP') || 'x')) return json({ error: 'muitos pedidos seguidos (429); espere alguns minutos' }, 429, headers);
+    if (new URL(req.url).pathname !== '/diagnostico' && freio(req.headers.get('CF-Connecting-IP') || 'x'))
+      return json({ error: 'muitos pedidos seguidos (429); espere alguns minutos' }, 429, headers);
     const raw = await req.text();
     if (raw.length > MAX_BODY) return json({ error: 'pedido grande demais' }, 413, headers);
     let body;
-    try { body = JSON.parse(raw); } catch { return json({ error: 'JSON inválido' }, 400, headers); }
+    try {
+      body = JSON.parse(raw);
+    } catch {
+      return json({ error: 'JSON inválido' }, 400, headers);
+    }
 
     const path = new URL(req.url).pathname;
     try {
@@ -332,25 +459,56 @@ export default {
       if (path === '/diagnostico') {
         // Testa cada modelo com um pedido mínimo e mede o tempo: mostra no app o que está funcionando agora
         const modelos = [...new Set([env.MODEL || DEFAULT_MODEL, env.FALLBACK_MODEL || FALLBACK_MODEL])];
-        const res = await Promise.all(modelos.map(async m => {
-          const t = Date.now(), c = new AbortController(), tm = setTimeout(() => c.abort(), 20_000);
-          try {
-            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`, {
-              method: 'POST', signal: c.signal,
-              headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
-              body: JSON.stringify({ contents: [{ role: 'user', parts: [{ text: 'Responda só: ok' }] }], generationConfig: { thinkingConfig: thinking(m) } }),
-            });
-            const txt = await r.text();
-            return { modelo: m, ok: r.ok, status: r.status, ms: Date.now() - t, erro: r.ok ? '' : txt.slice(0, 200) };
-          } catch (e) {
-            return { modelo: m, ok: false, status: 0, ms: Date.now() - t, erro: e.name === 'AbortError' ? 'sem resposta em 20 s' : String(e.message || e) };
-          } finally { clearTimeout(tm); }
-        }));
+        const res = await Promise.all(
+          modelos.map(async m => {
+            const t = Date.now(),
+              c = new AbortController(),
+              tm = setTimeout(() => c.abort(), 20_000);
+            try {
+              const r = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent`,
+                {
+                  method: 'POST',
+                  signal: c.signal,
+                  headers: { 'Content-Type': 'application/json', 'x-goog-api-key': env.GEMINI_KEY },
+                  body: JSON.stringify({
+                    contents: [{ role: 'user', parts: [{ text: 'Responda só: ok' }] }],
+                    generationConfig: { thinkingConfig: thinking(m) },
+                  }),
+                }
+              );
+              const txt = await r.text();
+              return {
+                modelo: m,
+                ok: r.ok,
+                status: r.status,
+                ms: Date.now() - t,
+                erro: r.ok ? '' : txt.slice(0, 200),
+              };
+            } catch (e) {
+              return {
+                modelo: m,
+                ok: false,
+                status: 0,
+                ms: Date.now() - t,
+                erro: e.name === 'AbortError' ? 'sem resposta em 20 s' : String(e.message || e),
+              };
+            } finally {
+              clearTimeout(tm);
+            }
+          })
+        );
         return json({ versao: VERSAO, modelos: res }, 200, headers);
       }
       if (path === '/veredito') {
         if (!body.a || !body.b) return json({ error: 'faltam os decks' }, 400, headers);
-        const { data, model, ms } = await gemini(env, SYSTEM_VEREDITO, promptVeredito(body), VEREDITO_SCHEMA, 0.4);
+        const { data, model, ms } = await gemini(
+          env,
+          SYSTEM_VEREDITO,
+          promptVeredito(body),
+          VEREDITO_SCHEMA,
+          0.4
+        );
         return json({ ...data, model, ms }, 200, headers);
       }
       if (path === '/cronica') {

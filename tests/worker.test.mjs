@@ -128,3 +128,41 @@ test('segurança: localhost só é aceito quando ALLOW_LOCAL=1', async () => {
   const r = await pedir('/prever', { a: deck('A'), b: deck('B') }, 'http://localhost:8080');
   assert.equal(r.status, 403);
 });
+
+test('veredito trata a carta MVP e o relato dos jogadores como fatos', async () => {
+  let corpo;
+  globalThis.fetch = async (url, op) => {
+    corpo = JSON.parse(op.body);
+    return respostaGemini({
+      deu_logica: 'sim',
+      titulo: 't',
+      veredito: 'v',
+      fator_decisivo: 'f',
+      licao_a: 'a',
+      licao_b: 'b',
+    });
+  };
+  const r = await pedir('/veredito', {
+    nomes: ['Douglas', 'João'],
+    a: deck('Rugido do Dragão'),
+    b: deck('Yusei Fudo'),
+    w: 0,
+    lp: [8000, 8800],
+    mvp: {
+      nome: 'Roubo Precipitado',
+      en: 'Snatch Steal',
+      deck: 'Rugido do Dragão',
+      jogador: 'Douglas',
+      efeito: 'Controle o monstro equipado.',
+    },
+    relato: 'Roubou meu monstro de 4200 de ATK.',
+  });
+  assert.equal(r.status, 200);
+  const txt = corpo.contents[0].parts[0].text;
+  assert.match(
+    txt,
+    /CARTA MVP .*Roubo Precipitado \(Snatch Steal\), do deck Rugido do Dragão, usada por Douglas\. Efeito: Controle/
+  );
+  assert.match(txt, /RELATO DOS JOGADORES .*4200 de ATK/);
+  assert.match(corpo.systemInstruction.parts[0].text, /têm prioridade sobre qualquer dedução/);
+});

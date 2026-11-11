@@ -351,3 +351,48 @@ test('no PC, o teclado controla o contador de LP', async () => {
   assert.deepEqual(erros, []);
   await fechar();
 });
+
+test('veredito no histórico envia a MVP com o efeito e o relato escrito pelos jogadores', async () => {
+  const { pg, erros, pedidos, fechar } = await abrirApp({
+    oraculo: rota =>
+      rota === '/veredito'
+        ? {
+            deu_logica: 'sim',
+            titulo: 'Roubo decisivo',
+            veredito: 'v',
+            fator_decisivo: 'f',
+            licao_a: 'a',
+            licao_b: 'b',
+            model: 'm',
+          }
+        : { status: 404, json: { error: 'rota não encontrada' } },
+  });
+  const t = await pg.evaluate(() => {
+    const t = Date.now() - 9000;
+    hist = [
+      {
+        t,
+        w: 0,
+        dur: 1,
+        decks: ['Rugido do Dragão', 'Yusei Fudo'],
+        lp: [8000, 0],
+        log: [],
+        mvp: { n: 'Roubo Precipitado', en: 'Snatch Steal' },
+      },
+    ];
+    save();
+    oraHist(t);
+    return t;
+  });
+  await pg.fill('#oraRel', 'Douglas roubou meu monstro de 4200 de ATK.');
+  await pg.evaluate(t => (oraRelSalvar(t, $('#oraRel').value), oraVeredito(t)), t);
+  await pg.waitForFunction(() => hist[0].vd);
+  const c = pedidos.find(p => p.rota === '/veredito').corpo;
+  assert.equal(c.mvp.nome, 'Roubo Precipitado');
+  assert.equal(c.mvp.jogador, 'Douglas');
+  assert.equal(c.relato, 'Douglas roubou meu monstro de 4200 de ATK.');
+  assert.equal(await pg.evaluate(() => hist[0].nota), 'Douglas roubou meu monstro de 4200 de ATK.');
+  assert.match(await pg.textContent('#box'), /Refazer o veredito/);
+  assert.deepEqual(erros, []);
+  await fechar();
+});

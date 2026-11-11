@@ -28,16 +28,48 @@ function oraHist(t) {
       : `<p class="cnote" style="text-align:left">Este duelo foi jogado sem previsão do Oráculo.</p>`;
   const v = h.vd,
     vl = v && (VDL[v.deu_logica] || VDL.equilibrado);
+  // O que os jogadores sabem e a IA não viu: a carta MVP e um relato curto do que decidiu
+  const ctxJog = oraOn()
+    ? `<div class="clh" style="text-align:left">🗣️ O QUE OS JOGADORES VIRAM</div>
+  ${h.mvp ? `<p style="text-align:left;margin:0 0 6px">⭐ MVP: <b>${esc(h.mvp.n)}</b> <small style="color:var(--mut)">(${esc(h.decks[h.w])})</small></p>` : `<p class="cnote" style="text-align:left;margin:0 0 6px">Sem carta MVP marcada.</p>`}
+  <textarea id="oraRel" class="srch" rows="3" maxlength="400" style="width:100%;box-sizing:border-box;resize:vertical" placeholder="Opcional: contem em uma ou duas frases o que decidiu. Ex.: “Douglas usou Roubo Precipitado, roubou meu monstro de 4200 de ATK e eu não consegui reagir.”" onchange="oraRelSalvar(${t},this.value)">${esc(h.nota || '')}</textarea>
+  <p class="cnote" style="text-align:left;margin:2px 0 8px">O Oráculo usa a MVP e esse relato como fatos no veredito e na crônica.</p>`
+    : '';
   const ver = v
     ? `<div class="clh" style="text-align:left">⚖️ O VEREDITO</div><div class="vdl">${vl[0]} ${vl[1]}</div><p style="text-align:left;font-weight:800">${esc(v.titulo)}</p>${par(v.veredito)}
   <div class="clh" style="text-align:left">🎯 O QUE DECIDIU</div>${par(v.fator_decisivo)}
   <div class="clh" style="text-align:left;color:${COR[0]}">📘 LIÇÃO · ${esc(h.decks[0])}</div>${par(v.licao_a)}
   <div class="clh" style="text-align:left;color:${COR[1]}">📘 LIÇÃO · ${esc(h.decks[1])}</div>${par(v.licao_b)}`
-    : oraOn()
-      ? `<button class="btn" onclick="oraVeredito(${t})">⚖️ Pedir o veredito do Oráculo<small>deu a lógica ou foi zebra? por quê?</small></button>`
-      : '';
+    : '';
+  const btnVer = oraOn()
+    ? `<button class="btn" onclick="oraRelSalvar(${t},($('#oraRel')||{}).value);oraVeredito(${t})">${v ? '🔄 Refazer o veredito<small>com a MVP e o relato acima</small>' : '⚖️ Pedir o veredito do Oráculo<small>deu a lógica ou foi zebra? por quê?</small>'}</button>`
+    : '';
   modal(`<h2>🔮 ORÁCULO</h2><p style="margin:-4px 0 6px"><b style="color:${COR[0]}">${esc(h.decks[0])}</b> <em>vs</em> <b style="color:${COR[1]}">${esc(h.decks[1])}</b><br><small style="color:var(--mut)">Vitória do ${NOMES[h.w]} · ${h.lp[0]} × ${h.lp[1]} · ${new Date(h.t).toLocaleDateString('pt-BR')}</small></p>
- ${prev}${(h.ev || []).length ? `<details class="orad"><summary>🎙️ Jogadas faladas (${h.ev.length})</summary>${h.ev.map(e => `<div class="vzl"><span>T${e.tn} ${e.p != null ? `<b style="color:${COR[e.p]}">${NOMES[e.p]}</b>` : ''}<br>${vEvTxt(e)}<small>“${esc(e.fala)}”</small></span></div>`).join('')}</details>` : ''}${ver}${oraOn() || h.cr ? `<button class="btn sec" onclick="oraCronica(${t})">📜 ${h.cr ? 'Ver' : 'Gerar'} a crônica do duelo</button>` : ''}<button class="btn sec" onclick="fechar()">Fechar</button>`);
+ ${prev}${(h.ev || []).length ? `<details class="orad"><summary>🎙️ Jogadas faladas (${h.ev.length})</summary>${h.ev.map(e => `<div class="vzl"><span>T${e.tn} ${e.p != null ? `<b style="color:${COR[e.p]}">${NOMES[e.p]}</b>` : ''}<br>${vEvTxt(e)}<small>“${esc(e.fala)}”</small></span></div>`).join('')}</details>` : ''}${ver}${ctxJog}${btnVer}${oraOn() || h.cr ? `<button class="btn sec" onclick="oraCronica(${t})">📜 ${h.cr ? 'Ver' : 'Gerar'} a crônica do duelo</button>` : ''}<button class="btn sec" onclick="fechar()">Fechar</button>`);
+}
+function oraRelSalvar(t, txt) {
+  const h = hist.find(x => x.t === t);
+  if (!h || txt == null) return;
+  const v = limpaTudo(String(txt)).trim().slice(0, 400);
+  if (v === (h.nota || '')) return;
+  if (v) h.nota = v;
+  else delete h.nota;
+  save();
+}
+// MVP com o efeito da carta e de quem ela é: a IA explica como ela decidiu o duelo
+async function oraMvp(h) {
+  if (!h.mvp) return null;
+  const nm = h.decks[h.w];
+  let efeito = '';
+  try {
+    const det = await oraTO(getDeck(nm), 5000);
+    const c = (det || []).find(x => x && (x.en === h.mvp.en || x.pt === h.mvp.n));
+    if (c && c.d)
+      efeito = String(c.pe || c.d.e || '')
+        .replace(/\s+/g, ' ')
+        .slice(0, 400);
+  } catch (e) {}
+  return { nome: h.mvp.n, en: h.mvp.en || null, deck: nm, jogador: NOMES[h.w], efeito };
 }
 async function oraVeredito(t) {
   const h = hist.find(x => x.t === t);
@@ -57,7 +89,8 @@ async function oraVeredito(t) {
         lp: h.lp,
         dur: h.dur,
         turnos: h.tn,
-        mvp: h.mvp && h.mvp.n,
+        mvp: await oraMvp(h),
+        relato: h.nota || '',
         previsao: h.ai ? { chance_a: h.ai.p, resumo: h.ai.r && h.ai.r.resumo } : null,
         eloP: h.eloP,
         tierP: h.tierP,

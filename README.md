@@ -75,7 +75,7 @@ Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **18 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **20 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
 - **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
