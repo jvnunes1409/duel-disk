@@ -159,7 +159,6 @@ function cfgM() {
        ])
      : '<p class="cnote">Este navegador não tem reconhecimento de voz (use o Chrome).</p>'
  }</div>
- ${SRC ? `<div class="row" style="gap:8px"><button class="btn" style="padding:10px;font-size:.72rem" onclick="vCtrl()">🎮 Botão físico</button><button class="btn" style="padding:10px;font-size:.72rem" onclick="vNomesPT()">🇧🇷 Preparar nomes em PT</button></div><div id="vzM" class="cnote" style="text-align:left"></div>` : ''}
  <div class="opt"><b>Previsões e crônicas</b>${sg('oraOn', [
    [1, 'Ligado'],
    [0, 'Desligado'],

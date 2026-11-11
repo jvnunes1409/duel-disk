@@ -38,7 +38,7 @@ No instante do sorteio, o app manda para a IA os dois decks com **todas as carta
 **Regra anti-trapaça:** a previsão só vale se chegar **antes do primeiro dano**. Se alguém mexer no LP antes, ela é descartada, para a IA nunca "ver" o duelo começando.
 
 ### 2. Jogadas por voz, sem modelo de linguagem
-Um toque no 🎙️ (ou num controle Bluetooth, um por jogador) e você fala a jogada: *"ataquei com a Distopia e ele ativou a Lança dos Cavaleiros Fantasmas"*. O reconhecimento de fala é o do próprio navegador. A identificação das cartas é um **algoritmo determinístico**, não uma IA:
+Um toque no 🎙️ e você fala a jogada: *"ataquei com a Distopia e ele ativou a Lança dos Cavaleiros Fantasmas"*. O reconhecimento de fala é o do próprio navegador. A identificação das cartas é um **algoritmo determinístico**, não uma IA:
 - procura só entre as ~100 cartas dos dois decks do duelo, e não entre as mais de 12 mil existentes;
 - usa similaridade de texto (Levenshtein) com **peso por raridade das palavras**: "Cavaleiros Fantasmas" aparece em quase todo o deck e vale pouco, enquanto "Véu Sombrio" identifica a carta;
 - divide a fala em ações ("e", "depois", "em resposta") e reconhece **várias cartas por frase**, marcando de qual deck é cada uma;

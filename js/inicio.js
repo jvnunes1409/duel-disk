@@ -17,7 +17,6 @@
   [300, 1000, 3000].forEach(ms => setTimeout(f, ms));
 })();
 vMicBtn();
-if (CFG.vf) addEventListener('pointerdown', () => vFone(1), { once: true }); // ===== Duelo em andamento salvo no aparelho =====
 rFiltro();
 rLista();
 rSort();
