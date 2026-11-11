@@ -108,8 +108,9 @@ test('o duelo em andamento volta depois de recarregar a página', async () => {
     amt = '1500';
     apply(1, -1);
     duel.ev = [{ t: 1, tn: 1, p: 0, fala: 'teste' }];
+    dSave(); // o app salva sozinho a cada 2 s; aqui força para o teste não depender do relógio
   });
-  await pg.waitForTimeout(2300);
+  await pg.waitForTimeout(500); // deixa o navegador terminar de gravar antes de recarregar
   await pg.reload();
   await pg.waitForTimeout(1200);
   const r = await pg.evaluate(() => ({
@@ -262,6 +263,7 @@ test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e cent
 test('segurança: um arquivo de backup malicioso não injeta HTML no app', async () => {
   const { pg, erros, fechar } = await abrirApp();
   // o "ataque" marca o localStorage se conseguir rodar; a importação de decks recarrega a página
+  const recarregou = pg.waitForEvent('load', { timeout: 30000 });
   await pg.evaluate(() => {
     const ruim = '<img src=x onerror="localStorage.setItem(\'xss\',1)">';
     importText(
@@ -271,8 +273,8 @@ test('segurança: um arquivo de backup malicioso não injeta HTML no app', async
       })
     );
   });
-  await pg.waitForTimeout(2500);
-  await pg.waitForFunction(() => typeof rH === 'function');
+  await recarregou;
+  await pg.waitForFunction(() => typeof rH === 'function' && typeof DECKS !== 'undefined');
   await pg.evaluate(() => {
     goTab('hist');
     rH();
@@ -346,10 +348,7 @@ test('no PC, o teclado controla o contador de LP', async () => {
   });
   for (const k of ['1', '5', '0', '0', 'j']) await pg.keyboard.press(k);
   for (const k of ['3', '0', '0', 'Shift+D']) await pg.keyboard.press(k);
-  assert.deepEqual(
-    await pg.evaluate(() => lp),
-    [8300, 6500]
-  );
+  assert.deepEqual(await pg.evaluate(() => lp), [8300, 6500]);
   assert.equal(await pg.evaluate(() => getComputedStyle(document.querySelector('#pcp')).display), 'block');
   assert.deepEqual(erros, []);
   await fechar();

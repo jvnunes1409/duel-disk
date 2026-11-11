@@ -3,7 +3,7 @@
 // com dados de verdade. Este arquivo precisa ser o PRIMEIRO script carregado.
 const DEMO = new URLSearchParams(location.search).has('demo');
 // Resumo do que tem na demonstração (null = ainda não há dados de demonstração publicados)
-const DEMO_RESUMO = null;
+const DEMO_RESUMO = { duelos: 14, desde: 1793141524651 };
 // Preenchido quando js/dados/demo-dados.js carrega
 let DEMO_INFO = null;
 

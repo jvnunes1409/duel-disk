@@ -92,6 +92,12 @@ async function bkRestore(i) {
   }
 }
 function bkBan() {
+  // na demonstração não faz sentido lembrar de backup
+  if (typeof DEMO !== 'undefined' && DEMO) {
+    const e = document.getElementById('bkban');
+    if (e) e.innerHTML = '';
+    return;
+  }
   const el = $('#bkban');
   if (!el) return;
   let h = '';

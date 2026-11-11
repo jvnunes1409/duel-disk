@@ -328,7 +328,8 @@ async function importText(txt) {
     rT();
     rS();
     alert((n ? n + ' duelo(s) adicionado(s).' : 'Nenhum duelo novo (já estavam aqui).') + ex);
-    if (rl) location.reload();
+    // pequena pausa para o navegador terminar de gravar os dados antes de recarregar
+    if (rl) setTimeout(() => location.reload(), 400);
   } catch (x) {
     alert('Arquivo inválido.');
   }

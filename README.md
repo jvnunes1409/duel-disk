@@ -2,7 +2,7 @@
 
 [![Testes](https://github.com/jvnunes1409/duel-disk/actions/workflows/testes.yml/badge.svg)](https://github.com/jvnunes1409/duel-disk/actions/workflows/testes.yml)
 
-**[Abrir o app](https://jvnunes1409.github.io/duel-disk/)** · funciona no navegador do celular e pode ser instalado como app (PWA)
+**[▶️ Abrir a demonstração](https://jvnunes1409.github.io/duel-disk/?demo)** (com o histórico real dos nossos duelos; nada é salvo no seu navegador) · **[Abrir o app](https://jvnunes1409.github.io/duel-disk/)** · funciona no navegador do celular e pode ser instalado como app (PWA)
 
 Eu e meu sobrinho jogamos Yu-Gi-Oh! com cartas físicas e uma coleção de 28 decks. O DuelDisk começou como um contador de pontos de vida e virou o companheiro de mesa dos nossos duelos. Ele sorteia os decks de forma justa, conta o LP, organiza torneios e guarda o histórico. Tem também um **Oráculo de IA** que prevê cada duelo, ouve as jogadas faladas e, no fim, explica se o resultado "deu a lógica".
 
