@@ -110,11 +110,27 @@ flowchart LR
 
 ## Estrutura do repositório
 
+Sem etapa de build: o navegador carrega os arquivos na ordem em que aparecem no `index.html`.
+
 ```
-index.html          app completo (HTML + CSS + JS, sem build)
-sw.js               service worker (funciona offline)
-manifest.webmanifest
-worker/oraculo.js   Cloudflare Worker: prompts, schemas e chamada ao Gemini
-worker/wrangler.jsonc  configuração do deploy automático
-sons/               efeitos sonoros
+index.html                  marcação das telas e ordem dos scripts
+css/estilo.css              visual (tema escuro inspirado no Duel Disk do anime)
+js/
+  dados/decks.js            os 28 decks: tier, atributo, estratégia, pontos fortes e fracos
+  dados/cartas.js           lista de cartas de cada deck (nome em português e em inglês)
+  base.js                   configuração, jogadores e utilitários
+  sorteio.js                sorteio justo, draft e roleta
+  duelo.js                  contador de LP, turnos, fim do duelo
+  duelo-salvo.js            retoma o duelo se a aba recarregar
+  historico.js, backup.js   histórico e backup
+  estatisticas.js           estatísticas, conquistas e Elo
+  torneio.js, liga.js       torneio de 24 decks e liga de pontos corridos
+  chaveamento.js            chave visual do torneio
+  ia/oraculo.js             previsão, crônica e placar da IA contra Elo, tier e moeda
+  ia/oraculo-historico.js   veredito depois do duelo
+  ia/voz.js                 reconhecimento de cartas faladas (algoritmo próprio, sem IA externa)
+  ...                       sons, artes, animações, dado e moeda, lista de cartas
+worker/oraculo.js           Cloudflare Worker: prompts, schemas, limites e chamada ao Gemini
+worker/wrangler.jsonc       deploy automático do Worker a cada push
+sw.js                       service worker: funciona offline
 ```
