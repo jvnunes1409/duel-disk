@@ -4079,3 +4079,47 @@ body.demo .stabs {
   font: 600 0.75rem system-ui, sans-serif;
   letter-spacing: 0;
 }
+
+/* ---- Chave do torneio em tela cheia */
+.bk-amp {
+  padding: 9px;
+  margin: 6px 0;
+  font-size: 0.8rem;
+}
+#bkfull {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #050c24;
+}
+#bkfull .bkf-in {
+  position: absolute;
+  inset: 48px 8px 8px;
+}
+#bkfull .chave {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform-origin: center;
+}
+#bkfull .mx {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--gd);
+  background: #0a1740;
+  color: var(--gd);
+  font-weight: 900;
+  z-index: 2;
+}
+#bkfull .bkf-dica {
+  position: absolute;
+  top: 16px;
+  left: 14px;
+  color: var(--mut);
+  font-size: 0.8rem;
+  font-weight: 700;
+}

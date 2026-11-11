@@ -374,6 +374,25 @@ test('Stats em abas e 🏆 para os decks campeões', async () => {
   await fechar();
 });
 
+test('chave do torneio em tela cheia: cabe inteira na tela e fecha no ✕', async () => {
+  const { pg, erros, fechar } = await abrirApp({ viewport: { width: 400, height: 840 } });
+  await pg.evaluate(() => {
+    const d = document.createElement('div');
+    d.innerHTML = chaveHTML(mkT(shuffle([...Array(BASEN).keys()])));
+    document.body.prepend(d);
+  });
+  await pg.click('.bk-amp');
+  const r = await pg.evaluate(() => {
+    const b = document.querySelector('#bkfull .chave').getBoundingClientRect();
+    return { l: b.left, t: b.top, r: b.right, b: b.bottom, w: innerWidth, h: innerHeight };
+  });
+  assert.ok(r.l >= 0 && r.t >= 0 && r.r <= r.w && r.b <= r.h, 'a chave inteira aparece sem rolar: ' + JSON.stringify(r));
+  await pg.click('#bkfull .mx');
+  assert.equal(await pg.$('#bkfull'), null);
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
 test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e centralizada)', async () => {
   const { pg, erros, fechar } = await abrirApp();
   await pg.evaluate(() => moeda());

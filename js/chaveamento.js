@@ -106,6 +106,43 @@ function chaveHTML(S) {
     const hd = [...(o ? ['PRELIMINAR'] : []), '1ª RODADA', '2ª RODADA', 'GRUPOS', 'SEMIFINAIS', 'FINAL', 'CAMPEÃO']
       .map((t, c) => `<div class="bk-h" style="left:${X(c - o)}px;width:${BW}px">${t}</div>`)
       .join('');
-    return `<div class="bk-wrap"><div class="chave" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${ln}</svg>${hd}${bx}</div></div><p class="cnote" style="margin:4px 0 8px">Arraste para o lado para ver até a final. Toque num duelo jogado para ver a análise do Oráculo.</p>`;
+    return `<button class="btn sec bk-amp" onclick="chaveAmpliar(this)">⛶ Ver a chave inteira</button><div class="bk-wrap"><div class="chave" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${ln}</svg>${hd}${bx}</div></div><p class="cnote" style="margin:4px 0 8px">Arraste para o lado ou toque em ⛶ para ver a chave inteira. Toque num duelo jogado para ver a análise do Oráculo.</p>`;
   });
+}
+
+// Tela cheia: a chave inteira ajustada à tela. No celular em pé, ela gira 90° quando isso deixa tudo maior.
+function chaveAmpliar(btn) {
+  const orig = btn.parentElement.querySelector('.chave');
+  if (!orig) return;
+  const fs = document.createElement('div');
+  fs.id = 'bkfull';
+  fs.innerHTML = `<div class="bkf-dica"></div><button class="mx" aria-label="Fechar">✕</button><div class="bkf-in"></div>`;
+  const ch = orig.cloneNode(true);
+  fs.querySelector('.bkf-in').appendChild(ch);
+  const sair = () => {
+    fs.remove();
+    removeEventListener('resize', ajusta);
+    removeEventListener('keydown', esc);
+  };
+  const esc = e => e.key === 'Escape' && sair();
+  const ajusta = () => {
+    const W = orig.offsetWidth,
+      H = orig.offsetHeight,
+      vw = innerWidth - 16,
+      vh = innerHeight - 56,
+      reto = Math.min(vw / W, vh / H),
+      girado = Math.min(vw / H, vh / W),
+      gira = girado > reto * 1.15,
+      k = gira ? girado : reto;
+    ch.style.transform = `translate(-50%, -50%) ${gira ? 'rotate(90deg) ' : ''}scale(${k})`;
+    fs.querySelector('.bkf-dica').textContent = gira ? '📱↺ Deite o celular para ler a chave' : '';
+  };
+  fs.querySelector('.mx').onclick = sair;
+  // tocar num duelo abre a análise dele: a tela cheia sai da frente
+  ch.addEventListener('click', e => e.target.closest('[onclick]') && sair());
+  document.body.appendChild(fs);
+  ajusta();
+  addEventListener('resize', ajusta);
+  addEventListener('keydown', esc);
+  play('click');
 }
