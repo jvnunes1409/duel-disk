@@ -181,6 +181,12 @@ function drawCards(i, c, msg) {
     const ex = todos.filter(k => c[k] && cat(c[k].d) === 'E'),
       pr = todos.filter(k => !ex.includes(k));
     $('#clN').textContent = '(' + soma(pr) + (ex.length ? ' + ' + soma(ex) + ' no Extra' : '') + ')';
+    // Deck Principal tem no mínimo 40 cartas: se der menos, a lista está sem alguma cópia repetida
+    if (soma(pr) < 40)
+      $('#clN').insertAdjacentHTML(
+        'beforeend',
+        `<small class="clav">⚠️ O Deck Principal precisa de pelo menos 40 cartas: falta alguma cópia repetida nesta lista.</small>`
+      );
   } else $('#clN').textContent = '(' + soma(todos) + ')';
   if (!c) {
     el.innerHTML =

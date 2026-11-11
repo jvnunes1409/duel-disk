@@ -4072,3 +4072,10 @@ body.demo .stabs {
   line-height: 1;
   box-shadow: 0 2px 8px #0008;
 }
+.clav {
+  display: block;
+  margin-top: 4px;
+  color: #ffb4a8;
+  font: 600 0.75rem system-ui, sans-serif;
+  letter-spacing: 0;
+}
