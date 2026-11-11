@@ -249,6 +249,86 @@ test('chaveamento do torneio: 12 + 6 + 2 + 1 duelos, grupos e campeão', async (
   await fechar();
 });
 
+test('torneio novo inclui os 28 decks (preliminar de 4 duelos) sem mexer num torneio antigo de 24', async () => {
+  const { pg, erros, fechar } = await abrirApp();
+  const r = await pg.evaluate(() => {
+    // torneio antigo, de 24 decks, em andamento
+    const antigo = mkT([...Array(24).keys()]);
+    const nAntigo = Object.keys(antigo.M).length;
+    // torneio novo, como o botão Sortear monta
+    T = mkT(shuffle([...Array(BASEN).keys()]));
+    const M = Object.values(T.M),
+      pre = M.filter(m => m.st === 'pre'),
+      nomes = new Set(),
+      junta = r => r.d && nomes.add(r.d);
+    M.forEach(m => (junta(m.a), junta(m.b)));
+    // o vencedor da preliminar 1 aparece no duelo certo da 1ª rodada
+    const m = T.M['pre-1'];
+    m.w = 1;
+    const alvo = M.find(x => x.st === 'r1' && (x.a.win === 'pre-1' || x.b.win === 'pre-1'));
+    const chega = side(alvo, alvo.a.win === 'pre-1' ? 0 : 1) === side(m, 1);
+    TV = null;
+    rT();
+    return {
+      nAntigo,
+      preAntigo: Object.keys(antigo.M).filter(k => k.startsWith('pre')).length,
+      pre: pre.length,
+      total: M.length,
+      decks: nomes.size,
+      chega,
+      destino: destTxt(m),
+      abaPrelim: [...document.querySelectorAll('.tstp button')].some(b => b.textContent.includes('Prelim')),
+      chave: (() => {
+        const d = document.createElement('div');
+        d.innerHTML = chaveHTML(T);
+        return d.querySelectorAll('.bk-m').length;
+      })(),
+    };
+  });
+  assert.equal(r.nAntigo, 27, 'o formato antigo continua com 27 duelos');
+  assert.equal(r.preAntigo, 0);
+  assert.equal(r.pre, 4);
+  assert.equal(r.total, 31);
+  assert.equal(r.decks, 28, 'todos os 28 decks entram, sem repetir');
+  assert.ok(r.chega, 'o vencedor da preliminar entra na 1ª rodada');
+  assert.match(r.destino, /^1ª Rodada · C\d+ com (Douglas|João)$/);
+  assert.ok(r.abaPrelim);
+  assert.equal(r.chave, 25, 'a chave visual desenha a preliminar');
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
+test('Stats em abas e 🏆 para os decks campeões', async () => {
+  const { pg, erros, fechar } = await abrirApp();
+  const r = await pg.evaluate(() => {
+    const d0 = DECKS[0][0];
+    hist.unshift({ t: Date.now(), w: 0, dur: 60000, decks: [d0, DECKS[1][0]], lp: [8000, 0], log: [] });
+    CAMP = [{ t: Date.now(), c: d0, v: DECKS[1][0], p: 0, s: [12, 9] }];
+    rLista();
+    goTab('stats');
+    const secoes = k => {
+      STAB = k;
+      rS();
+      return [...document.querySelectorAll('#stx .sh')].map(e => e.textContent);
+    };
+    const card = [...document.querySelectorAll('#lista .dk')].find(e => e.querySelector('b').textContent === d0);
+    return {
+      jog: secoes('jog'),
+      deck: secoes('deck'),
+      ora: secoes('ora'),
+      selo: card.querySelector('.tit')?.textContent,
+      dourado: card.classList.contains('camp'),
+    };
+  });
+  assert.ok(r.jog.some(t => t.includes('DOUGLAS × JOÃO')) && !r.jog.some(t => t.includes('RANKING')));
+  assert.ok(r.deck.some(t => t.includes('CAMPEÕES DE TORNEIO')) && !r.deck.some(t => t.includes('DOUGLAS')));
+  assert.ok(!r.ora.some(t => t.includes('DECKS')));
+  assert.equal(r.selo, '🏆');
+  assert.ok(r.dourado);
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
 test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e centralizada)', async () => {
   const { pg, erros, fechar } = await abrirApp();
   await pg.evaluate(() => moeda());

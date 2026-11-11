@@ -55,6 +55,7 @@ function torneioCard(S, cur) {
       f = S.M.f,
       done = !!(f && f.w != null),
       STG = [
+        ['pre', 'PRELIMINAR'],
         ['r1', '1ª RODADA'],
         ['r2', '2ª RODADA'],
         ['g', 'FASE DE GRUPOS'],

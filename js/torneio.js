@@ -1,9 +1,17 @@
-// Torneio de 24 decks: mata-mata, grupos, semifinais e final.
-// ===== Torneio: 24 decks, chave fixa =====
-// Caminho: R1 (12 duelos) → R2 (6) → Grupos A e B (3 decks, todos contra todos) → Semifinais → Final.
+// Torneio com todos os decks: preliminar, mata-mata, grupos, semifinais e final.
+// ===== Torneio: chave fixa de 24 vagas =====
+// Caminho: Preliminar (se houver mais de 24 decks) → R1 (12 duelos) → R2 (6) → Grupos A e B → Semifinais → Final.
+// Com 28 decks, 8 sorteados jogam a preliminar (4 duelos) e os 4 vencedores ocupam as últimas vagas da 1ª rodada.
+// Torneios antigos (sem preliminar) continuam funcionando igual.
 // Lado 0 de cada duelo = Douglas, lado 1 = João.
-const STN = { r1: '1ª Rodada', r2: '2ª Rodada', g: 'Grupos', sf: 'Semifinal', f: 'Final' },
-  STC = { r1: 'R1', r2: 'R2', g: 'Grupos', sf: 'Semi', f: 'Final' };
+const STN = { pre: 'Preliminar', r1: '1ª Rodada', r2: '2ª Rodada', g: 'Grupos', sf: 'Semifinal', f: 'Final' },
+  STC = { pre: 'Prelim.', r1: 'R1', r2: 'R2', g: 'Grupos', sf: 'Semi', f: 'Final' };
+// Quantos duelos de preliminar e em qual duelo da 1ª rodada (e de que lado) entra cada vencedor
+const PRE_N = () => Math.max(0, Math.min(12, BASEN - TORN));
+const preDest = j => {
+  const k = PRE_N();
+  return { r1: Math.round(((j - 1) * 12) / k) + 1, lado: j % 2 ? 0 : 1 };
+};
 const GRP = { A: ['r2-1', 'r2-2', 'r2-3'], B: ['r2-4', 'r2-5', 'r2-6'] };
 let T = null,
   TV = null,
@@ -28,6 +36,7 @@ function saveCamp() {
     localStorage.setItem('ygo_camp', s);
   } catch (e) {}
   KV.set('camp', s);
+  if (typeof rLista === 'function') rLista(); // atualiza os 🏆 da aba Decks
 }
 KV.get('torneio').then(s => {
   if (T || !s) return;
@@ -80,6 +89,7 @@ KV.get('camp').then(s => {
     if (Array.isArray(x) && x.length) {
       CAMP = x;
       rT();
+      rLista();
     }
   } catch (e) {}
 });
@@ -95,8 +105,21 @@ function shuffle(a) {
 function mkT(perm) {
   const M = {},
     add = (id, st, n, a, b) => (M[id] = { id, st, n, a, b, w: null, lp: null, h: null });
-  for (let k = 1; k <= 12; k++)
-    add('r1-' + k, 'r1', k, { d: DECKS[perm[2 * k - 2]][0] }, { d: DECKS[perm[2 * k - 1]][0] });
+  // perm: todos os decks do torneio em ordem sorteada. Os primeiros vão para a preliminar.
+  const k = perm.length > TORN ? perm.length - TORN : 0,
+    d = i => ({ d: DECKS[perm[i]][0] });
+  let p = 0;
+  for (let j = 1; j <= k; j++) add('pre-' + j, 'pre', j, d(p++), d(p++));
+  const vem = {};
+  for (let j = 1; j <= k; j++) {
+    const x = preDest(j);
+    vem[x.r1 + '-' + x.lado] = { win: 'pre-' + j };
+  }
+  for (let n = 1; n <= 12; n++) {
+    const a = vem[n + '-0'] || d(p++),
+      b = vem[n + '-1'] || d(p++);
+    add('r1-' + n, 'r1', n, a, b);
+  }
   for (let k = 1; k <= 6; k++) add('r2-' + k, 'r2', k, { win: 'r1-' + (2 * k - 1) }, { win: 'r1-' + 2 * k });
   ['A', 'B'].forEach(g =>
     [
@@ -190,11 +213,19 @@ function srcTxt(r) {
   if (r.grp) r = { win: GRP[r.grp][r.k] };
   if (r.win) {
     const [s, n] = r.win.split('-');
-    return s === 'sf' ? 'Vencedor da Semi ' + n : 'Vencedor ' + s.toUpperCase() + ' · C' + n;
+    return s === 'sf'
+      ? 'Vencedor da Semi ' + n
+      : s === 'pre'
+        ? 'Vencedor da Preliminar · C' + n
+        : 'Vencedor ' + s.toUpperCase() + ' · C' + n;
   }
   return r.pos ? `${r.p}º do Grupo ${r.pos}` : '?';
 }
 function destTxt(m) {
+  if (m.st === 'pre') {
+    const x = preDest(m.n);
+    return `1ª Rodada · C${x.r1} com ${NOMES[x.lado]}`;
+  }
   if (m.st === 'r1') return `2ª Rodada · C${Math.ceil(m.n / 2)} com ${NOMES[m.n % 2 ? 0 : 1]}`;
   if (m.st === 'r2') return 'Grupo ' + (m.n <= 3 ? 'A' : 'B');
   if (m.st === 'sf') return 'Final com ' + NOMES[m.n - 1];
@@ -283,7 +314,8 @@ function sortT() {
   tBusy = true;
   TV = 'r1';
   play('sweep');
-  const ix = [...Array(TORN).keys()];
+  // todos os decks do app entram (os cadastrados no aparelho ficam de fora)
+  const ix = [...Array(Math.min(BASEN, TORN + 12)).keys()];
   let n = 0;
   const iv = setInterval(() => {
     T = mkT(shuffle(ix));
@@ -366,9 +398,9 @@ function rT(an) {
   const el = $('#tour');
   if (!el) return;
   if (!T) {
-    el.innerHTML = `<div class="card thd"><h2 style="margin:4px 0;color:var(--gd);font:900 1.05rem Impact,sans-serif;letter-spacing:1.5px">🏟️ MATA-MATA DOS 24 DECKS</h2>
-  <details class="tinfo"><summary>ℹ️ Como funciona</summary><ul class="tfl"><li><b>1ª RODADA</b><span>12 duelos sorteados, quem perde sai</span></li><li><b>2ª RODADA</b><span>6 duelos entre os vencedores</span></li><li><b>GRUPOS</b><span>2 grupos de 3, todos contra todos; passam 2 de cada</span></li><li><b>SEMIFINAL</b><span>1º do A × 2º do B · 2º do A × 1º do B</span></li><li><b>FINAL</b><span>1 duelo valendo o título</span></li></ul>
-  <div class="trule"><p><b>Quem usa cada deck:</b> na 1ª rodada o sorteio define. Na 2ª, Douglas usa o vencedor do confronto ímpar e João o do par (C1 × C2, C3 × C4…). Nos grupos, cada um usa cada deck uma vez. Na semi, cada um fica com um 1º colocado. Na final, Douglas usa o vencedor da Semi 1 e João o da Semi 2.</p></div></details>
+    el.innerHTML = `<div class="card thd"><h2 style="margin:4px 0;color:var(--gd);font:900 1.05rem Impact,sans-serif;letter-spacing:1.5px">🏟️ MATA-MATA DOS ${Math.min(BASEN, TORN + 12)} DECKS</h2>
+  <details class="tinfo"><summary>ℹ️ Como funciona</summary><ul class="tfl">${PRE_N() ? `<li><b>PRELIMINAR</b><span>${PRE_N() * 2} decks sorteados fazem ${PRE_N()} duelos; os vencedores entram na 1ª rodada</span></li>` : ''}<li><b>1ª RODADA</b><span>12 duelos sorteados, quem perde sai</span></li><li><b>2ª RODADA</b><span>6 duelos entre os vencedores</span></li><li><b>GRUPOS</b><span>2 grupos de 3, todos contra todos; passam 2 de cada</span></li><li><b>SEMIFINAL</b><span>1º do A × 2º do B · 2º do A × 1º do B</span></li><li><b>FINAL</b><span>1 duelo valendo o título</span></li></ul>
+  <div class="trule"><p><b>Quem usa cada deck:</b> na preliminar e na 1ª rodada o sorteio define (o vencedor de cada preliminar já tem lugar marcado na chave). Na 2ª, Douglas usa o vencedor do confronto ímpar e João o do par (C1 × C2, C3 × C4…). Nos grupos, cada um usa cada deck uma vez. Na semi, cada um fica com um 1º colocado. Na final, Douglas usa o vencedor da Semi 1 e João o da Semi 2.</p></div></details>
   <button class="btn" onclick="sortT()">🎲 Sortear chaveamento</button></div>${ligaIntro()}${campHTML()}`;
     return;
   }
@@ -387,6 +419,7 @@ function rT(an) {
       .map(s => {
         const ms = M.filter(m => m.st === s),
           d = ms.filter(m => m.w != null).length;
+        if (!ms.length) return '';
         return `<button class="${TV === s ? 'on' : ''} ${d === ms.length ? 'ok' : ''}" onclick="TV='${s}';rT();play('click')">${STC[s]}<small>${d === ms.length ? '✓' : d + '/' + ms.length}</small></button>`;
       })
       .join('') +

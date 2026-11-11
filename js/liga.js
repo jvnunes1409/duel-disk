@@ -188,6 +188,42 @@ function rLiga(an) {
     campHTML();
   el.innerHTML = h;
 }
+// Títulos de cada deck (campeão e vice de torneios e ligas já encerrados)
+function titulos(nome) {
+  return {
+    c: CAMP.filter(x => x.c === nome).length,
+    v: CAMP.filter(x => x.v === nome).length,
+  };
+}
+// Selo ao lado do nome do deck: 🏆 (ou 🏆×2, 🏆×3…)
+function selo(nome) {
+  const t = titulos(nome);
+  return t.c ? `<span class="tit" title="Campeão de ${t.c} torneio${t.c > 1 ? 's' : ''}">🏆${t.c > 1 ? '×' + t.c : ''}</span>` : '';
+}
+// Stats → Decks: hall dos campeões
+function campeoesHTML() {
+  const ds = {};
+  CAMP.forEach(x => {
+    [
+      [x.c, 'c'],
+      [x.v, 'v'],
+    ].forEach(([n, k]) => {
+      if (!n) return;
+      const q = ds[n] || (ds[n] = { n, c: 0, v: 0, ult: 0 });
+      q[k]++;
+      if (k === 'c') q.ult = Math.max(q.ult, x.t);
+    });
+  });
+  const L = Object.values(ds).sort((a, b) => b.c - a.c || b.v - a.v || b.ult - a.ult);
+  return `<div class="sh">🏆 CAMPEÕES DE TORNEIO</div><div class="card">${
+    L.length
+      ? L.map(q => {
+          const i = DI(q.n);
+          return `<div class="rk ${q.c ? 'camp' : ''}" ${i >= 0 ? `onclick="info(${i})"` : ''}>${art(i < 0 ? null : i)}<div class="mid"><b>${esc(q.n)}</b><small>${q.c ? `🏆 ${q.c} título${q.c > 1 ? 's' : ''}` : ''}${q.c && q.v ? ' · ' : ''}${q.v ? `🥈 ${q.v} vice${q.v > 1 ? 's' : ''}` : ''}${q.ult ? ` · último em ${new Date(q.ult).toLocaleDateString('pt-BR')}` : ''}</small></div><div class="vd">${q.c ? '🏆'.repeat(Math.min(q.c, 3)) : '🥈'}</div></div>`;
+        }).join('')
+      : '<div class="mini">Quando um torneio ou liga terminar, o campeão aparece aqui e ganha um 🏆 na aba Decks.</div>'
+  }</div>`;
+}
 function campHTML() {
   if (!CAMP.length) return '';
   return (

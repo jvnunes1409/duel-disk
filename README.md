@@ -22,8 +22,8 @@ Num duelo casual de cartas físicas, nada fica registrado. Não dá para saber q
 |---|---|
 | **Sorteio** | Sorteio de decks em "modo justo" (diferença máxima de 1 tier) ou total, sem repetir decks recentes |
 | **Duelo** | Contador de LP com teclado numérico, turnos, moeda, dado, sons e animações no estilo do anime |
-| **Torneio** | 24 decks em mata-mata, fase de grupos, semifinais e final, com chaveamento visual estilo Copa do Mundo |
-| **Histórico** | Todos os duelos com decks, duração, LP final e registro de dano; estatísticas e ranking Elo por deck |
+| **Torneio** | Todos os 28 decks: preliminar, mata-mata, fase de grupos, semifinais e final, com chaveamento visual estilo Copa do Mundo; os campeões ganham 🏆 |
+| **Histórico** | Todos os duelos com decks, duração, LP final e registro de dano; estatísticas em abas (jogadores, decks, tiers, Oráculo) e ranking Elo por deck |
 | **🔮 Oráculo** | Previsão antes do duelo, jogadas por voz, crônica narrada e veredito depois do duelo |
 
 ## Como a IA é usada
@@ -64,7 +64,7 @@ Uma IA que soa convincente não é necessariamente uma IA que acerta. Por isso, 
 | 🏷️ **Tier** | Só a nossa classificação manual dos decks |
 | 🪙 **Moeda** | 50% sempre; a referência mínima |
 
-As métricas, em *Stats → Placar do Oráculo*:
+As métricas, em *Stats → 🔮 Oráculo*:
 - **Acerto:** quem recebeu mais de 50% venceu?
 - **Brier score:** erro quadrático da probabilidade (menor é melhor; 0,25 equivale a chutar 50%). Ele pune a IA que diz "90%" e erra mais do que a que diz "60%" e erra.
 - **Calibragem:** quando a IA diz 70%, ela acerta cerca de 70% das vezes?
@@ -75,7 +75,7 @@ Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **22 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **24 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
 - **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
@@ -143,7 +143,7 @@ js/
   duelo-salvo.js            retoma o duelo se a aba recarregar
   historico.js, backup.js   histórico e backup
   estatisticas.js           estatísticas, conquistas e Elo
-  torneio.js, liga.js       torneio de 24 decks e liga de pontos corridos
+  torneio.js, liga.js       torneio com preliminar e liga de pontos corridos
   chaveamento.js            chave visual do torneio
   ia/oraculo.js             previsão, crônica e placar da IA contra Elo, tier e moeda
   ia/oraculo-historico.js   veredito depois do duelo

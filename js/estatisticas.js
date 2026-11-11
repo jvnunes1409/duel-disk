@@ -1,6 +1,8 @@
 // Estatísticas, conquistas, Elo e desempenho do aparelho.
 // ===== Estatísticas =====
 let SF = 'all',
+  // aba da tela Stats: jog (jogadores), deck, tier, ora (Oráculo)
+  STAB = 'jog',
   SO = 'pct',
   SR = [],
   SD = {};
@@ -280,6 +282,15 @@ function rS() {
         `<button class="${SF === k ? 'on' : ''}" onclick="SF='${k}';rS();play('click')">${t}</button>`
     )
     .join('')}</div>`;
+  const ABAS = [
+    ['jog', '⚔️ Jogadores'],
+    ['deck', '🃏 Decks'],
+    ['tier', '⚖️ Tiers'],
+    ['ora', '🔮 Oráculo'],
+  ];
+  o += `<div class="stabs">${ABAS.map(([k, t]) => `<button class="${STAB === k ? 'on' : ''}" onclick="STAB='${k}';rS();scrollTo({top:0});play('click')">${t}</button>`).join('')}</div>`;
+  // cada seção vai para a sua aba; só a aba escolhida aparece
+  const AB = { jog: '', deck: '', tier: '', ora: '' };
   if (!R.length) {
     el.innerHTML =
       o +
@@ -323,7 +334,7 @@ function rS() {
       return `<div class="sv"><b class="${bA ? 'best' : ''}">${a == null ? '–' : f(a)}</b><span>${lab}</span><b class="${bB ? 'best' : ''}">${b == null ? '–' : f(b)}</b></div>`;
     },
     id = x => x;
-  o += `<div class="sh">⚔️ DOUGLAS × JOÃO</div><div class="card"><div class="vsh"><div><b style="color:var(--g)">DOUGLAS</b><span class="bn">${P[0].v}</span></div><span class="x">×</span><div><b style="color:var(--b)">JOÃO</b><span class="bn">${P[1].v}</span></div></div>
+  AB.jog += `<div class="sh">⚔️ DOUGLAS × JOÃO</div><div class="card"><div class="vsh"><div><b style="color:var(--g)">DOUGLAS</b><span class="bn">${P[0].v}</span></div><span class="x">×</span><div><b style="color:var(--b)">JOÃO</b><span class="bn">${P[1].v}</span></div></div>
   <div class="sbar">${P[0].v ? `<i style="width:${(P[0].v / n) * 100}%;background:var(--g)"></i>` : ''}${P[1].v ? `<i style="width:${(P[1].v / n) * 100}%;background:var(--b)"></i>` : ''}</div>
   <div class="sbl"><span>${pct(P[0].v, n)} das vitórias</span><span>${n} duelo${n > 1 ? 's' : ''}</span><span>${pct(P[1].v, n)} das vitórias</span></div>
   <div class="mini" style="margin-bottom:6px">${cn > 1 ? `🔥 ${NOMES[cw]} está numa sequência de ${cn} vitórias` : `Última vitória: ${NOMES[cw]}`}</div>
@@ -333,7 +344,7 @@ function rS() {
   ${row('Viradas (venceu estando 2000+ LP atrás)', P[0].vir, P[1].vir, id)}${row('Vitórias perfeitas (8000 LP)', P[0].perf, P[1].perf, id)}${row('Vitórias no sufoco (≤1000 LP)', P[0].suf, P[1].suf, id)}
   ${row('Aproveitamento quando começa', P[0].st ? Math.round((P[0].sw / P[0].st) * 100) : null, P[1].st ? Math.round((P[1].sw / P[1].st) * 100) : null, x => x + '%')}${row('Vitória em menos turnos', P[0].mt, P[1].mt, x => x + ' turno' + (x > 1 ? 's' : ''), 1)}</div>`;
   // --- Corrida do placar
-  o += `<div class="sh">📈 CORRIDA DO PLACAR</div><div class="card">${n < 2 ? '<div class="mini">Aparece a partir de 2 duelos.</div>' : raceSVG(R) + '<div class="mini">Saldo de vitórias ao longo dos duelos · toque no gráfico para ver cada duelo</div>'}</div>`;
+  AB.jog += `<div class="sh">📈 CORRIDA DO PLACAR</div><div class="card">${n < 2 ? '<div class="mini">Aparece a partir de 2 duelos.</div>' : raceSVG(R) + '<div class="mini">Saldo de vitórias ao longo dos duelos · toque no gráfico para ver cada duelo</div>'}</div>`;
   // --- Tempo
   const T2 = R.filter(x => x.h.dur > 0),
     tot = T2.reduce((a, x) => a + x.h.dur, 0),
@@ -346,7 +357,7 @@ function rS() {
   });
   const bd = Object.entries(days).sort((a, b) => b[1] - a[1])[0];
   const vs = x => (x && x.h.decks ? `${esc(x.h.decks[0])} × ${esc(x.h.decks[1])}` : 'decks não sorteados');
-  o += `<div class="sh">⏱ TEMPO</div><div class="tiles">
+  AB.jog += `<div class="sh">⏱ TEMPO</div><div class="tiles">
   <div class="tile"><small>Tempo total de duelo</small><b>${T2.length ? (tot >= 36e5 ? Math.floor(tot / 36e5) + 'h ' + String(Math.floor((tot % 36e5) / 6e4)).padStart(2, '0') + 'm' : fmt(tot)) : '–'}</b><span>${T2.length} duelo${T2.length === 1 ? '' : 's'} cronometrado${T2.length === 1 ? '' : 's'}</span></div>
   <div class="tile"><small>Duração média</small><b>${T2.length ? fmt(tot / T2.length) : '–'}</b><span>por duelo</span></div>
   <div class="tile"><small>Duelo mais longo</small><b>${lg ? fmt(lg.h.dur) : '–'}</b><span>${lg ? vs(lg) : ''}</span></div>
@@ -375,7 +386,7 @@ function rS() {
     rs = mx((x, p) => (x.h.w === p && x.h.lp[p] > 0 ? 8001 - x.h.lp[p] : 0)),
     rm = R.slice().sort((a, b) => b.r.hits - a.r.hits)[0];
   const dk = (x, p) => (x.h.decks ? ' com ' + esc(x.h.decks[p]) : '');
-  o += `<div class="sh">🏅 RECORDES</div><div class="card">
+  AB.jog += `<div class="sh">🏅 RECORDES</div><div class="card">
   ${rb ? `<div class="rec"><i>💥</i><div><b>Maior dano em uma BP</b><small>${NOMES[rb.p]}${dk(rb.x, rb.p)} · ${dt(rb.x.h.t)}</small></div><em>${nf(rb.v)}</em></div>` : ''}
   ${rv ? `<div class="rec"><i>🔄</i><div><b>Maior virada</b><small>${NOMES[rv.p]}${dk(rv.x, rv.p)} estava ${nf(rv.v)} LP atrás e venceu · ${dt(rv.x.h.t)}</small></div><em>${nf(rv.v)}</em></div>` : ''}
   ${rs ? `<div class="rec"><i>😰</i><div><b>Vitória mais no sufoco</b><small>${NOMES[rs.p]}${dk(rs.x, rs.p)} venceu com ${nf(8001 - rs.v)} LP · ${dt(rs.x.h.t)}</small></div><em>${nf(8001 - rs.v)}</em></div>` : ''}
@@ -392,7 +403,7 @@ function rS() {
   const mvl = Object.values(mvm)
     .sort((a, b) => b.c - a.c)
     .slice(0, 10);
-  o += `<div class="sh">⭐ CARTAS MVP</div><div class="card">${mvl.length ? mvl.map((x, k) => `<div class="rk" style="cursor:default"><span class="no">${k + 1}</span><div class="ph" ${x.is ? `style="background-image:url('${x.is}')"` : ''}></div><div class="mid"><b>${esc(x.n)}</b><small>${esc(x.dk)}</small></div><div class="vd">${x.c}×<small>MVP</small></div></div>`).join('') : '<div class="mini">Escolham a carta MVP no fim de cada duelo para montar este ranking.</div>'}</div>`;
+  const mvpHTML = `<div class="sh">⭐ CARTAS MVP</div><div class="card">${mvl.length ? mvl.map((x, k) => `<div class="rk" style="cursor:default"><span class="no">${k + 1}</span><div class="ph" ${x.is ? `style="background-image:url('${x.is}')"` : ''}></div><div class="mid"><b>${esc(x.n)}</b><small>${esc(x.dk)}</small></div><div class="vd">${x.c}×<small>MVP</small></div></div>`).join('') : '<div class="mini">Escolham a carta MVP no fim de cada duelo para montar este ranking.</div>'}</div>`;
   // --- Decks
   const S = (SD = deckStats(R)),
     L = Object.values(S);
@@ -406,7 +417,7 @@ function rS() {
       fs = L.filter(s => s.wc).sort((a, b) => a.wd / a.wc - b.wd / b.wc)[0],
       mu = by((a, b) => b.g - a.g),
       bd2 = by((a, b) => b.dmg / b.g - a.dmg / a.g, 2);
-    o += `<div class="sh">🃏 DECKS</div><div class="tiles">${t('Mais vitórias', mv, mv.v + ' vitória' + (mv.v > 1 ? 's' : ''))}${t('Melhor aproveitamento', bp, bp && pct(bp.v, bp.g) + ' em ' + bp.g + ' jogos', 'mínimo de 3 jogos')}
+    AB.deck += campeoesHTML() + `<div class="sh">🃏 DECKS</div><div class="tiles">${t('Mais vitórias', mv, mv.v + ' vitória' + (mv.v > 1 ? 's' : ''))}${t('Melhor aproveitamento', bp, bp && pct(bp.v, bp.g) + ' em ' + bp.g + ' jogos', 'mínimo de 3 jogos')}
    ${t('Mais rápido para vencer', fs, fs && 'média de ' + fmt(fs.wd / fs.wc))}${t('Mais destrutivo', bd2, bd2 && nf(bd2.dmg / bd2.g) + ' de dano por duelo', 'mínimo de 2 jogos')}
    ${t('Mais jogado', mu, mu.g + ' duelos')}${t('Mais derrotas', ml, ml.d + ' derrota' + (ml.d > 1 ? 's' : ''))}</div>`;
     const sorts = {
@@ -415,7 +426,7 @@ function rS() {
       g: (a, b) => b.g - a.g || b.v - a.v,
     };
     const un = DECKS.map(d => d[0]).filter(x => !S[x]);
-    o +=
+    AB.deck +=
       `<div class="card" style="margin-top:12px"><div class="clh" style="margin-top:0">RANKING DE DECKS</div><div class="chips" style="margin-bottom:4px">${[
         ['pct', 'Aproveitamento'],
         ['v', 'Vitórias'],
@@ -436,8 +447,8 @@ function rS() {
     const CF = conf()
       .filter(x => x.g > 0)
       .sort((a, b) => b.sc - a.sc || b.g - a.g);
-    o +=
-      `<div class="sh">📊 DESEMPENHO POR CONFRONTO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Para cada deck, vitórias e derrotas contra um deck <b>mais fraco</b>, do <b>mesmo tier</b> e <b>mais forte</b>. Contra um mais fraco, o esperado é vencer 65%; contra o mesmo tier, 50%; contra um mais forte, 35%. Vencer um deck forte rende bastante e perder para um fraco pesa bastante. O saldo é a média de (resultado − esperado) por duelo. Com ${CFN} duelos ou mais, saldo de +${CFL * 100} pontos ou mais sugere subir um tier e −${CFL * 100} ou menos sugere descer. Conta todos os duelos.</div>` +
+    const confHTML =
+      `<details class="stdet"><summary>📊 Detalhe: contra decks mais fracos, iguais e mais fortes</summary><div class="card"><div class="cnote" style="margin:0 0 6px">Para cada deck, vitórias e derrotas contra um deck <b>mais fraco</b>, do <b>mesmo tier</b> e <b>mais forte</b>. Contra um mais fraco, o esperado é vencer 65%; contra o mesmo tier, 50%; contra um mais forte, 35%. Vencer um deck forte rende bastante e perder para um fraco pesa bastante. O saldo é a média de (resultado − esperado) por duelo. Com ${CFN} duelos ou mais, saldo de +${CFL * 100} pontos ou mais sugere subir um tier e −${CFL * 100} ou menos sugere descer. Conta todos os duelos.</div>` +
       (CF.length
         ? CF.map(
             x =>
@@ -452,11 +463,11 @@ function rS() {
                 )}</div></div><div class="cfr"><b class="${x.sc > 0 ? 'pos' : x.sc < 0 ? 'neg' : ''}">${x.sc > 0 ? '+' : ''}${Math.round(x.sc * 100)}</b><small>pts vs esperado</small>${x.g < CFN ? `<span class="sug">poucos jogos (${x.g}/${CFN})</span>` : x.sug === x.cur ? '<span class="sug">✓ tier certo</span>' : `<button class="sug ${x.sug < x.cur ? 'up' : 'dn'}" onclick="event.stopPropagation();applyTier(${x.i},${x.sug})">${x.sug < x.cur ? '↑' : '↓'} Tier ${x.sug}</button>`}</div></div>`
           ).join('')
         : '<div class="mini" style="text-align:left">Ainda sem duelos com decks sorteados.</div>') +
-      `<div class="cnote">Legenda: ↓ fraco = deck de tier pior que o seu · ↑ forte = deck de tier melhor. Tier 1 é o mais forte.</div></div>`;
+      `<div class="cnote">Legenda: ↓ fraco = deck de tier pior que o seu · ↑ forte = deck de tier melhor. Tier 1 é o mais forte.</div></div></details>`;
     const EL = elo()
       .filter(x => x.g > 0)
       .sort((a, b) => b.e - a.e);
-    o +=
+    AB.tier +=
       `<div class="sh">⚖️ FORÇA REAL · TIER SUGERIDO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Cada deck começa com a pontuação do tier original e ganha ou perde pontos a cada duelo; vencer um deck mais forte vale mais. Com 4 jogos ou mais, o app sugere o tier que os resultados indicam. Conta todos os duelos.</div>` +
       EL.map(
         (x, k) =>
@@ -478,7 +489,7 @@ function rS() {
       const d = tt[h.w] - tt[1 - h.w];
       if (d > 0) zb.push({ h, d, tt });
     });
-    o +=
+    AB.tier +=
       `<div class="sh">🎯 TIERS</div><div class="card">` +
       [1, 2, 3, 4, 5]
         .map(k => {
@@ -499,36 +510,16 @@ function rS() {
             .join('')
         : '<div class="mini" style="text-align:left">Nenhuma zebra ainda.</div>') +
       `</div>`;
-    // --- Atributos
-    const ag = {};
-    R.forEach(({ h }) => {
-      if (!h.decks) return;
-      [0, 1].forEach(p => {
-        const i = DI(h.decks[p]);
-        if (i < 0) return;
-        const a = DECKS[i][2],
-          q = ag[a] || (ag[a] = [0, 0]);
-        q[0] += h.w === p ? 1 : 0;
-        q[1]++;
-      });
-    });
-    o +=
-      `<div class="sh">🌗 ATRIBUTOS</div><div class="card">` +
-      Object.entries(ag)
-        .sort((a, b) => b[1][0] / b[1][1] - a[1][0] / a[1][1])
-        .map(
-          ([a, q]) =>
-            `<div class="hb"><span style="display:flex;align-items:center;gap:5px;font-weight:800;font-size:.72rem">${atr(a).replace('class="atr"', 'class="atr" style="position:static;width:18px;height:18px;display:inline-block"')}${a}</span><div class="pb"><i style="width:${(q[0] / q[1]) * 100}%"></i></div><span><b>${pct(q[0], q[1])}</b> · ${q[1]} jogo${q[1] > 1 ? 's' : ''}</span></div>`
-        )
-        .join('') +
-      `</div>`;
+    AB.tier += confHTML;
   } else
-    o += `<div class="sh">🃏 DECKS</div><div class="card mini">Os duelos registrados não têm decks sorteados. Usem o Sorteio ou o Torneio para ter estatísticas por deck.</div>`;
-  o += oraPlacar(H);
+    AB.deck += `<div class="sh">🃏 DECKS</div><div class="card mini">Os duelos registrados não têm decks sorteados. Usem o Sorteio ou o Torneio para ter estatísticas por deck.</div>`;
+  AB.deck += mvpHTML;
+  if (!AB.tier) AB.tier = '<div class="card mini">Os tiers aparecem quando houver duelos com decks sorteados.</div>';
+  AB.ora += oraPlacar(H);
   const A = achv(hist),
     ids = Object.keys(ACH),
     cnt = [0, 1].map(p => Object.keys(A[p]).length);
-  o +=
+  AB.jog +=
     `<div class="sh">🏅 CONQUISTAS</div><div class="card"><div class="sbl" style="margin:0 0 4px;font-size:.85rem"><span style="color:var(--g)">Douglas ${cnt[0]}/${ids.length}</span><span style="color:var(--b)">João ${cnt[1]}/${ids.length}</span></div>` +
     ids
       .map(id => {
@@ -547,7 +538,7 @@ function rS() {
       })
       .join('') +
     `<div class="cnote">Contam todos os duelos, sem filtro.</div></div>`;
-  el.innerHTML = o;
+  el.innerHTML = o + AB[STAB];
   const sv = $('#race');
   if (sv) raceHover(sv, R);
 }
