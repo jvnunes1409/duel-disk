@@ -403,7 +403,7 @@ function oraPlacar(H) {
     cand = typeof retroCands === 'function' ? retroCands().length : 0;
   const btnRetro =
     oraOn() && cand
-      ? `<button class="btn" style="margin-top:8px" onclick="retroInicio()">🔁 Teste retroativo<small>prever às cegas ${cand} duelo${cand > 1 ? 's' : ''} antigo${cand > 1 ? 's' : ''}</small></button>`
+      ? `<button class="btn" style="margin-top:10px" onclick="retroInicio()">🔁 Teste retroativo<small>prever às cegas ${cand} duelo${cand > 1 ? 's' : ''} antigo${cand > 1 ? 's' : ''}</small></button>`
       : '';
   if (!nV && !nR)
     return oraOn()
@@ -411,46 +411,63 @@ function oraPlacar(H) {
       : '';
   if (PLV === 'vivo' && !nV) PLV = 'tudo';
   if (PLV === 'retro' && !nR) PLV = 'tudo';
-  const R = oraLinhas(H, PLV);
-  const y = h => (h.w === 0 ? 1 : 0),
-    M = [
-      ['🔮 Oráculo (IA)', h => h.p],
-      ['📈 Elo', h => h.eloP],
-      ['🏷️ Tier', h => h.tierP],
-      ['🪙 Moeda', () => 0.5],
-    ].map(([n, f]) => {
-      const v = R.filter(h => typeof f(h) === 'number');
-      return {
-        n,
-        k: v.length,
-        ac: v.filter(h => f(h) !== 0.5 && (f(h) > 0.5 ? 1 : 0) === y(h)).length,
-        br: v.length ? v.reduce((s, h) => s + (f(h) - y(h)) ** 2, 0) / v.length : null,
-      };
-    });
-  const best = Math.min(...M.filter(m => m.br != null).map(m => m.br)),
-    pct = m => (m.n.includes('Moeda') || !m.k ? '—' : Math.round((m.ac / m.k) * 100) + '%');
-  const cal = [
-    [0, 0.6],
-    [0.6, 0.75],
-    [0.75, 1.01],
+  const R = oraLinhas(H, PLV),
+    n = R.length,
+    y = h => (h.w === 0 ? 1 : 0);
+  // Acerto = quem recebeu mais de 50% venceu. Nota = Brier convertido para 0–100:
+  // 0 = igual a chutar 50% sempre (moeda), 100 = cravou 100% no vencedor todas as vezes.
+  const M = [
+    ['🔮', 'Oráculo (IA)', h => h.p],
+    ['📈', 'Elo (resultados)', h => h.eloP],
+    ['🏷️', 'Tier (sua lista)', h => h.tierP],
+  ].map(([ic, nome, f]) => {
+    const v = R.filter(h => typeof f(h) === 'number'),
+      br = v.length ? v.reduce((s, h) => s + (f(h) - y(h)) ** 2, 0) / v.length : null;
+    return {
+      ic,
+      nome,
+      k: v.length,
+      ac: v.filter(h => f(h) !== 0.5 && (f(h) > 0.5 ? 1 : 0) === y(h)).length,
+      br,
+      nota: br == null ? null : Math.round((1 - br / 0.25) * 100),
+    };
+  });
+  const ora = M[0],
+    outros = M.slice(1).filter(m => m.k),
+    melhorOutro = outros.reduce((a, m) => (m.nota > a.nota ? m : a), outros[0] || { nota: -999 });
+  // Frase-resumo em português claro
+  const dif = ora.nota - melhorOutro.nota,
+    poucos = n < 15;
+  const veredito =
+    Math.abs(dif) <= 5
+      ? `Até agora o Oráculo está <b>empatado</b> com o ${{ '📈': 'Elo', '🏷️': 'seu tier' }[melhorOutro.ic]}.`
+      : dif > 0
+        ? `Até agora o Oráculo está <b>na frente</b> dos métodos simples.`
+        : `Até agora o ${{ '📈': 'Elo', '🏷️': 'seu tier' }[melhorOutro.ic]} está <b>na frente</b> do Oráculo.`;
+  const barra = (m, melhor) =>
+    `<div class="pl-m${melhor ? ' on' : ''}"><div class="pl-t"><span>${m.ic} ${m.nome}</span><b>${m.k ? Math.round((m.ac / m.k) * 100) + '%' : '—'}</b></div>
+ <div class="pl-b"><i style="width:${m.k ? Math.round((m.ac / m.k) * 100) : 0}%"></i></div>
+ <small>acertou ${m.ac} de ${m.k} · nota da porcentagem: <b>${m.nota == null ? '—' : m.nota}</b></small></div>`;
+  const melhorNota = Math.max(...M.filter(m => m.nota != null).map(m => m.nota));
+  // Calibragem em faixas de confiança, com nomes em vez de números
+  const faixas = [
+    [0, 0.6, 'Em dúvida', 'deu entre 50% e 59%'],
+    [0.6, 0.75, 'Inclinado', 'deu entre 60% e 74%'],
+    [0.75, 1.01, 'Confiante', 'deu 75% ou mais'],
   ]
-    .map(([lo, hi]) => {
+    .map(([lo, hi, nome, txt]) => {
       const v = R.filter(h => {
         const c = Math.max(h.p, 1 - h.p);
         return c >= lo && c < hi;
       });
-      return v.length
-        ? {
-            k: v.length,
-            ac: v.filter(h => oraFav(h.p) === h.w).length,
-            cf: v.reduce((s, h) => s + Math.max(h.p, 1 - h.p), 0) / v.length,
-          }
-        : null;
+      if (!v.length) return '';
+      const ac = v.filter(h => oraFav(h.p) === h.w).length;
+      return `<div class="pl-f"><span><b>${nome}</b><small>${txt}</small></span><span>acertou <b>${ac} de ${v.length}</b> (${Math.round((ac / v.length) * 100)}%)</span></div>`;
     })
-    .filter(Boolean);
+    .join('');
   const seg =
     nV && nR
-      ? `<div class="seg" style="margin:0 0 8px">${[
+      ? `<div class="seg" style="margin:0 0 10px">${[
           ['tudo', `Tudo (${nV + nR})`],
           ['vivo', `Ao vivo (${nV})`],
           ['retro', `Retroativo (${nR})`],
@@ -458,18 +475,22 @@ function oraPlacar(H) {
           .map(([k, t]) => `<button class="${PLV === k ? 'on' : ''}" onclick="PLV='${k}';rS()">${t}</button>`)
           .join('')}</div>`
       : '';
-  const desc = {
+  const fonte = {
     vivo: 'previsões feitas antes do primeiro dano',
-    retro: 'previsões feitas depois, às cegas, para duelos antigos (com o Elo de antes de cada duelo)',
+    retro: 'previsões feitas depois, às cegas, para duelos antigos',
     tudo:
-      nR && nV
-        ? 'ao vivo + retroativas'
+      nV && nR
+        ? 'previsões ao vivo e retroativas'
         : nR
-          ? 'previsões retroativas, feitas às cegas para duelos antigos'
+          ? 'previsões retroativas (às cegas)'
           : 'previsões feitas antes do primeiro dano',
   }[PLV];
-  return `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card">${seg}<p class="cnote" style="margin:0 0 8px;text-align:left">${R.length} duelo${R.length > 1 ? 's' : ''}: ${desc}. Brier: erro da chance (menor é melhor; 0,25 = chutar 50%).</p>
- <table class="orat"><tr><th></th><th>Acerto</th><th>Brier</th></tr>${M.map(m => `<tr${m.br === best ? ' class="on"' : ''}><td>${m.n}</td><td>${pct(m)}</td><td>${m.br == null ? '—' : m.br.toFixed(3).replace('.', ',')}</td></tr>`).join('')}</table>
- ${cal.length ? `<div class="clh" style="text-align:left">🎯 CALIBRAGEM</div>${cal.map(c => `<p class="cnote" style="margin:2px 0;text-align:left">Quando disse ${Math.round(c.cf * 100)}% em média: acertou ${c.ac} de ${c.k} (${Math.round((c.ac / c.k) * 100)}%)</p>`).join('')}` : ''}
- ${R.length < 15 ? `<p class="cnote" style="text-align:left">Com menos de 15 duelos a diferença entre os métodos ainda é sorte. Continuem jogando!</p>` : ''}${btnRetro}</div>`;
+  return `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card">${seg}
+ <p class="pl-v">Em <b>${n} duelo${n > 1 ? 's' : ''}</b> (${fonte}), o Oráculo apontou o vencedor certo em <b>${ora.ac}</b>. ${veredito}${poucos ? ' <span>Com menos de 15 duelos, diferenças pequenas ainda são sorte.</span>' : ''}</p>
+ <div class="clh" style="text-align:left">🏁 QUEM PREVÊ MELHOR</div>
+ ${M.map(m => barra(m, m.nota === melhorNota)).join('')}
+ <p class="cnote" style="text-align:left;margin:6px 0 0">🪙 Chutar no cara ou coroa acertaria cerca de metade e teria nota 0. A <b>nota da porcentagem</b> vai de 0 a 100: premia quem dá chance alta para quem vence e pune quem diz "90%" e erra.</p>
+ ${faixas ? `<div class="clh" style="text-align:left">🎯 A CONFIANÇA DO ORÁCULO FAZ SENTIDO?</div><p class="cnote" style="text-align:left;margin:0 0 6px">Se ele for bem calibrado, acerta mais quando está mais confiante.</p>${faixas}` : ''}
+ <details class="orad"><summary>Números técnicos</summary><p class="cnote" style="text-align:left">Brier (erro quadrático médio da probabilidade; menor é melhor, 0,25 = moeda): ${M.map(m => `${m.nome.split(' ')[0]} ${m.br == null ? '—' : m.br.toFixed(3).replace('.', ',')}`).join(' · ')}. Nota = (1 − Brier ÷ 0,25) × 100.</p></details>
+ ${btnRetro}</div>`;
 }
