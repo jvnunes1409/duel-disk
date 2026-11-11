@@ -12,7 +12,7 @@ Eu e meu sobrinho Douglas jogamos Yu-Gi-Oh! com cartas físicas e uma coleção 
 
 ## Como nasceu
 
-Com mais de 20 decks na coleção, o sorteio do duelo era um ritual improvisado: alguém de casa escolhia dois números de 1 a 24, contávamos os decks na estante e jogávamos com os que saíam. O processo era lento e, pior, injusto. Muitas vezes caía um deck muito forte contra um já ultrapassado, e o duelo estava decidido antes de começar.
+Com mais de 20 decks na coleção, o sorteio do duelo era um ritual improvisado: pedíamos para alguém de casa falar dois números, contávamos os decks na estante até chegar neles e jogávamos com os que saíam. O processo era lento e, pior, injusto. Muitas vezes caía um deck muito forte contra um já ultrapassado, e o duelo estava decidido antes de começar.
 
 Os outros problemas vinham depois do sorteio:
 - **Controle:** os apps de contador de LP disponíveis eram genéricos e pouco atraentes, e não existia um lugar para guardar o histórico dos duelos.
