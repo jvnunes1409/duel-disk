@@ -173,7 +173,15 @@ function drawCards(i, c, msg) {
   const el = $('#cl');
   if (!el) return;
   const L = CARDS[DECKS[i][0]] || [];
-  $('#clN').textContent = '(' + L.length + ')';
+  // Contagem por cópias (3x D ao Cubo conta 3), separando o Deck Principal do Extra Deck quando os detalhes já chegaram
+  const qt = k => +L[k][3] || 1,
+    soma = ks => ks.reduce((t, k) => t + qt(k), 0),
+    todos = [...L.keys()];
+  if (c) {
+    const ex = todos.filter(k => c[k] && cat(c[k].d) === 'E'),
+      pr = todos.filter(k => !ex.includes(k));
+    $('#clN').textContent = '(' + soma(pr) + (ex.length ? ' + ' + soma(ex) + ' no Extra' : '') + ')';
+  } else $('#clN').textContent = '(' + soma(todos) + ')';
   if (!c) {
     el.innerHTML =
       (msg ? `<p class="cnote">${msg}</p>` : '') +
@@ -195,7 +203,7 @@ function drawCards(i, c, msg) {
     const rows = c.map((x, k) => [x, k]).filter(([x]) => cat(x.d) === g);
     if (!rows.length) return '';
     return (
-      `<div class="cg">${t} · ${rows.length}</div>` +
+      `<div class="cg">${t} · ${soma(rows.map(([, k]) => k))}</div>` +
       rows
         .map(([x, k]) => {
           const d = x.d,
