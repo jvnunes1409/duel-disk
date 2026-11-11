@@ -11,7 +11,17 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 6;
+const VERSAO = 7;
+
+// Cartas de uma jogada falada (formato novo: várias por fala; antigo: uma só)
+function cartasJ(j, nomes, comEfeito) {
+  const cs = Array.isArray(j.cartas) && j.cartas.length ? j.cartas : (j.carta ? [{ carta: j.carta, nome_pt: j.nome_pt, dono: j.dono, efeito: j.efeito }] : []);
+  if (!cs.length) return ' → nenhuma carta reconhecida';
+  return ' → cartas: ' + cs.slice(0, 4).map(c =>
+    clip(c.nome_pt || c.carta, 80) + (c.nome_pt ? ' (' + clip(c.carta, 80) + ')' : '') +
+    (c.dono != null ? ', do deck de ' + nomes[c.dono] : '') +
+    (comEfeito && c.efeito ? ' | efeito: ' + clip(c.efeito, 300) : '')).join(' ; ');
+}
 const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
 const LIMITE_MS = 45_000;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
@@ -84,6 +94,7 @@ Você recebe dois registros, ambos com turno e segundos desde o início:
 - LP: cada dano ou cura, exato.
 - Jogadas faladas: o que um jogador disse em voz alta durante o duelo (transcrição automática, pode ter erros), com a carta reconhecida e o texto do efeito dela.
 Como narrar:
+- Uma fala pode citar várias cartas, inclusive do oponente ("do deck de X"): normalmente é uma ação e a resposta a ela.
 - Cruze os dois registros: se uma carta foi falada e logo depois houve dano ou cura no mesmo turno, use o efeito da carta para deduzir o que aconteceu, mas deixe claro quando é dedução ("tudo indica que", "provavelmente").
 - Quando a carta é do deck do outro jogador, quem falou provavelmente reagiu a ela (destruiu, negou, sofreu o efeito).
 - Se a carta tem vários efeitos, só afirme qual foi usado se a fala ou o LP deixarem claro.
@@ -97,6 +108,8 @@ Sua tarefa: dizer se o resultado "deu a lógica" e explicar por quê, olhando as
 - Avalie o confronto pelas listas: qual deck tinha vantagem, quais cartas de um deck anulam a estratégia do outro, que mão cada um precisava.
 - Use o registro de LP e as jogadas faladas como evidência do que aconteceu. Você não viu o duelo: o que não está no registro é dedução, deixe isso claro ("provavelmente", "tudo indica").
 - Se houve previsão antes do duelo, diga se ela fazia sentido e o que ela não considerou.
+- Quando houver jogadas faladas, use-as nas lições: aponte jogadas que funcionaram e as que provavelmente foram erros (ex.: usou uma carta cedo demais, gastou uma resposta num alvo fraco, deixou de usar uma carta-chave), sempre citando o turno.
+- Uma jogada pode citar cartas dos dois decks (uma ação e a resposta do oponente); "do deck de X" indica de quem é a carta.
 - Nunca invente jogadas, cartas ou mãos que não estejam no registro.
 - Cite cartas SEMPRE pelo nome em português (o que vem antes dos parênteses na lista); inglês só se não houver nome em português.
 - Chame os decks pelo nome, nunca de "Deck A" ou "Deck B".`;
@@ -106,8 +119,7 @@ function promptVeredito(b) {
   const log = (b.log || []).slice(-60).map(e =>
     `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
   const jog = (b.jogadas || []).slice(0, 80).map(j =>
-    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 160)}"` +
-    (j.carta ? ` → carta: ${clip(j.nome_pt || j.carta, 80)}` : '')).join('\n');
+    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` + cartasJ(j, nomes, false)).join('\n');
   const pct = x => typeof x === 'number' ? Math.round(x * 100) + '%' : 'sem dado';
   return `${deckTxt('DECK A (' + nomes[0] + ')', b.a)}
 
@@ -175,8 +187,7 @@ function promptCronica(b) {
   const log = (b.log || []).slice(-60).map(e =>
     `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
   const jog = (b.jogadas || []).slice(0, 80).map(j =>
-    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 160)}"` +
-    (j.carta ? ` → carta: ${clip(j.carta, 80)}${j.nome_pt ? ' (' + clip(j.nome_pt, 80) + ')' : ''}${j.dono != null ? ', do deck de ' + nomes[j.dono] : ''}${j.efeito ? ' | efeito: ' + clip(j.efeito, 400) : ''}` : ' → nenhuma carta reconhecida')).join('\n');
+    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 200)}"` + cartasJ(j, nomes, true)).join('\n');
   const prev = b.previsao
     ? `Previsão do Oráculo antes do duelo: ${Math.round(b.previsao.chance_a * 100)}% para ${nomes[0]} (${clip(b.previsao.resumo, 300)})`
     : 'O Oráculo não fez previsão para este duelo.';
