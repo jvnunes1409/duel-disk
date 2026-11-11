@@ -439,12 +439,25 @@ function oraPlacar(H) {
   // Frase-resumo em português claro
   const dif = ora.nota - melhorOutro.nota,
     poucos = n < 15;
+  const nomeOutro = { '📈': 'Elo', '🏷️': 'seu tier' }[melhorOutro.ic],
+    mesmoAcerto = ora.ac === melhorOutro.ac;
+  // Com o mesmo número de acertos, quem decide é a nota: ela olha QUANTA chance cada um deu a quem venceu
   const veredito =
     Math.abs(dif) <= 5
-      ? `Até agora o Oráculo está <b>empatado</b> com o ${{ '📈': 'Elo', '🏷️': 'seu tier' }[melhorOutro.ic]}.`
-      : dif > 0
-        ? `Até agora o Oráculo está <b>na frente</b> dos métodos simples.`
-        : `Até agora o ${{ '📈': 'Elo', '🏷️': 'seu tier' }[melhorOutro.ic]} está <b>na frente</b> do Oráculo.`;
+      ? `Até agora o Oráculo está <b>empatado</b> com o ${nomeOutro}.`
+      : mesmoAcerto
+        ? `Os dois acertaram ${ora.ac}, mas ${dif > 0 ? 'o Oráculo' : 'o ' + nomeOutro} fica <b>na frente pela nota</b>, que mede quanta chance cada um deu a quem venceu, e não só se acertou.`
+        : dif > 0
+          ? `Até agora o Oráculo está <b>na frente</b> dos métodos simples.`
+          : `Até agora o ${nomeOutro} está <b>na frente</b> do Oráculo.`;
+  // Vezes em que o Oráculo apostou contra a lista de tiers (achou que o deck de tier pior venceria)
+  const contra = R.filter(
+      h => typeof h.tierP === 'number' && h.tierP !== 0.5 && h.p !== 0.5 && h.p > 0.5 !== h.tierP > 0.5
+    ),
+    contraAc = contra.filter(h => oraFav(h.p) === h.w).length,
+    contraTxt = contra.length
+      ? `<p class="pl-ct">🔀 Contrariou a lista de tiers em <b>${contra.length} duelo${contra.length > 1 ? 's' : ''}</b> (apostou no deck de tier pior) e acertou <b>${contraAc}</b>.</p>`
+      : '';
   const barra = (m, melhor) =>
     `<div class="pl-m${melhor ? ' on' : ''}"><div class="pl-t"><span>${m.ic} ${m.nome}</span><b>${m.k ? Math.round((m.ac / m.k) * 100) + '%' : '—'}</b></div>
  <div class="pl-b"><i style="width:${m.k ? Math.round((m.ac / m.k) * 100) : 0}%"></i></div>
@@ -487,7 +500,7 @@ function oraPlacar(H) {
           : 'previsões feitas antes do primeiro dano',
   }[PLV];
   return `<div class="sh">🔮 PLACAR DO ORÁCULO</div><div class="card">${seg}
- <p class="pl-v">Em <b>${n} duelo${n > 1 ? 's' : ''}</b> (${fonte}), o Oráculo apontou o vencedor certo em <b>${ora.ac}</b>. ${veredito}${poucos ? ' <span>Com menos de 15 duelos, diferenças pequenas ainda são sorte.</span>' : ''}</p>
+ <p class="pl-v">Em <b>${n} duelo${n > 1 ? 's' : ''}</b> (${fonte}), o Oráculo apontou o vencedor certo em <b>${ora.ac}</b>. ${veredito}${poucos ? ' <span>Com menos de 15 duelos, diferenças pequenas ainda são sorte.</span>' : ''}</p>${contraTxt}
  <div class="clh" style="text-align:left">🏁 QUEM PREVÊ MELHOR</div>
  ${M.map(m => barra(m, m.nota === melhorNota)).join('')}
  <p class="cnote" style="text-align:left;margin:6px 0 0">🪙 Chutar no cara ou coroa acertaria cerca de metade e teria nota 0. A <b>nota da porcentagem</b> vai de 0 a 100: premia quem dá chance alta para quem vence e pune quem diz "90%" e erra.</p>
