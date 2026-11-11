@@ -11,7 +11,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 5;
+const VERSAO = 6;
 const FALLBACK_MODEL = 'gemini-3.5-flash-lite'; // usado se o principal passar de LIMITE_MS
 const LIMITE_MS = 45_000;
 const DEFAULT_ORIGIN = 'https://jvnunes1409.github.io';
@@ -53,6 +53,19 @@ const CRONICA_SCHEMA = {
   required: ['titulo', 'cronica', 'virada', 'oraculo'],
 };
 
+const VEREDITO_SCHEMA = {
+  type: 'OBJECT',
+  properties: {
+    deu_logica: { type: 'STRING', enum: ['sim', 'zebra', 'equilibrado'], description: 'sim = venceu quem era favorito pelas cartas; zebra = venceu o azarão; equilibrado = não havia favorito claro' },
+    titulo: { type: 'STRING', description: 'Uma frase de veredito, direta' },
+    veredito: { type: 'STRING', description: '2 ou 3 parágrafos separados por linha em branco: o resultado era esperado pelas listas? Que estratégia de um deck atrapalha a do outro? O que o registro do duelo mostra?' },
+    fator_decisivo: { type: 'STRING', description: 'O que provavelmente decidiu o duelo (2 a 3 frases), separando o que é certeza do registro do que é dedução' },
+    licao_a: { type: 'STRING', description: 'O que o jogador do deck A pode fazer diferente ou repetir neste confronto (2 a 3 frases)' },
+    licao_b: { type: 'STRING', description: 'O mesmo para o deck B (2 a 3 frases)' },
+  },
+  required: ['deu_logica', 'titulo', 'veredito', 'fator_decisivo', 'licao_a', 'licao_b'],
+};
+
 const SYSTEM_PREVER = `Você é o Oráculo do Duelo, analista de Yu-Gi-Oh! TCG para duelos casuais entre dois jogadores com decks físicos (Structure Decks e decks de personagem, sem side deck).
 Responda em português do Brasil.
 Regras para a chance:
@@ -77,6 +90,41 @@ Como narrar:
 - Só cite cartas que aparecem nas jogadas faladas ou na MVP. Nunca invente cartas, ataques ou mãos.
 - Sem jogadas faladas, narre a partir do LP e não cite cartas.
 - Cite cartas pelo nome em português quando houver (as cartas físicas são em português).`;
+
+const SYSTEM_VEREDITO = `Você é o Oráculo do Duelo, analista de Yu-Gi-Oh! TCG, revendo um duelo casual que já terminou, entre dois jogadores com decks físicos.
+Responda em português do Brasil, em tom de comentarista técnico, direto e honesto.
+Sua tarefa: dizer se o resultado "deu a lógica" e explicar por quê, olhando as listas de cartas e efeitos dos dois decks.
+- Avalie o confronto pelas listas: qual deck tinha vantagem, quais cartas de um deck anulam a estratégia do outro, que mão cada um precisava.
+- Use o registro de LP e as jogadas faladas como evidência do que aconteceu. Você não viu o duelo: o que não está no registro é dedução, deixe isso claro ("provavelmente", "tudo indica").
+- Se houve previsão antes do duelo, diga se ela fazia sentido e o que ela não considerou.
+- Nunca invente jogadas, cartas ou mãos que não estejam no registro.
+- Cite cartas SEMPRE pelo nome em português (o que vem antes dos parênteses na lista); inglês só se não houver nome em português.
+- Chame os decks pelo nome, nunca de "Deck A" ou "Deck B".`;
+
+function promptVeredito(b) {
+  const nomes = b.nomes || ['Jogador 1', 'Jogador 2'];
+  const log = (b.log || []).slice(-60).map(e =>
+    `T${e.tn} ${Math.round(e.s)}s: ${nomes[e.p]} ${e.d < 0 ? 'sofreu ' + -e.d : 'recuperou ' + e.d} (LP ${e.lp})`).join('\n');
+  const jog = (b.jogadas || []).slice(0, 80).map(j =>
+    `T${j.tn} ${j.s}s: ${j.p == null ? '?' : nomes[j.p]} disse "${clip(j.fala, 160)}"` +
+    (j.carta ? ` → carta: ${clip(j.nome_pt || j.carta, 80)}` : '')).join('\n');
+  const pct = x => typeof x === 'number' ? Math.round(x * 100) + '%' : 'sem dado';
+  return `${deckTxt('DECK A (' + nomes[0] + ')', b.a)}
+
+${deckTxt('DECK B (' + nomes[1] + ')', b.b)}
+
+RESULTADO: venceu ${nomes[b.w]} com ${b.w === 0 ? b.a?.nome : b.b?.nome}. LP final ${b.lp?.[0]} x ${b.lp?.[1]}. Duração ${Math.round((b.dur || 0) / 60000)} min, ${b.turnos || '?'} turnos.
+${b.mvp ? 'Carta MVP marcada pelos jogadores: ' + clip(b.mvp, 80) : ''}
+Chance de ${nomes[0]} antes do duelo: Oráculo ${b.previsao ? pct(b.previsao.chance_a) + ' (' + clip(b.previsao.resumo, 300) + ')' : 'não fez previsão'}; Elo ${pct(b.eloP)}; tier ${pct(b.tierP)}.
+
+Registro de LP:
+${log || '(vazio: o vencedor foi declarado sem registrar dano)'}
+
+Jogadas faladas:
+${jog || '(nenhuma)'}
+
+Deu a lógica?`;
+}
 
 function cors(origin, env) {
   const allowed = (env.ALLOWED_ORIGIN || DEFAULT_ORIGIN).split(',').map(s => s.trim());
@@ -236,6 +284,11 @@ export default {
         const { data, model, ms } = await gemini(env, SYSTEM_PREVER, promptPrever(body), PREVER_SCHEMA, 0.3);
         const chance = Math.min(0.95, Math.max(0.05, Number(data.chance_a) || 0.5));
         return json({ ...data, chance_a: chance, model, ms }, 200, headers);
+      }
+      if (path === '/veredito') {
+        if (!body.a || !body.b) return json({ error: 'faltam os decks' }, 400, headers);
+        const { data, model, ms } = await gemini(env, SYSTEM_VEREDITO, promptVeredito(body), VEREDITO_SCHEMA, 0.4);
+        return json({ ...data, model, ms }, 200, headers);
       }
       if (path === '/cronica') {
         const { data, model } = await gemini(env, SYSTEM_CRONICA, promptCronica(body), CRONICA_SCHEMA, 0.8);

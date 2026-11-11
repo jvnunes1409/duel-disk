@@ -143,6 +143,17 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
 #vzb{position:fixed;left:12px;right:12px;top:10px;z-index:7;display:none;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;border-radius:12px;border:1px solid #9b7cff;background:#140c35f2;color:#fff;font-size:.9rem;box-shadow:0 6px 20px #000a}#vzb.on{display:flex}#vzb button{flex:none;padding:7px 10px;border-radius:8px;border:1px solid #9b7cff;background:none;color:#c9b8ff;font-weight:800}
 .ib.rec{border-color:#ff4d6d;background:#5a0f22;animation:micp 1s infinite}@keyframes micp{50%{box-shadow:0 0 18px #ff4d6d}}
 .vzl{display:flex;justify-content:space-between;align-items:center;gap:8px;text-align:left;padding:8px 0;border-top:1px solid #2c58b8}.vzl small{display:block;color:var(--mut);font-size:.7rem}.vzl button{flex:none;width:36px;height:36px;border-radius:8px;border:1px solid #2c58b8;background:none;color:var(--mut)}
+.bk-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:6px -6px 0;padding:0 6px 6px}.bk{position:relative}.bk *{box-sizing:border-box}.bk svg{position:absolute;left:0;top:0}.bk path{fill:none;stroke:#2c58b8;stroke-width:2}.bk path.on{stroke:var(--gd)}
+.bk-h{position:absolute;top:0;text-align:center;font:900 .62rem Impact,sans-serif;letter-spacing:1.5px;color:var(--gd)}
+.bk-m{position:absolute;display:flex;flex-direction:column;border:1px solid #2c58b8;border-radius:8px;background:#07122f;overflow:hidden}.bk-m.clk{cursor:pointer;border-color:#9b7cff}
+.bk-r{flex:1;display:flex;align-items:center;justify-content:space-between;gap:4px;padding:0 6px;font:700 .64rem system-ui;color:#cfe0ff;border-left:3px solid transparent;min-width:0}.bk-r+.bk-r{border-top:1px solid #1b3474}.bk-r span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bk-r i{color:var(--mut);font-weight:600}
+.bk-r.w{background:#f2c14e22;color:#fff;font-weight:900;border-left-color:var(--pc)}.bk-r.l{opacity:.45}.bk-r b{font-size:.58rem;color:var(--mut)}
+.bk-gr{position:absolute;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:6px;border:1px solid var(--gd);border-radius:10px;background:#0a1a4a}.bk-gt{font:900 .66rem Impact,sans-serif;letter-spacing:1.5px;color:var(--gd);text-align:center}
+.bk-g{display:flex;justify-content:space-between;gap:4px;font:700 .62rem system-ui;color:#cfe0ff;padding:3px 4px;border-radius:5px}.bk-g span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.bk-g.q{background:#f2c14e22;color:#fff}
+.bk-c{position:absolute;display:flex;flex-direction:column;align-items:center;padding:8px 4px;border:2px solid #2c58b8;border-radius:12px;font-size:1.4rem;text-align:center}.bk-c span{font:900 .7rem system-ui;color:var(--mut)}.bk-c.on{border-color:var(--gd);background:#f2c14e22;box-shadow:0 0 16px #f2c14e66}.bk-c.on span{color:#fff}.bk-c small{font:700 .6rem system-ui;color:var(--gd)}
+.horab{display:flex;justify-content:space-between;width:100%;margin:8px 0 2px;padding:9px 12px;border-radius:10px;border:1px solid #9b7cff;background:#9b7cff1a;color:#c9b8ff;font:800 .8rem system-ui;text-align:left}
+.vdl{display:inline-block;margin:2px 0 6px;padding:4px 10px;border-radius:99px;border:1px solid var(--gd);color:var(--gd);font:900 .75rem Impact,sans-serif;letter-spacing:1.5px}
+details.orad{margin:6px 0 10px;text-align:left}details.orad>summary{cursor:pointer;color:#c9b8ff;font:800 .8rem system-ui;padding:6px 0}
 .tmb{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;margin-bottom:10px;border-radius:10px;border:1px solid var(--gd);background:#f2c14e1a;color:var(--gd);font:900 .8rem Impact,sans-serif;letter-spacing:1.5px;cursor:pointer}
 .tmb small{font:700 .7rem system-ui;color:var(--mut);letter-spacing:0;white-space:nowrap}
 .htl{font-size:.75rem;color:var(--gd);font-weight:800;margin-top:2px}
@@ -274,12 +285,14 @@ details{margin-top:8px}summary{color:var(--cy);font-weight:800;padding:6px 0}.lg
 /* ---- Revisão de interface: a aba Duelo cabe inteira na tela, sem rolar ---- */
 h1{padding:6px;font-size:1.1rem}
 body[data-t=duelo] h1{display:none}body[data-t=duelo] main{padding-top:8px}body[data-t=duelo]{padding-bottom:0}
-#duelo.on{display:flex;flex-direction:column;height:calc(100vh - 66px);height:calc(100dvh - 66px - env(safe-area-inset-bottom,0px))}
+#duelo.on{display:flex;flex-direction:column;height:calc(100vh - var(--navh,66px));height:calc(100dvh - var(--navh,66px) - 14px)}
 #duelo .tb{margin-bottom:6px;flex:none}#duelo .ib{min-height:clamp(36px,6dvh,50px);padding:0;font-size:1.25rem}
-#duelo .pl{height:clamp(70px,12.5dvh,128px);margin-bottom:6px;flex:none}
+#duelo .pl{height:clamp(70px,12.5dvh,128px);margin-bottom:6px;flex:0 1 auto;min-height:50px}
+#duelo .tmb{flex:none;padding:5px 10px;margin-bottom:6px;font-size:.72rem;min-height:0;white-space:nowrap;overflow:hidden}#duelo .tmb>span{overflow:hidden;text-overflow:ellipsis;min-width:0}#duelo .tmb small{font-size:.65rem}
+#duelo #players{flex:0 1 auto;min-height:0;display:flex;flex-direction:column}
 #duelo .calc{padding:4px 12px;margin-bottom:6px;flex:none}#duelo .calc span{font-size:1.7rem}
 #duelo .lab{margin:0 0 2px;font-size:.7rem;flex:none}
-#duelo .pad{flex:1;min-height:0;gap:5px;grid-template-rows:repeat(7,minmax(30px,1fr))}
+#duelo .pad{flex:1;min-height:0;gap:5px;grid-template-rows:repeat(7,minmax(27px,1fr))}
 #duelo .k{padding:0;display:grid;place-items:center;font-size:clamp(1.05rem,3.2dvh,1.5rem)}#duelo .k.sm{font-size:clamp(.9rem,2.6dvh,1.1rem)}
 @media(min-height:860px){#duelo .pad{max-height:460px}}
 #duelo .ptw b{font-size:clamp(.48rem,1.55dvh,.64rem);letter-spacing:0;padding-top:6px}#duelo .ptw b small{font-size:clamp(.48rem,1.5dvh,.55rem)}
@@ -787,9 +800,9 @@ function ligaCard(S,cur){return withT(S,()=>{const ms=Object.values(S.M),pl=ms.f
  <details><summary>Todos os jogos</summary>${Object.keys(rs).map(r=>`<h4>RODADA ${r}</h4>${rs[r].sort((a,b)=>a.n-b.n).map(mLine).join('')}`).join('')}</details></div>`})}
 function torneioCard(S,cur){return withT(S,()=>{const ms=Object.values(S.M),pl=ms.filter(m=>m.w!=null).length,f=S.M.f,done=!!(f&&f.w!=null),STG=[['r1','1ª RODADA'],['r2','2ª RODADA'],['g','FASE DE GRUPOS'],['sf','SEMIFINAIS'],['f','FINAL']];
  return `<div class="card arq" style="border-top:3px solid var(--gd)">${arqHead(S,cur,ms.length,pl,done)}${done?`<div class="ch">🏆 Campeão: ${esc(dn(side(f,f.w)))} · ${NOMES[f.w]}<br><small style="color:var(--mut)">Vice: ${esc(dn(side(f,1-f.w)))}</small></div>`:''}
- ${STG.map(([k,t])=>{const L=ms.filter(m=>m.st===k).sort((a,b)=>a.id.length-b.id.length||(a.id>b.id?1:-1));if(!L.length||!L.some(m=>m.w!=null||side(m,0)!=null))return'';
+ ${S.M['r1-1']&&S.M['sf-1']?chaveHTML(S):''}<details class="orad"><summary>Lista de todos os duelos</summary>${STG.map(([k,t])=>{const L=ms.filter(m=>m.st===k).sort((a,b)=>a.id.length-b.id.length||(a.id>b.id?1:-1));if(!L.length||!L.some(m=>m.w!=null||side(m,0)!=null))return'';
   let tb='';if(k==='g')tb=['A','B'].map(g=>{const q=stand(g);return q?`<table><tr><th colspan="5" style="text-align:left;color:var(--gd)">GRUPO ${g}</th></tr>${q.rows.map((r,i)=>`<tr class="${q.done&&i<2?'top':''}"><td>${i+1}º</td><td class="dn">${esc(dn(r.i))}</td><td>${r.v}V</td><td>${r.d}D</td><td>${r.lp}</td></tr>`).join('')}</table>`:''}).join('');
-  return `<h4>${t}</h4>${tb}${L.map(mLine).join('')}`}).join('')}</div>`})}
+  return `<h4>${t}</h4>${tb}${L.map(mLine).join('')}`}).join('')}</details></div>`})}
 function ligasView(){const L=[];if(T&&T.fmt==='liga'&&allM().some(m=>m.w!=null))L.push([T,1]);TARQ.filter(x=>x.fmt==='liga'&&!(T&&x.t===T.t)).forEach(x=>L.push([x,0]));L.sort((a,b)=>b[0].t-a[0].t);
  return L.length?L.map(([S,c])=>ligaCard(S,c)).join(''):'<p style="color:var(--mut);text-align:center">Nenhuma liga jogada ainda.</p>'}
 function torneiosView(){const L=[];if(T&&T.fmt!=='liga'&&allM().some(m=>m.w!=null))L.push([T,1]);TARQ.filter(x=>x.fmt!=='liga'&&!(T&&x.t===T.t)).forEach(x=>L.push([x,0]));L.sort((a,b)=>b[0].t-a[0].t);
@@ -801,6 +814,7 @@ function rH(){bkBan();$('#hseg').innerHTML=[['geral','GERAL'],['ligas','LIGAS'],
  const kd=kindOf(h);return `<div class="card ${kd==='liga'?'kl':kd?'kt':''}" style="border-left:5px solid ${COR[h.w]}"><div class="hh"><b><span style="color:var(--g)">Douglas</span> × <span style="color:var(--b)">João</span></b><small>${new Date(h.t).toLocaleString('pt-BR',{dateStyle:'short',timeStyle:'short'})}</small></div>
  <div class="hd">${h.decks?`${h.decks[0]} <em>vs</em> ${h.decks[1]}`:'<em>Decks não sorteados</em>'}${kd?`<div class="htl k-${kd}">${kd==='liga'?'📋 LIGA':'🏟️ TORNEIO'} · ${esc(h.tl||'')}</div>`:'<div class="htl k-av">⚔️ DUELO AVULSO</div>'}</div>
  <div class="hs"><span>🏆 ${NOMES[h.w]}</span><span>⏱ ${fmt(h.dur)}</span><span>❤️ ${h.lp[0]} × ${h.lp[1]}</span>${h.tn>1?`<span>🔄 ${h.tn} turnos</span>`:''}${h.first!=null?`<span>🪙 ${NOMES[h.first]} começou</span>`:''}${h.sr?`<span>🎯 MD3 · duelo ${h.srg}</span>`:''}${h.mvp?`<span>⭐ ${esc(h.mvp.n)}</span>`:''}</div>
+ ${h.decks?`<button class="horab" onclick="oraHist(${h.t})">🔮 Oráculo${h.ai?(oraFav(h.ai.p)===h.w?' · ✅ acertou':' · ❌ errou'):''}${h.vd?' · '+(VDL[h.vd.deu_logica]||VDL.equilibrado)[1].toLowerCase():''}<span>›</span></button>`:''}
  <details><summary>Detalhes</summary><div class="row" style="margin:8px 0;font-size:.85rem">${[0,1].map(p=>`<div><b style="color:${COR[p]}">${NOMES[p]}</b><br>Dano sofrido: ${st[p].dmg}<br>Cura: ${st[p].heal}</div>`).join('')}</div>
  ${h.decks?`<button class="tund" style="margin:2px 0 8px" onclick="mvpPick(${h.t})">⭐ ${h.mvp?'Trocar':'Escolher'} carta MVP</button>`:''}<button class="tund" style="margin:2px 0 8px" onclick="shareRes(${h.t})">📷 Compartilhar imagem</button>
  ${h.log.length?h.log.map(e=>`<div class="lg" style="color:${COR[e.p]}">${fmt(e.t)}${e.tn?' · T'+e.tn:''} · ${NOMES[e.p]} ${e.d<0?'−':'+'}${Math.abs(e.d)} → ${e.lp}</div>`).join(''):'<small>Sem registros.</small>'}</details></div>`}).join(''):'<p style="color:var(--mut);text-align:center">Nenhum duelo registrado ainda.</p>')}
@@ -1488,7 +1502,59 @@ async function vNomesPT(){const m=$('#vzM');let tot=0,pt=0;for(let i=0;i<DECKS.l
   (d||[]).forEach(x=>{tot++;if(x.pt&&x.pt!==x.en)pt++})}
  VZ.cand=null;if(duel&&duel.decks)vPrep();if(m)m.innerHTML=tot?`✅ ${pt} de ${tot} cartas com nome em português. As outras são reconhecidas pelo nome em inglês.`:'❌ Sem internet: tente de novo com conexão.'}
 function vMicBtn(){const b=$('#bMic');if(b)b.style.display=micOn()?'':'none'}
-vMicBtn();if(CFG.vf)addEventListener('pointerdown',()=>vFone(1),{once:true});rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
+// ===== Chaveamento do torneio (estilo Copa do Mundo) =====
+// 1ª rodada (12 jogos) → 2ª rodada (6) → Grupos A e B (3 decks cada) → Semifinais cruzadas → Final → Campeão.
+// Desenhado com posições fixas e linhas em SVG; a área rola na horizontal no celular.
+function chaveHTML(S){return withT(S,()=>{const M=S.M,BW=128,BH=46,GX=30,U=54,TOP=26,X=c=>c*(BW+GX);
+ const cy={};for(let k=1;k<=12;k++)cy['r1-'+k]=TOP+(k-1)*U+BH/2;
+ for(let k=1;k<=6;k++)cy['r2-'+k]=(cy['r1-'+(2*k-1)]+cy['r1-'+2*k])/2;
+ const gA={t:cy['r2-1']-BH/2,b:cy['r2-3']+BH/2},gB={t:cy['r2-4']-BH/2,b:cy['r2-6']+BH/2};
+ gA.c=(gA.t+gA.b)/2;gB.c=(gB.t+gB.b)/2;cy['sf-1']=gA.c;cy['sf-2']=gB.c;cy.f=(gA.c+gB.c)/2;
+ const H=TOP+12*U,W=X(5)+BW+6;let ln='',bx='';
+ const L=(x1,y1,x2,y2,on)=>{const mx=(x1+x2)/2;ln+=`<path d="M${x1} ${y1}H${mx}V${y2}H${x2}" class="${on?'on':''}"/>`};
+ const nome=i=>i!=null?esc(dn(i)):'<i>a definir</i>';
+ const caixa=(id,col)=>{const m=M[id];if(!m)return;const i0=side(m,0),i1=side(m,1),d=m.w!=null,y=cy[id]-BH/2,clk=m.h!=null&&hist.some(h=>h.t===m.h);
+  const row=(s,i)=>`<div class="bk-r ${d?(m.w===s?'w':'l'):''}" style="--pc:${COR[s]}"><span>${nome(i)}</span>${d&&m.lp?`<b>${m.lp[s]}</b>`:''}</div>`;
+  bx+=`<div class="bk-m ${clk?'clk':''}" style="left:${X(col)}px;top:${y}px;width:${BW}px;height:${BH}px" ${clk?`onclick="oraHist(${m.h})"`:''}>${row(0,i0)}${row(1,i1)}</div>`};
+ const venc=id=>{const m=M[id];return m&&m.w!=null};
+ for(let k=1;k<=12;k++){caixa('r1-'+k,0);const r2='r2-'+Math.ceil(k/2);L(X(0)+BW,cy['r1-'+k],X(1),cy[r2],venc('r1-'+k))}
+ for(let k=1;k<=6;k++){caixa('r2-'+k,1);ln+=`<path d="M${X(1)+BW} ${cy['r2-'+k]}H${X(2)}" class="${venc('r2-'+k)?'on':''}"/>`}
+ ['A','B'].forEach(g=>{const G=g==='A'?gA:gB,q=stand(g),dn2=q&&q.done;
+  const rows=q?q.rows.map((r,k)=>`<div class="bk-g ${dn2&&k<2?'q':''}"><span>${k+1}º ${esc(dn(r.i))}</span><b>${r.v}V</b></div>`).join(''):GRP[g].map(id=>`<div class="bk-g"><span>${nome(res({win:id}))}</span></div>`).join('');
+  bx+=`<div class="bk-gr" style="left:${X(2)}px;top:${G.t}px;width:${BW}px;height:${G.b-G.t}px"><div class="bk-gt">GRUPO ${g}</div>${rows}</div>`});
+ // Semis cruzadas: 1º A x 2º B e 2º A x 1º B
+ L(X(2)+BW,gA.c-8,X(3),cy['sf-1']-10,venc('sf-1'));L(X(2)+BW,gB.c-8,X(3),cy['sf-1']+10,venc('sf-1'));
+ L(X(2)+BW,gA.c+8,X(3),cy['sf-2']-10,venc('sf-2'));L(X(2)+BW,gB.c+8,X(3),cy['sf-2']+10,venc('sf-2'));
+ caixa('sf-1',3);caixa('sf-2',3);L(X(3)+BW,cy['sf-1'],X(4),cy.f,venc('sf-1'));L(X(3)+BW,cy['sf-2'],X(4),cy.f,venc('sf-2'));caixa('f',4);
+ const f=M.f,camp=f&&f.w!=null?side(f,f.w):null;ln+=`<path d="M${X(4)+BW} ${cy.f}H${X(5)}" class="${camp!=null?'on':''}"/>`;
+ bx+=`<div class="bk-c ${camp!=null?'on':''}" style="left:${X(5)}px;top:${cy.f-34}px;width:${BW}px">🏆<span>${camp!=null?esc(dn(camp)):'Campeão'}</span>${camp!=null?`<small>${NOMES[f.w]}</small>`:''}</div>`;
+ const hd=['1ª RODADA','2ª RODADA','GRUPOS','SEMIFINAIS','FINAL','CAMPEÃO'].map((t,c)=>`<div class="bk-h" style="left:${X(c)}px;width:${BW}px">${t}</div>`).join('');
+ return`<div class="bk-wrap"><div class="bk" style="width:${W}px;height:${H}px"><svg width="${W}" height="${H}">${ln}</svg>${hd}${bx}</div></div><p class="cnote" style="margin:4px 0 8px">Arraste para o lado para ver até a final. Toque num duelo jogado para ver a análise do Oráculo.</p>`})}
+// ===== Oráculo no histórico: a previsão guardada + o veredito depois do duelo =====
+const VDL={sim:['✅','DEU A LÓGICA'],zebra:['🦓','DEU ZEBRA'],equilibrado:['⚖️','DUELO EQUILIBRADO']};
+function oraHist(t){const h=hist.find(x=>x.t===t);if(!h||!h.decks)return;const dk=h.decks.map(DI);if(dk.some(i=>i<0))return modal(`<h2>🔮 ORÁCULO</h2><p>Um dos decks deste duelo não existe mais no app.</p><button class="btn sec" onclick="fechar()">Fechar</button>`);
+ const par=x=>String(x||'').split(/\n+/).filter(Boolean).map(y=>`<p style="text-align:left">${esc(y)}</p>`).join('');
+ const prev=h.ai?`<div class="clh" style="text-align:left">🔮 ANTES DO DUELO</div><p style="text-align:left">O Oráculo deu <b style="color:${COR[oraFav(h.ai.p)]}">${oraPct(h.ai.p)}% para ${NOMES[oraFav(h.ai.p)]}</b> (${esc(h.decks[oraFav(h.ai.p)])}). ${oraFav(h.ai.p)===h.w?'✅ Acertou.':'❌ Errou.'}</p>
+  ${h.ai.r?`<details class="orad"><summary>Ver a previsão completa</summary>${oraBox({...h.ai.r,chance_a:h.ai.p,model:h.ai.r.model||h.ai.m},dk)}</details>`:''}`
+  :`<p class="cnote" style="text-align:left">Este duelo foi jogado sem previsão do Oráculo.</p>`;
+ const v=h.vd,vl=v&&(VDL[v.deu_logica]||VDL.equilibrado);
+ const ver=v?`<div class="clh" style="text-align:left">⚖️ O VEREDITO</div><div class="vdl">${vl[0]} ${vl[1]}</div><p style="text-align:left;font-weight:800">${esc(v.titulo)}</p>${par(v.veredito)}
+  <div class="clh" style="text-align:left">🎯 O QUE DECIDIU</div>${par(v.fator_decisivo)}
+  <div class="clh" style="text-align:left;color:${COR[0]}">📘 LIÇÃO · ${esc(h.decks[0])}</div>${par(v.licao_a)}
+  <div class="clh" style="text-align:left;color:${COR[1]}">📘 LIÇÃO · ${esc(h.decks[1])}</div>${par(v.licao_b)}`
+  :oraOn()?`<button class="btn" onclick="oraVeredito(${t})">⚖️ Pedir o veredito do Oráculo<small>deu a lógica ou foi zebra? por quê?</small></button>`:'';
+ modal(`<h2>🔮 ORÁCULO</h2><p style="margin:-4px 0 6px"><b style="color:${COR[0]}">${esc(h.decks[0])}</b> <em>vs</em> <b style="color:${COR[1]}">${esc(h.decks[1])}</b><br><small style="color:var(--mut)">Vitória do ${NOMES[h.w]} · ${h.lp[0]} × ${h.lp[1]} · ${new Date(h.t).toLocaleDateString('pt-BR')}</small></p>
+ ${prev}${ver}${oraOn()||h.cr?`<button class="btn sec" onclick="oraCronica(${t})">📜 ${h.cr?'Ver':'Gerar'} a crônica do duelo</button>`:''}<button class="btn sec" onclick="fechar()">Fechar</button>`)}
+async function oraVeredito(t){const h=hist.find(x=>x.t===t);if(!h)return;const dk=h.decks.map(DI);
+ modal(`<h2>⚖️ VEREDITO</h2><p>O Oráculo está revendo o duelo…</p>`);
+ try{const[a,b]=await Promise.all(dk.map(oraDeck));
+  const r=await oraPost('/veredito',{nomes:NOMES,a,b,w:h.w,lp:h.lp,dur:h.dur,turnos:h.tn,mvp:h.mvp&&h.mvp.n,
+   previsao:h.ai?{chance_a:h.ai.p,resumo:h.ai.r&&h.ai.r.resumo}:null,eloP:h.eloP,tierP:h.tierP,
+   jogadas:await vParaIA(h),log:(h.log||[]).map(e=>({tn:e.tn,s:e.t/1000,p:e.p,d:e.d,lp:e.lp}))},120000);
+  h.vd={deu_logica:r.deu_logica,titulo:r.titulo,veredito:r.veredito,fator_decisivo:r.fator_decisivo,licao_a:r.licao_a,licao_b:r.licao_b,model:r.model};save();rH();oraHist(t)}
+ catch(e){const m=/rota não encontrada|404/.test(e.message)?'O Worker ainda não tem o veredito. A atualização automática leva 1 a 2 minutos depois de cada mudança; tente de novo daqui a pouco.':oraMotivo(e.message);
+  modal(`<h2>⚖️ VEREDITO</h2><p>Não consegui falar com o Oráculo agora.</p>${m?`<p style="text-align:left">${esc(m)}</p>`:''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraVeredito(${t})">Tentar de novo</button><button class="btn sec" onclick="oraHist(${t})">Voltar</button>`)}}
+(()=>{const nv=document.querySelector('nav');if(!nv)return;const f=()=>document.documentElement.style.setProperty('--navh',Math.ceil(innerHeight-nv.getBoundingClientRect().top)+'px');f();try{new ResizeObserver(f).observe(nv)}catch(e){}addEventListener('resize',f)})();vMicBtn();if(CFG.vf)addEventListener('pointerdown',()=>vFone(1),{once:true});rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
 </script>
 <script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
