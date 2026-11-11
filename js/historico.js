@@ -37,7 +37,7 @@ function mergeH(a) {
 }
 KV.get('hist').then(s => {
   try {
-    if (s) mergeH(JSON.parse(s));
+    if (s) mergeH(limpaTudo(JSON.parse(s)));
   } catch (e) {}
 });
 function backupTxt(lite) {
@@ -248,7 +248,7 @@ $('#fImp').onchange = async e => {
 };
 async function importText(txt) {
   try {
-    const j = JSON.parse(txt);
+    const j = limpaTudo(JSON.parse(txt));
     await snapNow('Antes de importar um arquivo');
     let rl = false;
     const n = mergeH(Array.isArray(j) ? j : j.hist || []);

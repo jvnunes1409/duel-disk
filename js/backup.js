@@ -66,7 +66,7 @@ async function bkRestore(i) {
   )
     return;
   try {
-    const j = JSON.parse(b.s);
+    const j = limpaTudo(JSON.parse(b.s));
     await snapNow('Antes de restaurar uma cópia');
     hist = Array.isArray(j.hist) ? j.hist : [];
     save();

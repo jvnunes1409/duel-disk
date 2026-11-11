@@ -5,13 +5,14 @@
 //   GEMINI_KEY      (Secret)  chave criada no Google AI Studio
 //   MODEL           (texto)   opcional; padrão abaixo
 //   ALLOWED_ORIGIN  (texto)   opcional; padrão https://jvnunes1409.github.io
+//   ALLOW_LOCAL     (texto)   opcional; '1' aceita também http://localhost (testes no computador)
 //
 // Rotas:
 //   POST /prever   → previsão antes do duelo (quem é favorito, chance, cartas-chave, plano do azarão)
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 11;
+const VERSAO = 12;
 
 // Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
 // Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
@@ -153,7 +154,10 @@ Deu a lógica?`;
 
 function cors(origin, env) {
   const allowed = (env.ALLOWED_ORIGIN || DEFAULT_ORIGIN).split(',').map(s => s.trim());
-  const ok = allowed.includes(origin) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '');
+  // localhost só é aceito se a variável ALLOW_LOCAL=1 estiver no Worker (para testar o app no computador)
+  const ok =
+    allowed.includes(origin) ||
+    (env.ALLOW_LOCAL === '1' && /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || ''));
   return {
     ok,
     headers: {

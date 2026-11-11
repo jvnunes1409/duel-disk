@@ -1,14 +1,24 @@
 // Configuração básica: decks do torneio, decks cadastrados no aparelho, tiers, atributos, jogadores e utilitários.
 // Versão do app (a mesma do cache do service worker): aparece no menu para saber qual versão o celular está rodando
-const APPV = 'v49';
+const APPV = 'v50';
 const TORN = 24,
   TORNNAMES = DECKS.slice(0, TORN).map(d => d[0]),
   BASEN = DECKS.length,
   BASENAMES = DECKS.map(d => d[0]),
   EMO = { FOGO: '🔥', ÁGUA: '💧', TERRA: '⛰️', VENTO: '🌪️', LUZ: '✨', TREVAS: '🌑', DIVINO: '⚡' };
+// Segurança: texto que vem de fora do código (deck cadastrado no app, arquivo de backup) nunca pode virar HTML.
+// limpaTudo tira < e > de todas as strings, em qualquer profundidade do objeto.
+const limpaTudo = o =>
+  typeof o === 'string'
+    ? o.replace(/[<>]/g, '')
+    : Array.isArray(o)
+      ? o.map(limpaTudo)
+      : o && typeof o === 'object'
+        ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, limpaTudo(v)]))
+        : o;
 let CUS = [];
 try {
-  CUS = JSON.parse(localStorage.getItem('ygo_custom') || '[]');
+  CUS = limpaTudo(JSON.parse(localStorage.getItem('ygo_custom') || '[]'));
 } catch (e) {}
 CUS = CUS.filter(c => c && c.n && !BASENAMES.includes(c.n));
 CUS.forEach(c => {

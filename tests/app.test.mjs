@@ -258,3 +258,38 @@ test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e cent
   assert.deepEqual(erros, []);
   await fechar();
 });
+
+test('segurança: um arquivo de backup malicioso não injeta HTML no app', async () => {
+  const { pg, erros, fechar } = await abrirApp();
+  // o "ataque" marca o localStorage se conseguir rodar; a importação de decks recarrega a página
+  await pg.evaluate(() => {
+    const ruim = '<img src=x onerror="localStorage.setItem(\'xss\',1)">';
+    importText(
+      JSON.stringify({
+        hist: [{ t: Date.now() - 5000, w: 0, dur: 1, decks: [ruim, DECKS[1][0]], lp: [1, 0], log: [] }],
+        custom: [{ n: 'Deck ' + ruim, t: 3, a: 'LUZ', s: ruim, l: '' }],
+      })
+    );
+  });
+  await pg.waitForTimeout(2500);
+  await pg.waitForFunction(() => typeof rH === 'function');
+  await pg.evaluate(() => {
+    goTab('hist');
+    rH();
+    goTab('decks');
+    rLista();
+    const i = DECKS.findIndex(d => d[0].startsWith('Deck '));
+    if (i >= 0) info(i);
+  });
+  await pg.waitForTimeout(500);
+  const r = await pg.evaluate(() => ({
+    importou: DECKS.some(d => d[0].startsWith('Deck ')),
+    xss: localStorage.getItem('xss'),
+    imgs: document.querySelectorAll('img[src="x"]').length,
+  }));
+  assert.equal(r.importou, true, 'o deck do arquivo foi importado');
+  assert.equal(r.xss, null, 'nenhum código do arquivo rodou');
+  assert.equal(r.imgs, 0);
+  assert.deepEqual(erros, []);
+  await fechar();
+});

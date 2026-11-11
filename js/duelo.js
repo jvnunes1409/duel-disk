@@ -68,7 +68,7 @@ function ports() {
     $('#pt' + p).innerHTML = art(
       i,
       '',
-      `<b>${NOMES[p].toUpperCase()}${i != null ? `<small>${DECKS[i][0]}</small>` : ''}</b>`
+      `<b>${NOMES[p].toUpperCase()}${i != null ? `<small>${esc(DECKS[i][0])}</small>` : ''}</b>`
     );
   });
 }

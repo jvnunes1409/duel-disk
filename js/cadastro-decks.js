@@ -161,7 +161,7 @@ async function ydkLoad(inp) {
   );
 }
 function deckSave(i) {
-  const v = dfv(),
+  const v = limpaTudo(dfv()),
     ed = i >= BASEN ? CUS.find(c => c.n === DECKS[i][0]) : null;
   if (!v.n) {
     dfm('⚠️ Dê um nome ao deck.');

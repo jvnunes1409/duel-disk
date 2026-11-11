@@ -32,7 +32,7 @@ function rLista() {
       const d = DECKS[i];
       return filtro && d[1] !== filtro
         ? ''
-        : `<div class="card dk" onclick="info(${i})">${art(i)}<div><b>${d[0]}</b> <span class="tier t${d[1]}">T${d[1]}</span><small>${d[4]}</small></div></div>`;
+        : `<div class="card dk" onclick="info(${i})">${art(i)}<div><b>${esc(d[0])}</b> <span class="tier t${d[1]}">T${d[1]}</span><small>${esc(d[4])}</small></div></div>`;
     })
     .join('');
 }
@@ -89,7 +89,7 @@ function rSort() {
   $('#bSort').textContent = SRT.modo === 'draft' ? 'Sortear opções do draft' : 'Sortear decks';
 }
 function rcHTML(i, k, s) {
-  return `<b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${DECKS[i][0]} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s ? '' : `<button class="info" onclick="info(${i})">Ver Info</button>`}`;
+  return `<b style="color:${COR[k]};font-family:Impact;letter-spacing:2px">${NOMES[k].toUpperCase()}</b>${art(i)}<h3>${esc(DECKS[i][0])} <span class="tier t${DECKS[i][1]}">TIER ${DECKS[i][1]}</span></h3>${s ? '' : `<button class="info" onclick="info(${i})">Ver Info</button>`}`;
 }
 function setRC(k, i, s, pop) {
   const e = $('#rc' + k);

@@ -122,3 +122,9 @@ test('crônica e veredito mandam as jogadas faladas com as cartas e o dono de ca
   assert.match(chamadas[0], /HERÓI do Destino - Distopia/);
   assert.match(chamadas[0], /Cavaleiros Fantasmas - Lança \(Phantom Knights' Spear\), do deck de João/);
 });
+
+test('segurança: localhost só é aceito quando ALLOW_LOCAL=1', async () => {
+  globalThis.fetch = async () => respostaGemini(PREVISAO);
+  const r = await pedir('/prever', { a: deck('A'), b: deck('B') }, 'http://localhost:8080');
+  assert.equal(r.status, 403);
+});
