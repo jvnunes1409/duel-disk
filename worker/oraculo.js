@@ -11,7 +11,20 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 7;
+const VERSAO = 8;
+
+// Freio contra abuso: o endereço do Worker é público (está no app), então cada IP tem um limite de pedidos.
+// Fica na memória da instância; não é perfeito, mas impede que alguém gaste a cota grátis do Gemini em loop.
+const LIMITE_PEDIDOS = 30, JANELA_MS = 10 * 60_000;
+const VISTOS = new Map();
+function freio(ip) {
+  const agora = Date.now();
+  const lista = (VISTOS.get(ip) || []).filter(t => agora - t < JANELA_MS);
+  if (lista.length >= LIMITE_PEDIDOS) { VISTOS.set(ip, lista); return true; }
+  lista.push(agora); VISTOS.set(ip, lista);
+  if (VISTOS.size > 5000) VISTOS.clear();
+  return false;
+}
 
 // Cartas de uma jogada falada (formato novo: várias por fala; antigo: uma só)
 function cartasJ(j, nomes, comEfeito) {
@@ -283,6 +296,7 @@ export default {
     if (!ok) return json({ error: 'origem não permitida' }, 403, headers);
     if (!env.GEMINI_KEY) return json({ error: 'GEMINI_KEY não configurada no Worker' }, 500, headers);
 
+    if (freio(req.headers.get('CF-Connecting-IP') || 'x')) return json({ error: 'muitos pedidos seguidos (429); espere alguns minutos' }, 429, headers);
     const raw = await req.text();
     if (raw.length > MAX_BODY) return json({ error: 'pedido grande demais' }, 413, headers);
     let body;

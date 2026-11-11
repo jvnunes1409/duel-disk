@@ -1,0 +1,120 @@
+# 🔮 DuelDisk: companheiro de mesa com IA para Yu-Gi-Oh!
+
+**[Abrir o app](https://jvnunes1409.github.io/duel-disk/)** · funciona no navegador do celular e pode ser instalado como app (PWA)
+
+Eu e meu sobrinho jogamos Yu-Gi-Oh! com cartas físicas e uma coleção de 28 decks. O DuelDisk começou como um contador de pontos de vida e virou o companheiro de mesa dos nossos duelos. Ele sorteia os decks de forma justa, conta o LP, organiza torneios e guarda o histórico. Tem também um **Oráculo de IA** que prevê cada duelo, ouve as jogadas faladas e, no fim, explica se o resultado "deu a lógica".
+
+<!-- Prints: docs/duelo.png, docs/previsao.png, docs/placar.png, docs/chaveamento.png -->
+
+---
+
+## O problema
+
+Num duelo casual de cartas físicas, nada fica registrado. Não dá para saber quais decks são mais fortes de verdade, se a nossa divisão em tiers faz sentido, nem aprender com os erros de um duelo. A pergunta que guiou o projeto foi:
+
+> **Uma IA consegue prever e explicar duelos melhor do que a nossa própria intuição sobre os decks? E como provar isso?**
+
+## O que o app faz
+
+| Área | Funcionalidades |
+|---|---|
+| **Sorteio** | Sorteio de decks em "modo justo" (diferença máxima de 1 tier) ou total, sem repetir decks recentes |
+| **Duelo** | Contador de LP com teclado numérico, turnos, moeda, dado, sons e animações no estilo do anime |
+| **Torneio** | 24 decks em mata-mata, fase de grupos, semifinais e final, com chaveamento visual estilo Copa do Mundo |
+| **Histórico** | Todos os duelos com decks, duração, LP final e registro de dano; estatísticas e ranking Elo por deck |
+| **🔮 Oráculo** | Previsão antes do duelo, jogadas por voz, crônica narrada e veredito depois do duelo |
+
+## Como a IA é usada
+
+### 1. Previsão antes do duelo
+No instante do sorteio, o app manda para a IA os dois decks com **todas as cartas**: nome em português, nome em inglês, tipo, ATK/DEF e efeito resumido. Junto vão a estratégia de cada deck e o histórico do confronto (Elo e confronto direto). A IA devolve, em **JSON com schema definido**:
+- a chance de vitória de cada lado e o nível de confiança;
+- uma análise do confronto: ritmo, interações entre cartas e o que costuma decidir;
+- o plano de jogo de cada deck e as cartas-chave, com o motivo de cada uma;
+- como o deck menos favorito pode virar.
+
+**Regra anti-trapaça:** a previsão só vale se chegar **antes do primeiro dano**. Se alguém mexer no LP antes, ela é descartada, para a IA nunca "ver" o duelo começando.
+
+### 2. Jogadas por voz, sem modelo de linguagem
+Um toque no 🎙️ (ou num controle Bluetooth, um por jogador) e você fala a jogada: *"ataquei com a Distopia e ele ativou a Lança dos Cavaleiros Fantasmas"*. O reconhecimento de fala é o do próprio navegador. A identificação das cartas é um **algoritmo determinístico**, não uma IA:
+- procura só entre as ~100 cartas dos dois decks do duelo, e não entre as mais de 12 mil existentes;
+- usa similaridade de texto (Levenshtein) com **peso por raridade das palavras**: "Cavaleiros Fantasmas" aparece em quase todo o deck e vale pouco, enquanto "Véu Sombrio" identifica a carta;
+- divide a fala em ações ("e", "depois", "em resposta") e reconhece **várias cartas por frase**, marcando de qual deck é cada uma;
+- palavras genéricas do jogo ("monstro", "armadilha") nunca identificam uma carta sozinhas.
+
+**Por que não usar um modelo de linguagem aqui?** Precisa responder na hora, funcionar sem internet e não custar nada por jogada. Uma busca restrita e bem ponderada resolve melhor.
+
+### 3. Crônica e veredito depois do duelo
+A IA recebe o registro exato de LP (dano, turno, minuto), as jogadas faladas com o efeito de cada carta e a previsão feita antes. Com isso ela devolve:
+- **Crônica:** a narração do duelo.
+- **Veredito:** deu a lógica, foi zebra ou era equilibrado? Por quê? O que decidiu? E uma lição para cada jogador, apontando jogadas que funcionaram e possíveis erros.
+
+O prompt proíbe inventar jogadas: o que não está no registro precisa ser apresentado como dedução ("provavelmente…").
+
+## Como a IA é avaliada
+
+Uma IA que soa convincente não é necessariamente uma IA que acerta. Por isso, cada previsão é comparada com o resultado real e com **três métodos simples**:
+
+| Método | O que é |
+|---|---|
+| 🔮 **Oráculo (IA)** | Chance estimada pelo modelo antes do duelo |
+| 📈 **Elo** | Sistema de pontuação do xadrez, calculado com os nossos resultados |
+| 🏷️ **Tier** | Só a nossa classificação manual dos decks |
+| 🪙 **Moeda** | 50% sempre; a referência mínima |
+
+As métricas, em *Stats → Placar do Oráculo*:
+- **Acerto:** quem recebeu mais de 50% venceu?
+- **Brier score:** erro quadrático da probabilidade (menor é melhor; 0,25 equivale a chutar 50%). Ele pune a IA que diz "90%" e erra mais do que a que diz "60%" e erra.
+- **Calibragem:** quando a IA diz 70%, ela acerta cerca de 70% das vezes?
+
+Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode ser sorte.
+
+<!-- Resultados: preencher com os números do Placar do Oráculo antes da apresentação -->
+
+## Arquitetura
+
+```mermaid
+flowchart LR
+    subgraph Celular["📱 Celular (PWA)"]
+        A["index.html<br/>app completo"]
+        V["Reconhecimento de fala<br/>do navegador"]
+        L[("localStorage<br/>histórico e duelo em andamento")]
+    end
+    A -- HTTPS --> W["☁️ Cloudflare Worker<br/>prompts · schema · chave · limites"]
+    W --> G["🤖 Google Gemini<br/>saída JSON estruturada"]
+    A --> Y["Base de cartas<br/>arte, efeitos e nomes em PT"]
+    GH["GitHub"] -- "push → deploy automático" --> A
+    GH -- "push → deploy automático" --> W
+```
+
+**Decisões de engenharia:**
+- **A chave da API nunca vai para o navegador.** Ela fica num Worker, que também guarda os prompts e valida a origem, o tamanho e a frequência dos pedidos.
+- **Saída estruturada (JSON schema)** em vez de texto livre, para o app sempre conseguir mostrar a resposta.
+- **Latência:** a previsão começa no toque do Sortear, antes da animação; o raciocínio do modelo é limitado; se o modelo principal passar de 45 segundos, o Worker troca automaticamente para um modelo leve.
+- **Modelos mudam:** quando o modelo antigo foi descontinuado, bastou trocar uma variável no Worker; o app mostra o erro real em vez de um genérico "sem sinal".
+- **Contexto em português:** as cartas físicas são em português, então a IA recebe e cita os nomes oficiais em português.
+- **Resiliência:** o duelo em andamento é salvo a cada 2 segundos, e se o navegador recarregar a aba, ele volta de onde parou. Sem internet, o app funciona normalmente, só sem o Oráculo.
+
+## Limitações conhecidas
+
+- O Oráculo só sabe o que foi registrado: LP e jogadas faladas. Ele não vê a mão nem o campo.
+- O reconhecimento de voz depende do Chrome e do ambiente; nomes muito parecidos entre decks podem confundir.
+- O histórico fica no celular. A sincronização entre aparelhos ainda não existe; há backup por arquivo.
+- O freio de pedidos do Worker é por instância (simples, não distribuído).
+
+## Próximos passos
+
+- **IA rival jogando de verdade:** usar o motor de regras aberto da comunidade (ygopro-core) e deixar a IA só tomar decisões, num duelo digital com cartas escondidas.
+- **Sincronizar o histórico** entre os celulares por um servidor próprio.
+- **Mais dados:** com mais duelos, testar se a IA supera o Elo e ajustar os prompts com base nos erros dela.
+
+## Estrutura do repositório
+
+```
+index.html          app completo (HTML + CSS + JS, sem build)
+sw.js               service worker (funciona offline)
+manifest.webmanifest
+worker/oraculo.js   Cloudflare Worker: prompts, schemas e chamada ao Gemini
+worker/wrangler.jsonc  configuração do deploy automático
+sons/               efeitos sonoros
+```

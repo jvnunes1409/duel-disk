@@ -664,7 +664,14 @@ function go(){if(!run){run=true;requestAnimationFrame(loop)}}
 // ---- Tela sempre ligada durante o duelo
 let WL=null;async function wake(on){try{if(on&&CFG.wake&&!WL&&navigator.wakeLock&&document.visibilityState==='visible'){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){const w=WL;WL=null;await w.release()}}catch(e){WL=null}}
 document.addEventListener('visibilitychange',()=>wake(document.visibilityState==='visible'&&$('#duelo').classList.contains('on')));
-function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button>${micOn()&&duel.decks?`<button class="btn" onclick="vLista()">🎙️ Jogadas faladas (${(duel.ev||[]).length})</button>`:''}<div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="fechar()">Fechar</button>`)}
+function menu(){modal(`<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button>${micOn()&&duel.decks?`<button class="btn" onclick="vLista()">🎙️ Jogadas faladas (${(duel.ev||[]).length})</button>`:''}<div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="sobre()">ℹ️ Sobre o DuelDisk</button><button class="btn sec" onclick="fechar()">Fechar</button>`)}
+function sobre(){const R=hist.filter(h=>h.ai&&h.decks),ac=R.filter(h=>oraFav(h.ai.p)===h.w).length;
+ modal(`<h2>ℹ️ DUELDISK</h2><p style="text-align:left">Companheiro de mesa para duelos de Yu-Gi-Oh! com cartas físicas: sorteio justo de decks, contador de LP, torneio e histórico, com um <b>Oráculo de IA</b> que prevê cada duelo, registra jogadas por voz e explica o resultado depois.</p>
+ <div class="clh" style="text-align:left">🔮 COMO A IA É USADA</div>
+ <p style="text-align:left">• <b>Previsão</b> antes do primeiro dano, a partir das listas e efeitos das cartas e do histórico.<br>• <b>Avaliação honesta</b>: cada previsão é comparada com o resultado real e com métodos simples (Elo, tier, moeda).<br>• <b>Jogadas por voz</b> reconhecidas entre as cartas dos dois decks, sem IA externa.<br>• <b>Crônica e veredito</b> depois do duelo, sem inventar jogadas que não foram registradas.</p>
+ ${R.length?`<p class="cnote" style="text-align:left">Até agora: ${R.length} duelo${R.length>1?'s':''} previstos, ${ac} acertos (${Math.round(ac/R.length*100)}%). Detalhes em Stats → Placar do Oráculo.</p>`:''}
+ <div class="clh" style="text-align:left">🧩 ARQUITETURA</div><p style="text-align:left">App em um único HTML (PWA) no GitHub Pages · Cloudflare Worker guarda a chave e os prompts · Google Gemini com saída em JSON estruturado · deploy automático a cada commit.</p>
+ <a class="btn" href="https://github.com/jvnunes1409/duel-disk" target="_blank" rel="noopener" style="text-decoration:none;display:block">💻 Código no GitHub</a><button class="btn sec" onclick="menu()">← Voltar</button>`)}
 function endM(){modal(`<h2>ENCERRAR DUELO</h2><button class="btn" onclick="resetDuel()">🔄 Reiniciar<small>mesmos decks, LP volta a 8000</small></button><button class="btn red" onclick="cancelDuel(1)">✖ Cancelar<small>descarta o duelo, nada vai para o histórico</small></button><button class="btn sec" onclick="menu()">Voltar</button>`)}
 function resetDuel(){if(duel.log.length&&!confirm('Reiniciar? Os lances deste duelo serão perdidos.'))return;fechar();newDuel(duel.decks,duel.tm,duel.sr);duelStart()}
 // ---- Escolher os decks manualmente (sem sorteio)
@@ -1571,7 +1578,21 @@ async function oraVeredito(t){const h=hist.find(x=>x.t===t);if(!h)return;const d
   h.vd={deu_logica:r.deu_logica,titulo:r.titulo,veredito:r.veredito,fator_decisivo:r.fator_decisivo,licao_a:r.licao_a,licao_b:r.licao_b,model:r.model};save();rH();oraHist(t)}
  catch(e){const m=/rota não encontrada|404/.test(e.message)?'O Worker ainda não tem o veredito. A atualização automática leva 1 a 2 minutos depois de cada mudança; tente de novo daqui a pouco.':oraMotivo(e.message);
   modal(`<h2>⚖️ VEREDITO</h2><p>Não consegui falar com o Oráculo agora.</p>${m?`<p style="text-align:left">${esc(m)}</p>`:''}<p class="cnote">${esc(e.message)}</p><button class="btn" onclick="oraVeredito(${t})">Tentar de novo</button><button class="btn sec" onclick="oraHist(${t})">Voltar</button>`)}}
-(()=>{const nv=document.querySelector('nav');if(!nv)return;const f=()=>document.documentElement.style.setProperty('--navh',Math.ceil(innerHeight-nv.getBoundingClientRect().top)+'px');f();try{new ResizeObserver(f).observe(nv)}catch(e){}addEventListener('resize',f)})();vMicBtn();if(CFG.vf)addEventListener('pointerdown',()=>vFone(1),{once:true});rFiltro();rLista();rSort();rH();rT();newDuel();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
+(()=>{const nv=document.querySelector('nav');if(!nv)return;const f=()=>document.documentElement.style.setProperty('--navh',Math.ceil(innerHeight-nv.getBoundingClientRect().top)+'px');f();try{new ResizeObserver(f).observe(nv)}catch(e){}addEventListener('resize',f)})();vMicBtn();if(CFG.vf)addEventListener('pointerdown',()=>vFone(1),{once:true});// ===== Duelo em andamento salvo no aparelho =====
+// Se o Chrome recarregar a aba (celular com pouca memória, tela bloqueada, app trocado), o duelo volta de onde parou:
+// decks, LP, turno, registro de dano, jogadas faladas e a previsão do Oráculo.
+const DKEY='ygo_live';
+function dSave(){try{if(duel&&duel.decks&&!over){const d={...duel};if(d.ai&&d.ai.st!=='ok')delete d.ai;d.dn=duel.decks.map(i=>DECKS[i][0]);
+  localStorage.setItem(DKEY,JSON.stringify({v:1,at:Date.now(),duel:d,lp}))}else localStorage.removeItem(DKEY)}catch(e){}}
+function dRestore(){let S=null;try{S=JSON.parse(localStorage.getItem(DKEY)||'null')}catch(e){}
+ if(!S||!S.duel||!S.duel.decks||Date.now()-S.at>12*3600e3)return false;
+ if(S.duel.decks.some((i,k)=>!DECKS[i]||DECKS[i][0]!==(S.duel.dn||[])[k]))return false;
+ duel=S.duel;lp=S.lp;sh=[...lp];over=false;amt='';tnReset();calc();ports();
+ const pl=$('#players');pl.classList.remove('lpin');pl.classList.toggle('lphide',!duel.log.length);
+ VZ.cand=null;VZ.pp=null;if(micOn())vPrep();if(!duel.ai&&!duel.log.length)oraPrever();
+ tBan();rTurn();go();if(duel.log.length||(duel.ev||[]).length)setTimeout(()=>{goTab('duelo');toast('⏯️ Duelo retomado de onde parou')},300);return true}
+setInterval(dSave,2000);addEventListener('pagehide',dSave);document.addEventListener('visibilitychange',()=>{if(document.hidden)dSave()});
+rFiltro();rLista();rSort();rH();rT();newDuel();dRestore();draw();wake(true);loadArt().then(()=>{window.ART_READY=1;if(PERF.bg&&!BGL){BGL=true;loadBg()}});
 </script>
 <script>if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
 </body>
