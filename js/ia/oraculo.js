@@ -68,7 +68,7 @@ function oraTeste() {
 function oraMotivo(m) {
   m = String(m || '');
   if (/abort/i.test(m))
-    return 'A IA levou mais de 2 minutos para responder. Cole o oraculo.js novo no Worker (ele pede um raciocínio curto) ou troque MODEL para gemini-3.5-flash-lite.';
+    return 'A IA demorou demais para responder (os servidores do Google costumam ficar lentos em alguns horários). Espere um pouco e tente de novo.';
   if (/Failed to fetch|NetworkError|Load failed/i.test(m))
     return 'O celular não conseguiu falar com o Worker. Confira se o endereço está certo e se tem internet. Se o endereço estiver certo, o código do Worker pode ainda ser o Hello World (cole o oraculo.js de novo e dê Deploy).';
   if (/GEMINI_KEY/.test(m))
@@ -146,7 +146,7 @@ async function oraDeck(i) {
       .filter(({ c }) => !(c && c.d && cat(c.d) === 'E'))
       .map(({ x, c }) => ({ en: x[1], q: x[3] || 1, txt: oraLinha(x, c) }));
     try {
-      const r = await oraTO(consistencia(d[0], d[4], main), 30000);
+      const r = await oraTO(consistencia(d[0], d[4], main).catch(() => null), 30000);
       if (r) consist = { cartas: r.cartas, partida: r.partida, tijolos: r.tijolos, abre5: r.abre5, abre6: r.abre6, tijolo2: r.tijolo2 };
     } catch (e) {}
   }

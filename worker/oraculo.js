@@ -12,7 +12,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 15;
+const VERSAO = 16;
 
 // O que os jogadores informaram depois do duelo: a carta MVP (com efeito e dono) e um relato curto.
 // Aceita o formato antigo (MVP só com o nome) e o novo (objeto).
@@ -379,9 +379,11 @@ function thinking(model) {
   return { thinkingLevel: 'low' };
 }
 
-async function gemini(env, system, prompt, schema, temperature) {
-  const principal = env.MODEL || DEFAULT_MODEL;
-  const reserva = env.FALLBACK_MODEL || FALLBACK_MODEL;
+// leve = tarefa simples (ex.: classificar cartas): começa pelo modelo rápido e usa o principal só de reserva
+async function gemini(env, system, prompt, schema, temperature, leve) {
+  let principal = env.MODEL || DEFAULT_MODEL;
+  let reserva = env.FALLBACK_MODEL || FALLBACK_MODEL;
+  if (leve && reserva) [principal, reserva] = [reserva, principal];
   const t0 = Date.now();
   try {
     return await geminiModel(env, principal, system, prompt, schema, temperature, LIMITE_MS, t0);
@@ -508,7 +510,7 @@ export default {
       if (path === '/partida') {
         const n = Array.isArray(body.cartas) ? Math.min(60, body.cartas.length) : 0;
         if (!n) return json({ error: 'faltam as cartas' }, 400, headers);
-        const { data, model } = await gemini(env, SYSTEM_PARTIDA, promptPartida(body), PARTIDA_SCHEMA, 0.1);
+        const { data, model } = await gemini(env, SYSTEM_PARTIDA, promptPartida(body), PARTIDA_SCHEMA, 0.1, true);
         // só números válidos, sem repetir, e nunca a mesma carta nas duas listas (números de 1 a n viram 0 a n-1)
         const limpa = a => [...new Set((Array.isArray(a) ? a : []).map(Number))].filter(x => Number.isInteger(x) && x >= 1 && x <= n).map(x => x - 1);
         const partida = limpa(data.partida),

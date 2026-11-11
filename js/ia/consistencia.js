@@ -40,6 +40,7 @@ const savePart = () => {
   } catch (e) {}
 };
 // Assinatura da lista: se a lista do deck mudar, a classificação é refeita
+const PARTP = {};
 const consSig = main => main.map(c => c.q + 'x' + c.en).join('|');
 
 // main: cartas do Deck Principal [{ en, pt, q, txt }]. Devolve os números, ou null se não der para calcular.
@@ -49,7 +50,13 @@ async function consistencia(nome, estrategia, main) {
   let c = PART[nome];
   if (!c || c.sig !== sig) {
     if (!oraOn()) return null;
-    const r = await oraPost('/partida', { nome, estrategia, cartas: main.map(x => x.txt) }, 30000);
+    // o mesmo deck pedido duas vezes ao mesmo tempo (previsão + detalhes do deck) vira um pedido só
+    PARTP[nome] =
+      PARTP[nome] ||
+      // até 90 s: se a previsão não puder esperar, ela segue sem a consistência, mas a classificação
+      // continua e fica guardada para o próximo duelo com este deck
+      oraPost('/partida', { nome, estrategia, cartas: main.map(x => x.txt) }, 90000).finally(() => delete PARTP[nome]);
+    const r = await PARTP[nome];
     c = PART[nome] = {
       sig,
       p: (r.partida || []).map(i => main[i] && main[i].en).filter(Boolean),
@@ -105,7 +112,8 @@ function consHTML(i) {
 }
 async function consCalcular(i) {
   const el = $('#consD');
-  if (el) el.innerHTML = '<div class="clh">🎴 CONSISTÊNCIA</div><p class="cnote">A IA está lendo os efeitos das cartas…</p>';
+  if (el) el.innerHTML = '<div class="clh">🎴 CONSISTÊNCIA</div><p class="cnote">A IA está lendo os efeitos das cartas… <b id="oraT"></b><br>Costuma levar de 5 a 30 segundos.</p>';
+  oraRelogioModal(Date.now());
   try {
     const main = await consMain(i);
     if (!main) throw new Error('sem a lista de efeitos (precisa de internet)');
