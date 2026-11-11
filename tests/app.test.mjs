@@ -260,37 +260,35 @@ test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e cent
   await fechar();
 });
 
-test('segurança: um arquivo de backup malicioso não injeta HTML no app', async () => {
-  const { pg, erros, fechar } = await abrirApp();
-  // o "ataque" marca o localStorage se conseguir rodar; a importação de decks recarrega a página
-  const recarregou = pg.waitForEvent('load', { timeout: 30000 });
-  await pg.evaluate(() => {
-    const ruim = '<img src=x onerror="localStorage.setItem(\'xss\',1)">';
-    importText(
+test('segurança: texto malicioso em deck cadastrado ou backup não injeta HTML no app', async () => {
+  // 1) deck cadastrado com nome malicioso já guardado no aparelho (é lido ao abrir o app)
+  const ruim = `<img src=x onerror="localStorage.setItem('xss',1)">`;
+  const { pg, erros, fechar } = await abrirApp({
+    antes: `localStorage.setItem('ygo_custom', JSON.stringify([{ n: 'Deck ' + ${JSON.stringify(ruim)}, t: 3, a: 'LUZ', s: ${JSON.stringify(ruim)}, l: '' }]));`,
+  });
+  // 2) arquivo de backup com duelo malicioso (sem decks novos, então não recarrega)
+  await pg.evaluate(async r => {
+    await importText(
       JSON.stringify({
-        hist: [{ t: Date.now() - 5000, w: 0, dur: 1, decks: [ruim, DECKS[1][0]], lp: [1, 0], log: [] }],
-        custom: [{ n: 'Deck ' + ruim, t: 3, a: 'LUZ', s: ruim, l: '' }],
+        hist: [{ t: Date.now() - 5000, w: 0, dur: 1, decks: [r, DECKS[1][0]], lp: [1, 0], log: [] }],
       })
     );
-  });
-  await recarregou;
-  await pg.waitForFunction(() => typeof rH === 'function' && typeof DECKS !== 'undefined');
-  await pg.evaluate(() => {
     goTab('hist');
     rH();
     goTab('decks');
     rLista();
-    const i = DECKS.findIndex(d => d[0].startsWith('Deck '));
-    if (i >= 0) info(i);
-  });
+    info(DECKS.findIndex(d => d[0].startsWith('Deck ')));
+  }, ruim);
   await pg.waitForTimeout(500);
   const r = await pg.evaluate(() => ({
-    importou: DECKS.some(d => d[0].startsWith('Deck ')),
+    deck: DECKS.some(d => d[0].startsWith('Deck ')),
+    duelo: hist.length,
     xss: localStorage.getItem('xss'),
     imgs: document.querySelectorAll('img[src="x"]').length,
   }));
-  assert.equal(r.importou, true, 'o deck do arquivo foi importado');
-  assert.equal(r.xss, null, 'nenhum código do arquivo rodou');
+  assert.equal(r.deck, true, 'o deck cadastrado aparece');
+  assert.equal(r.duelo, 1, 'o duelo do arquivo foi importado');
+  assert.equal(r.xss, null, 'nenhum código de fora rodou');
   assert.equal(r.imgs, 0);
   assert.deepEqual(erros, []);
   await fechar();
