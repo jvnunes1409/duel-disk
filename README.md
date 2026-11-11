@@ -75,13 +75,13 @@ Com menos de 15 duelos o app avisa que a diferença entre os métodos ainda pode
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **20 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **22 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
 - **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça).
 - **Teste retroativo:** **nunca envia o resultado** para a IA e usa só os duelos anteriores no Elo.
 - **Worker:** saída em JSON estruturado, nova tentativa e modelo reserva quando o Gemini fica sobrecarregado, bloqueio de outros sites e limite de pedidos.
-- **Segurança:** um arquivo de backup malicioso não consegue injetar código no app, e o Worker recusa pedidos de outros sites (inclusive `localhost`, a menos que seja liberado).
+- **Segurança:** a política de conteúdo (CSP) bloqueia scripts de outros sites, as respostas do Worker nunca expõem a chave, e um arquivo de backup malicioso não consegue injetar código no app, e o Worker recusa pedidos de outros sites (inclusive `localhost`, a menos que seja liberado).
 - **Vitrine:** o modo demonstração não mistura com os dados de quem visita, e no PC o teclado controla o contador.
 - **App:** duelo retomado após recarregar, lembrete de turno, contagem de cartas, chaveamento do torneio e regressões visuais que já aconteceram (como o estilo da chave "vazando" para a moeda).
 
@@ -151,8 +151,14 @@ js/
 worker/oraculo.js           Cloudflare Worker: prompts, schemas, limites e chamada ao Gemini
 worker/wrangler.jsonc       deploy automático do Worker a cada push
 sw.js                       service worker: funciona offline
+icones/                     ícones do app instalado
+.github/                    testes automáticos, varredura de segurança (CodeQL) e Dependabot
 ```
 
-## Licença
+## Autoria e licença
 
-[MIT](LICENSE)
+Projeto criado e mantido por **[jvnunes1409](https://github.com/jvnunes1409)**. O histórico de commits registra a data e a autoria de cada mudança desde o primeiro dia.
+
+O código está público **só para consulta e avaliação**: **todos os direitos reservados** (veja [LICENSE](LICENSE)). Não é permitido copiar o projeto nem apresentá-lo como trabalho próprio. Segurança: veja [SECURITY.md](SECURITY.md).
+
+*Yu-Gi-Oh! e suas cartas pertencem à Konami; este é um projeto de fãs, sem fins comerciais.*

@@ -499,7 +499,7 @@ document.addEventListener('visibilitychange', () =>
 );
 function menu() {
   modal(
-    `<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button>${micOn() && duel.decks ? `<button class="btn" onclick="vLista()">🎙️ Jogadas faladas (${(duel.ev || []).length})</button>` : ''}<div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="sobre()">ℹ️ Sobre o DuelDisk</button><p class="cnote" style="margin:6px 0 0">Versão ${APPV} · ${DECKS.length} decks</p><button class="btn sec" onclick="fechar()">Fechar</button>`
+    `<h2>MENU</h2><button class="btn" onclick="escolher()">📚 Escolher decks</button><button class="btn" onclick="endM()">🔄 Reiniciar / cancelar</button><button class="btn" onclick="cfgM()">⚙️ Sons e animações</button>${micOn() && duel.decks ? `<button class="btn" onclick="vLista()">🎙️ Jogadas faladas (${(duel.ev || []).length})</button>` : ''}<div class="mlb">Declarar vencedor</div><div class="row"><button class="btn" style="border-color:var(--g);color:var(--g);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(0)">🏆 Douglas</button><button class="btn" style="border-color:var(--b);color:var(--b);letter-spacing:1px;padding:15px 4px" onclick="fechar();finish(1)">🏆 João</button></div><button class="btn sec" onclick="sobre()">ℹ️ Sobre o DuelDisk</button><p class="cnote" style="margin:6px 0 0">Versão ${APPV} · ${DECKS.length} decks · © 2026 jvnunes1409</p><button class="btn sec" onclick="fechar()">Fechar</button>`
   );
 }
 function sobre() {
@@ -510,7 +510,7 @@ function sobre() {
  <p style="text-align:left">• <b>Previsão</b> antes do primeiro dano, a partir das listas e efeitos das cartas e do histórico.<br>• <b>Avaliação honesta</b>: cada previsão é comparada com o resultado real e com métodos simples (Elo, tier, moeda).<br>• <b>Jogadas por voz</b> reconhecidas entre as cartas dos dois decks, sem IA externa.<br>• <b>Crônica e veredito</b> depois do duelo, sem inventar jogadas que não foram registradas.</p>
  ${R.length ? `<p class="cnote" style="text-align:left">Até agora: ${R.length} duelo${R.length > 1 ? 's' : ''} previstos, ${ac} acertos (${Math.round((ac / R.length) * 100)}%). Detalhes em Stats → Placar do Oráculo.</p>` : ''}
  <div class="clh" style="text-align:left">🧩 ARQUITETURA</div><p style="text-align:left">App em um único HTML (PWA) no GitHub Pages · Cloudflare Worker guarda a chave e os prompts · Google Gemini com saída em JSON estruturado · deploy automático a cada commit.</p>
- <a class="btn" href="https://github.com/jvnunes1409/duel-disk" target="_blank" rel="noopener" style="text-decoration:none;display:block">💻 Código no GitHub</a><button class="btn sec" onclick="menu()">← Voltar</button>`);
+ <a class="btn" href="https://github.com/jvnunes1409/duel-disk" target="_blank" rel="noopener" style="text-decoration:none;display:block">💻 Código no GitHub</a><p class="cnote" style="margin:8px 0 0">Criado por <b>jvnunes1409</b> · © 2026, todos os direitos reservados.</p><button class="btn sec" onclick="menu()">← Voltar</button>`);
 }
 function endM() {
   modal(

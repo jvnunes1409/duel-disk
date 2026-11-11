@@ -112,7 +112,14 @@ test('o duelo em andamento volta depois de recarregar a página', async () => {
   });
   await pg.waitForTimeout(500); // deixa o navegador terminar de gravar antes de recarregar
   await pg.reload();
-  await pg.waitForTimeout(1200);
+  // espera o app retomar o duelo (em vez de um tempo fixo)
+  await pg.waitForFunction(
+    () => typeof duel !== 'undefined' && duel && duel.log && duel.log.length === 1,
+    null,
+    {
+      timeout: 10000,
+    }
+  );
   const r = await pg.evaluate(() => ({
     decks: duel.decks,
     lp,
@@ -393,6 +400,26 @@ test('veredito no histórico envia a MVP com o efeito e o relato escrito pelos j
   assert.equal(c.relato, 'Douglas roubou meu monstro de 4200 de ATK.');
   assert.equal(await pg.evaluate(() => hist[0].nota), 'Douglas roubou meu monstro de 4200 de ATK.');
   assert.match(await pg.textContent('#box'), /Refazer o veredito/);
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
+test('segurança: a política de conteúdo (CSP) bloqueia scripts de outros sites', async () => {
+  const { pg, erros, fechar } = await abrirApp();
+  const r = await pg.evaluate(
+    () =>
+      new Promise(ok => {
+        const s = document.createElement('script');
+        s.src = 'https://site-malicioso.example/roubo.js';
+        s.onerror = () => ok('bloqueado');
+        s.onload = () => ok('carregou');
+        document.head.appendChild(s);
+        setTimeout(() => ok('sem resposta'), 4000);
+      })
+  );
+  assert.equal(r, 'bloqueado');
+  const csp = await pg.getAttribute('meta[http-equiv="Content-Security-Policy"]', 'content');
+  assert.match(csp, /object-src 'none'/);
   assert.deepEqual(erros, []);
   await fechar();
 });

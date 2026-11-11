@@ -12,7 +12,7 @@
 //   POST /cronica  → resumo depois do duelo, a partir do histórico de LP
 
 const DEFAULT_MODEL = 'gemini-3.8-flash';
-const VERSAO = 13;
+const VERSAO = 14;
 
 // O que os jogadores informaram depois do duelo: a carta MVP (com efeito e dono) e um relato curto.
 // Aceita o formato antigo (MVP só com o nome) e o novo (objeto).
@@ -256,10 +256,16 @@ function cors(origin, env) {
   };
 }
 
+// Cabeçalhos de segurança em toda resposta: sem cache, sem "adivinhar" o tipo do conteúdo
+const SEG = {
+  'X-Content-Type-Options': 'nosniff',
+  'Cache-Control': 'no-store',
+  'Referrer-Policy': 'no-referrer',
+};
 const json = (obj, status, headers) =>
   new Response(JSON.stringify(obj), {
     status,
-    headers: { ...headers, 'Content-Type': 'application/json; charset=utf-8' },
+    headers: { ...headers, ...SEG, 'Content-Type': 'application/json; charset=utf-8' },
   });
 
 const clip = (s, n) => String(s ?? '').slice(0, n);

@@ -166,3 +166,13 @@ test('veredito trata a carta MVP e o relato dos jogadores como fatos', async () 
   assert.match(txt, /RELATO DOS JOGADORES .*4200 de ATK/);
   assert.match(corpo.systemInstruction.parts[0].text, /têm prioridade sobre qualquer dedução/);
 });
+
+test('segurança: respostas do Worker têm cabeçalhos de proteção e nunca expõem a chave', async () => {
+  globalThis.fetch = async () =>
+    new Response('{"error":{"code":400,"message":"API key not valid"}}', { status: 400 });
+  const r = await pedir('/prever', { a: deck('A'), b: deck('B') });
+  assert.equal(r.headers.get('X-Content-Type-Options'), 'nosniff');
+  assert.equal(r.headers.get('Cache-Control'), 'no-store');
+  const txt = await r.text();
+  assert.ok(!txt.includes('chave-teste'), 'a chave não aparece na resposta');
+});

@@ -7,6 +7,10 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Menor permissão possível: a automação só lê o código (não pode alterar nada no repositório)
+permissions:
+  contents: read
+
 jobs:
   testes:
     runs-on: ubuntu-latest
