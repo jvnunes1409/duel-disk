@@ -8,7 +8,7 @@
     "format": "prettier --write \"js/**/*.js\" \"css/*.css\" \"tests/*.mjs\""
   },
   "devDependencies": {
-    "playwright": "1.48.2"
+    "playwright": "1.65.0"
   },
   "author": "jvnunes1409 (https://github.com/jvnunes1409)",
   "license": "SEE LICENSE IN LICENSE"
