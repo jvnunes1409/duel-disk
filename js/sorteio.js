@@ -32,7 +32,7 @@ function rLista() {
       const d = DECKS[i];
       return filtro && d[1] !== filtro
         ? ''
-        : `<div class="card dk ${titulos(d[0]).c ? 'camp' : ''}" onclick="info(${i})">${art(i)}<div><b>${esc(d[0])}</b> <span class="tier t${d[1]}">T${d[1]}</span>${selo(d[0])}<small>${esc(d[4])}</small></div></div>`;
+        : `<div class="card dk ${titulos(d[0]).c ? 'camp' : ''}" onclick="info(${i})">${art(i)}<div><b>${esc(d[0])}</b> <span class="tier t${d[1]}">T${d[1]}</span>${i < BASEN && d[1] !== BT[i] ? `<span class="tmud ${d[1] < BT[i] ? 'up' : 'dn'}" title="Era Tier ${BT[i]}">${d[1] < BT[i] ? '▲' : '▼'}</span>` : ''}${selo(d[0])}<small>${esc(d[4])}</small></div></div>`;
     })
     .join('');
 }

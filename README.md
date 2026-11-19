@@ -31,7 +31,7 @@ Num duelo casual de cartas físicas, nada fica registrado. Não dá para saber q
 
 | Área | Funcionalidades |
 |---|---|
-| **Sorteio** | Sorteio de decks em "modo justo" (diferença máxima de 1 tier) ou total, sem repetir decks recentes |
+| **Sorteio** | Sorteio de decks em "modo justo" (diferença máxima de 1 tier) ou total, sem repetir decks recentes; os tiers se ajustam sozinhos quando os resultados (Elo) mostram com folga que um deck mudou de nível |
 | **Duelo** | Contador de LP com teclado numérico, turnos, moeda, dado, sons e animações no estilo do anime |
 | **Torneio** | Todos os 28 decks: preliminar, mata-mata, fase de grupos, semifinais e final, com chaveamento visual estilo Copa do Mundo; os campeões ganham 🏆 |
 | **Histórico** | Todos os duelos com decks, duração, LP final e registro de dano; estatísticas em abas (jogadores, decks, tiers, Oráculo) e ranking Elo por deck |
@@ -115,7 +115,7 @@ Placar de 11/11/2026, com **14 duelos**: 4 com previsão ao vivo (feita antes do
 
 ## Testes automáticos
 
-Cada mudança enviada ao GitHub dispara **27 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
+Cada mudança enviada ao GitHub dispara **28 testes automáticos** (GitHub Actions). Eles abrem o app num navegador invisível e testam também o Worker, com a internet simulada:
 
 - **Voz:** as cartas são reconhecidas em português, várias por frase, com o dono certo, e palavras genéricas não viram carta.
 - **Oráculo:** a previsão sai no sorteio e é **descartada se chegar depois do primeiro dano** (regra anti-trapaça); a consistência usa a fórmula exata e a classificação de cada deck é feita uma vez só.

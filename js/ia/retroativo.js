@@ -39,7 +39,8 @@ function retroCtx(h) {
     jogos: [ea.g, eb.g],
     h2h: { a: h2a, b: h2b },
     eloP: pWin(ea.e, eb.e),
-    tierP: pWin(TE[DECKS[ia][1]] || 1500, TE[DECKS[ib][1]] || 1500),
+    // tier da lista original: o tier atual pode ter mudado com os próprios resultados (seria espiar o futuro)
+    tierP: pWin(TE[BT[ia]] || 1500, TE[BT[ib]] || 1500),
   };
 }
 

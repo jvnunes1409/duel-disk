@@ -196,17 +196,46 @@ function elo(H = hist) {
       G[b]++;
     });
   return DECKS.map((d, i) => {
-    const e = E[d[0]];
+    const e = E[d[0]],
+      // tier "contínuo" pelo Elo: 1700+ = T1, cada 100 pontos abaixo desce um tier
+      r = (1700 - e) / 100 + 1,
+      cur = d[1];
     return {
       n: d[0],
       i,
       e,
       g: G[d[0]],
-      cur: d[1],
-      sug: Math.min(5, Math.max(1, Math.round((1700 - e) / 100) + 1)),
+      cur,
+      // margem para não ficar trocando de tier a cada duelo: só sugere mudar quando o Elo
+      // passa com folga da fronteira (0,65 tier além do atual)
+      sug: Math.abs(r - cur) >= TIER_MARGEM ? Math.min(5, Math.max(1, Math.round(r))) : cur,
     };
   });
 }
+const TIER_MARGEM = 0.65,
+  TIER_MIN_JOGOS = 4;
+// Tier automático: quando o Elo mostra com folga que um deck mudou de nível, o tier dele
+// muda sozinho (no sorteio justo, na aba Decks e em todo o app). Devolve as mudanças feitas.
+// Desliga em Stats → Tiers. Só vale para os decks do app (não para os cadastrados no aparelho).
+function autoTier(so) {
+  if (!CFG.at) return [];
+  const mud = elo()
+    .filter(x => x.i < BASEN && x.g >= TIER_MIN_JOGOS && x.sug !== x.cur && (!so || so.includes(x.i)))
+    .map(x => ({ i: x.i, n: x.n, de: x.cur, para: x.sug }));
+  if (!mud.length) return mud;
+  mud.forEach(m => {
+    DECKS[m.i][1] = m.para;
+    if (m.para === BT[m.i]) delete TO[m.n];
+    else TO[m.n] = m.para;
+  });
+  try {
+    localStorage.setItem('ygo_tiers', JSON.stringify(TO));
+  } catch (e) {}
+  KV.set('tiers', JSON.stringify(TO));
+  if (typeof rLista === 'function') rLista();
+  return mud;
+}
+const tierMsg = m => `${m.para < m.de ? '📈' : '📉'} ${m.n} ${m.para < m.de ? 'subiu' : 'caiu'} para o Tier ${m.para}`;
 // ---- Desempenho por confronto: vitórias e derrotas contra deck mais fraco / mesmo tier / mais forte
 const CFX = [0.65, 0.5, 0.35],
   CFN = 5,
@@ -468,10 +497,14 @@ function rS() {
       .filter(x => x.g > 0)
       .sort((a, b) => b.e - a.e);
     AB.tier +=
-      `<div class="sh">⚖️ FORÇA REAL · TIER SUGERIDO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Cada deck começa com a pontuação do tier original e ganha ou perde pontos a cada duelo; vencer um deck mais forte vale mais. Com 4 jogos ou mais, o app sugere o tier que os resultados indicam. Conta todos os duelos.</div>` +
+      `<div class="sh">⚖️ FORÇA REAL · TIER SUGERIDO</div><div class="card"><div class="cnote" style="margin:0 0 6px">Cada deck começa com a pontuação do tier original e ganha ou perde pontos a cada duelo; vencer um deck mais forte vale mais. Com 4 jogos ou mais, quando a pontuação passa com folga para outra faixa, o deck muda de tier.</div><div class="opt" style="margin:4px 0 8px"><b>🔄 Tier automático pelos resultados</b>${['Ligado', 'Desligado']
+        .map((l, k) => `<button class="${(CFG.at ? 0 : 1) === k ? 'on' : ''}" onclick="CFG.at=${k ? 0 : 1};saveCfg();if(CFG.at)autoTier().forEach(m=>toast(tierMsg(m)));rS();play('click')">${l}</button>`)
+        .join('')
+        .replace(/^/, '<div class="seg">')
+        .replace(/$/, '</div>')}</div>` +
       EL.map(
         (x, k) =>
-          `<div class="rk" onclick="info(${x.i})"><span class="no">${k + 1}</span>${art(x.i)}<div class="mid"><b>${esc(x.n)}</b><span class="tier t${x.cur}">T${x.cur}</span> <small style="display:inline">${x.g} jogo${x.g > 1 ? 's' : ''}</small></div><span class="elo">${Math.round(x.e)}</span>${x.g < 4 ? '<span class="sug">poucos jogos</span>' : x.sug === x.cur ? '<span class="sug">✓ tier certo</span>' : `<button class="sug ${x.sug < x.cur ? 'up' : 'dn'}" onclick="event.stopPropagation();applyTier(${x.i},${x.sug})">${x.sug < x.cur ? '↑' : '↓'} Tier ${x.sug}</button>`}</div>`
+          `<div class="rk" onclick="info(${x.i})"><span class="no">${k + 1}</span>${art(x.i)}<div class="mid"><b>${esc(x.n)}</b><span class="tier t${x.cur}">T${x.cur}</span> <small style="display:inline">${x.g} jogo${x.g > 1 ? 's' : ''}</small></div><span class="elo">${Math.round(x.e)}</span>${x.g < TIER_MIN_JOGOS ? '<span class="sug">poucos jogos</span>' : x.sug === x.cur ? (x.cur !== BT[x.i] ? `<span class="sug ${x.cur < BT[x.i] ? 'up' : 'dn'}">${x.cur < BT[x.i] ? '📈 subiu' : '📉 caiu'} (era T${BT[x.i]})</span>` : '<span class="sug">✓ tier certo</span>') : `<button class="sug ${x.sug < x.cur ? 'up' : 'dn'}" onclick="event.stopPropagation();applyTier(${x.i},${x.sug})">${x.sug < x.cur ? '↑' : '↓'} Tier ${x.sug}</button>`}</div>`
       ).join('') +
       `</div>`;
     // --- Tiers e zebras

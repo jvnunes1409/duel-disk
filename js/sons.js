@@ -112,7 +112,7 @@ reg(
 );
 
 // ===== Narrador e áudios próprios =====
-let CFG = { voz: 1, vs: 1, vic: 'all', wake: 1, tnag: 1, tfr: 1 };
+let CFG = { voz: 1, vs: 1, vic: 'all', wake: 1, tnag: 1, tfr: 1, at: 1 };
 try {
   Object.assign(CFG, JSON.parse(localStorage.getItem('ygo_cfg') || '{}'));
 } catch (e) {}

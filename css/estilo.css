@@ -4123,3 +4123,18 @@ body.demo .stabs {
   font-size: 0.8rem;
   font-weight: 700;
 }
+
+/* ---- Tier que mudou pelos resultados (▲ subiu / ▼ caiu em relação à lista original) */
+.tmud {
+  margin-left: 3px;
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+.tmud.up,
+.sug.up {
+  color: #5fe08a;
+}
+.tmud.dn,
+.sug.dn {
+  color: #ff8a7a;
+}

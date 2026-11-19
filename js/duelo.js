@@ -631,6 +631,9 @@ function finish(w) {
   }
   hist.unshift(h);
   save();
+  // o resultado pode mudar o tier dos dois decks (Tier automático, Stats → Tiers)
+  if (duel.decks && typeof autoTier === 'function')
+    autoTier(duel.decks).forEach((m, k) => setTimeout(() => toast(tierMsg(m)), 4800 + k * 2600));
   rH();
   LH = h;
   tBan();

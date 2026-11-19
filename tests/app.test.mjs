@@ -393,6 +393,46 @@ test('chave do torneio em tela cheia: cabe inteira na tela e fecha no ✕', asyn
   await fechar();
 });
 
+test('tier automático: o deck sobe com folga no Elo, a aba Decks mostra, e não fica trocando a cada duelo', async () => {
+  const { pg, erros, fechar } = await abrirApp();
+  const r = await pg.evaluate(() => {
+    const i = DECKS.findIndex((d, k) => k < BASEN && d[1] === 3),
+      j = DECKS.findIndex((d, k) => k < BASEN && d[1] === 1),
+      n = DECKS[i][0],
+      m = DECKS[j][0];
+    // 4 vitórias do deck tier 3 contra um tier 1
+    for (let k = 0; k < 4; k++) hist.unshift({ t: Date.now() + k, w: 0, dur: 6e4, decks: [n, m], lp: [8000, 0], log: [] });
+    const mud = autoTier();
+    const card = [...document.querySelectorAll('#lista .dk')].find(e => e.querySelector('b').textContent === n);
+    // uma derrota logo depois não derruba de volta (margem contra o vai e vem)
+    hist.unshift({ t: Date.now() + 9, w: 1, dur: 6e4, decks: [n, m], lp: [0, 8000], log: [] });
+    const depois = autoTier();
+    // desligado, nada muda sozinho
+    CFG.at = 0;
+    const off = autoTier();
+    return {
+      mud: mud.find(x => x.i === i),
+      tierAgora: DECKS[i][1],
+      salvo: JSON.parse(localStorage.getItem('ygo_tiers'))[n],
+      badge: card.querySelector('.tier').textContent,
+      seta: card.querySelector('.tmud')?.textContent,
+      voltou: depois.some(x => x.i === i),
+      off: off.length,
+      base: BT[i],
+    };
+  });
+  assert.ok(r.mud && r.mud.para < 3, 'o deck subiu de tier');
+  assert.equal(r.tierAgora, r.mud.para);
+  assert.equal(r.salvo, r.mud.para, 'fica salvo no aparelho');
+  assert.equal(r.badge, 'T' + r.mud.para, 'a aba Decks mostra o tier novo');
+  assert.equal(r.seta, '▲');
+  assert.equal(r.voltou, false, 'uma derrota não faz o deck cair de volta na hora');
+  assert.equal(r.off, 0);
+  assert.equal(r.base, 3, 'a lista original continua guardada para comparação');
+  assert.deepEqual(erros, []);
+  await fechar();
+});
+
 test('a moeda não herda o estilo do chaveamento (a coroa continua marrom e centralizada)', async () => {
   const { pg, erros, fechar } = await abrirApp();
   await pg.evaluate(() => moeda());

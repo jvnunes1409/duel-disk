@@ -24,6 +24,8 @@ rH();
 rT();
 newDuel();
 dRestore();
+// decks que mudaram de nível pelos resultados ganham o tier novo (Tier automático)
+setTimeout(() => autoTier().forEach((m, k) => setTimeout(() => toast(tierMsg(m)), k * 2600)), 1500);
 draw();
 wake(true);
 loadArt().then(() => {
